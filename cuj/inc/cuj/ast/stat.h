@@ -77,4 +77,18 @@ public:
     void gen_ir(ir::IRBuilder &builder) const override;
 };
 
+class Break : public Statement
+{
+public:
+
+    void gen_ir(ir::IRBuilder &builder) const override;
+};
+
+class Continue : public Statement
+{
+public:
+
+    void gen_ir(ir::IRBuilder &builder) const override;
+};
+
 CUJ_NAMESPACE_END(cuj::ast)

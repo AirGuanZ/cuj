@@ -6,6 +6,7 @@
 #include <cuj/ast/expr.h>
 #include <cuj/ast/func.h>
 #include <cuj/ast/stat.h>
+#include <cuj/util/type_list.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::ast)
 
@@ -26,6 +27,18 @@ namespace detail
         builder.append_assign(ret, cast_op);
 
         return ret;
+    }
+
+    template<typename T>
+    RC<InternalArithmeticValue<T>> to_right(RC<InternalArithmeticValue<T>> value)
+    {
+        if(auto l = std::dynamic_pointer_cast<InternalArithmeticLeftValue<T>>(value))
+        {
+            auto impl = newRC<InternalArithmeticLoad<T>>();
+            impl->pointer = value->get_address();
+            return impl;
+        }
+        return value;
     }
 
 } // namespace detail
@@ -52,12 +65,6 @@ ir::BasicValue InternalArithmeticLeftValue<T>::gen_ir(ir::IRBuilder &builder) co
     builder.append_assign(ret, load);
 
     return ret;
-}
-
-template<typename T>
-RC<InternalArithmeticValue<size_t>> InternalClassValue<T>::get_address() const
-{
-    throw std::runtime_error("getting address of a non-left value");
 }
 
 template<typename T>
@@ -120,6 +127,19 @@ ir::BasicValue InternalMemberPointerValueOffset<C>::gen_ir(ir::IRBuilder &builde
 }
 
 template<typename T>
+ir::BasicValue InternalArithmeticLoad<T>::gen_ir(ir::IRBuilder &builder) const
+{
+    auto ptr = pointer->gen_ir(builder);
+
+    auto type = get_current_context()->get_type<T>();
+    auto load = ir::LoadOp{ type, ptr };
+    auto ret = builder.gen_temp_value(type);
+
+    builder.append_assign(ret, load);
+    return ret;
+}
+
+template<typename T>
 ir::BasicValue InternalArithmeticLiterial<T>::gen_ir(ir::IRBuilder &builder) const
 {
     return ir::BasicImmediateValue{ literial };
@@ -171,17 +191,48 @@ ir::BasicValue InternalUnaryOperator<T, I>::gen_ir(ir::IRBuilder &builder) const
 }
 
 template<typename T>
-ArithmeticValue<T>::ArithmeticValue(RC<InternalArithmeticValue<T>> impl)
-    : impl_(std::move(impl))
+void ArithmeticValue<T>::init_as_stack_var()
 {
+    auto impl = newRC<InternalArithmeticLeftValue<T>>();
+    impl->address = get_current_function()->alloc_stack_var<T>();
+    impl_ = std::move(impl);
+}
 
+template<typename T>
+ArithmeticValue<T>::ArithmeticValue()
+{
+    init_as_stack_var();
+}
+
+template<typename T>
+template<typename Arg>
+ArithmeticValue<T>::ArithmeticValue(const Arg &arg)
+{
+    if constexpr(std::is_convertible_v<Arg, RC<InternalArithmeticValue<T>>>)
+    {
+        impl_ = RC<InternalArithmeticValue<T>>(arg);
+        return;
+    }
+    else if constexpr(std::is_same_v<Arg, UninitializeFlag>)
+        return;
+    else
+    {
+        init_as_stack_var();
+        *this = arg;
+    }
 }
 
 template<typename T>
 ArithmeticValue<T>::ArithmeticValue(const ArithmeticValue &rhs)
-    : impl_(rhs.impl_)
+    : ArithmeticValue()
 {
+    *this = rhs;
+}
 
+template<typename T>
+ArithmeticValue<T>::ArithmeticValue(ArithmeticValue &&rhs) noexcept
+{
+    std::swap(this->impl_, rhs.impl_);
 }
 
 template<typename T>
@@ -236,10 +287,10 @@ RC<InternalArithmeticValue<T>> ArithmeticValue<T>::get_impl() const
 }
 
 template<typename T>
-ClassValue<T>::ClassValue(RC<InternalClassValue<T>> impl)
+ClassValue<T>::ClassValue(RC<InternalClassLeftValue<T>> impl)
     : impl_(std::move(impl))
 {
-
+    
 }
 
 template<typename T>
@@ -263,7 +314,7 @@ Pointer<T> ClassValue<T>::address() const
 }
 
 template<typename T>
-RC<InternalClassValue<T>> ClassValue<T>::get_impl() const
+RC<InternalClassLeftValue<T>> ClassValue<T>::get_impl() const
 {
     return impl_;
 }
@@ -382,7 +433,7 @@ Value<T> Pointer<T>::deref() const
     {
         auto impl = newRC<InternalArrayValue<
             typename T::ElementType, T::ElementCount>>();
-        impl->data_ptr = impl_->value;
+        impl->data_ptr = detail::to_right(impl_->value);
         return T(std::move(impl));
     }
     else if constexpr(is_pointer<T>)
@@ -401,9 +452,10 @@ Value<T> Pointer<T>::deref() const
     }
     else
     {
+        auto addr_value = detail::to_right(impl_->value);
         auto impl = newRC<InternalClassLeftValue<T>>();
-        impl->address = impl_->value;
-        impl->obj     = newBox<T>(impl_->value);
+        impl->address = addr_value;
+        impl->obj     = newBox<T>(addr_value);
         return ClassValue<T>(std::move(impl));
     }
 }

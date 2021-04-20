@@ -27,7 +27,7 @@ struct TypeList
     static constexpr int N = sizeof...(Ts);
 
     template<int I>
-    using Get = typelist_detail::TypeListGetImpl<I, Ts...>;
+    using Get = typename typelist_detail::TypeListGetImpl<I, Ts...>::Type;
 };
 
 CUJ_NAMESPACE_END(cuj)

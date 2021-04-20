@@ -43,6 +43,8 @@ public:
 
     template<typename T, typename...Args>
     Value<T> create_stack_var(Args &&...args);
+    
+    RC<InternalStackAllocationValue> alloc_on_stack(const ir::Type *type);
 
     template<typename T>
     Value<T> create_arg();

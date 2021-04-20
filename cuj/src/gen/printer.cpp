@@ -167,9 +167,7 @@ void IRPrinter::print(const ir::Statement &stat)
         MATCH_STAT(Continue),
         MATCH_STAT(Block),
         MATCH_STAT(If),
-        MATCH_STAT(While),
-        MATCH_STAT(Label),
-        MATCH_STAT(Goto));
+        MATCH_STAT(While));
 
 #undef MATCH_STAT
 }
@@ -247,18 +245,6 @@ void IRPrinter::print(const ir::While &while_s)
     str_.push_indent();
     print(*while_s.body);
     str_.pop_indent();
-}
-
-void IRPrinter::print(const ir::Label &label)
-{
-    str_.append("label: ", label.index, ", ", label.name);
-    str_.new_line();
-}
-
-void IRPrinter::print(const ir::Goto &goto_s)
-{
-    str_.append("goto ", goto_s.label_index);
-    str_.new_line();
 }
 
 std::string IRPrinter::get_typename(const ir::Type *type) const
@@ -339,6 +325,8 @@ std::string IRPrinter::to_string(const ir::Value &value) const
     },
         [this](const ir::LoadOp &v)
     {
+        if(v.src_ptr.is<ir::AllocAddress>())
+            return "read<" + get_typename(v.type) + "> " + to_string(v.src_ptr);
         return "load<" + get_typename(v.type) + "> " + to_string(v.src_ptr);
     },
         [this](const ir::CallOp &v)

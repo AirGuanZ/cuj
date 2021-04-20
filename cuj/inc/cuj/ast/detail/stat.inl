@@ -117,4 +117,14 @@ inline void While::gen_ir(ir::IRBuilder &builder) const
     builder.append_statment(newRC<ir::Statement>(std::move(result)));
 }
 
+inline void Break::gen_ir(ir::IRBuilder &builder) const
+{
+    builder.append_statment(newRC<ir::Statement>(ir::Break{}));
+}
+
+inline void Continue::gen_ir(ir::IRBuilder &builder) const
+{
+    builder.append_statment(newRC<ir::Statement>(ir::Continue{}));
+}
+
 CUJ_NAMESPACE_END(cuj::ast)

@@ -13,11 +13,9 @@ struct Continue;
 struct Block;
 struct If;
 struct While;
-struct Label;
-struct Goto;
 
 using Statement = Variant<
-    Store, Assign, Break, Continue, Block, If, While, Label, Goto>;
+    Store, Assign, Break, Continue, Block, If, While>;
 
 struct Store
 {
@@ -63,17 +61,6 @@ struct While
     RC<Block>  calculate_cond;
     BasicValue cond;
     RC<Block>  body;
-};
-
-struct Label
-{
-    std::string name;
-    int         index;
-};
-
-struct Goto
-{
-    int label_index;
 };
 
 CUJ_NAMESPACE_END(cuj::ir)

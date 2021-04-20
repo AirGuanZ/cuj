@@ -8,30 +8,10 @@ CUJ_NAMESPACE_BEGIN(cuj::ast)
 template<typename C>
 class ClassBase
 {
-    struct MemberRecordBase
-    {
-        virtual ~MemberRecordBase() = default;
-    };
-
-    template<typename T>
-    struct MemberRecord : MemberRecordBase
-    {
-        Value<T> member;
-
-        explicit MemberRecord(const Value<T> &member_value)
-            : member(member_value)
-        {
-            
-        }
-    };
-
     StructTypeRecorder                 *type_recorder_;
     RC<InternalArithmeticValue<size_t>> ref_pointer_;
 
-    std::vector<Box<MemberRecordBase>> member_records_;
-
-    template<typename T>
-    Value<T> commit_member_record(Value<T> member);
+    int member_count_ = 0;
 
 protected:
 

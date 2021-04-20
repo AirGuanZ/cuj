@@ -7,14 +7,11 @@ CUJ_NAMESPACE_BEGIN(cuj::ast)
 template<typename T, typename...Args>
 Value<T> Function::alloc_stack_var(bool is_arg, Args &&...args)
 {
-    const int alloc_index = static_cast<int>(stack_allocs_.size());
     auto alloc_type = get_current_context()->get_type<T>();
-    stack_allocs_.push_back({ alloc_type, alloc_index });
-    if(is_arg)
-        arg_indices_.push_back(alloc_index);
+    auto address = alloc_on_stack(alloc_type);
 
-    auto address = newRC<InternalStackAllocationValue>();
-    address->alloc_index = alloc_index;
+    if(is_arg)
+        arg_indices_.push_back(address->alloc_index);
     
     static_assert(!is_array<T>   || sizeof...(args) == 0);
     static_assert(!is_pointer<T> || sizeof...(args) <= 1);
@@ -51,7 +48,7 @@ Value<T> Function::alloc_stack_var(bool is_arg, Args &&...args)
         if constexpr(sizeof...(args) == 1)
             ret = (std::forward<Args>(args), ...);
 
-        return ret;
+        return std::move(ret);
     }
     else
     {
@@ -100,6 +97,18 @@ template<typename T, typename...Args>
 Value<T> Function::create_stack_var(Args &&...args)
 {
     return alloc_stack_var<T>(false, std::forward<Args>(args)...);
+}
+
+inline RC<InternalStackAllocationValue> Function::alloc_on_stack(
+    const ir::Type *type)
+{
+    const int alloc_index = static_cast<int>(stack_allocs_.size());
+    stack_allocs_.push_back({ type, alloc_index });
+    
+    auto address = newRC<InternalStackAllocationValue>();
+    address->alloc_index = alloc_index;
+
+    return address;
 }
 
 template<typename T>

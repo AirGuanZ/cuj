@@ -10,9 +10,6 @@ template<typename T>
 class InternalArithmeticValue;
 
 template<typename T>
-class InternalClassValue;
-
-template<typename T>
 class InternalArithmeticLeftValue;
 
 template<typename T>
@@ -48,7 +45,7 @@ namespace detail
     struct IsDerivedFromClassBase<T, std::void_t<typename T::CUJClassFlag>>
         : std::true_type
     {
-        //static_assert(std::is_base_of_v<ClassBase<T>, T>);
+        static_assert(std::is_base_of_v<ClassBase<T>, T>);
     };
 
     template<typename T, typename = void>
@@ -56,9 +53,19 @@ namespace detail
 
     template<typename T>
     struct IsPointerValue
-        <T, std::void_t<typename T::PointedType>> : std::true_type
+        <T, std::void_t<typename T::CUJPointerTag>> : std::true_type
     {
         static_assert(std::is_same_v<T, Pointer<typename T::PointedType>>);
+    };
+
+    template<typename T, typename = void>
+    struct IsIntrinsicValue : std::false_type { };
+
+    template<typename T>
+    struct IsIntrinsicValue
+        <T, std::void_t<typename T::CUJBuiltinTypeTag>> : std::true_type
+    {
+        
     };
 
     template<typename T, typename = void>
@@ -75,7 +82,11 @@ namespace detail
     template<typename T, typename = void>
     struct CUJValueType
     {
-        static_assert(IsPointerValue<T>::value || IsArrayValue<T>::value);
+        static_assert(
+            IsPointerValue<T>  ::value ||
+            IsArrayValue<T>    ::value ||
+            IsIntrinsicValue<T>::value);
+
         using Type = T;
     };
 
@@ -108,6 +119,9 @@ template<typename T>
 constexpr bool is_cuj_class = detail::IsDerivedFromClassBase<T>::value;
 
 template<typename T>
+constexpr bool is_intrinsic = detail::IsIntrinsicValue<T>::value;
+
+template<typename T>
 class InternalArithmeticValue
 {
 public:
@@ -138,7 +152,7 @@ public:
 };
 
 template<typename T>
-class InternalClassValue
+class InternalClassLeftValue
 {
 public:
 
@@ -146,23 +160,9 @@ public:
 
     std::unique_ptr<T> obj;
 
-    virtual ~InternalClassValue() = default;
-
-    virtual bool is_left() const { return false; }
-
-    virtual RC<InternalArithmeticValue<size_t>> get_address() const;
-};
-
-template<typename T>
-class InternalClassLeftValue : public InternalClassValue<T>
-{
-public:
-
     RC<InternalArithmeticValue<size_t>> address;
 
-    bool is_left() const override { return true; }
-
-    RC<InternalArithmeticValue<size_t>> get_address() const override;
+    RC<InternalArithmeticValue<size_t>> get_address() const;
 };
 
 template<typename T>
@@ -208,6 +208,16 @@ public:
 
     RC<InternalArithmeticValue<size_t>> class_pointer;
     int                                 member_index;
+
+    ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
+};
+
+template<typename T>
+class InternalArithmeticLoad : public InternalArithmeticValue<T>
+{
+public:
+
+    RC<InternalArithmeticValue<size_t>> pointer;
 
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };
@@ -269,15 +279,20 @@ class ArithmeticValue
 {
     RC<InternalArithmeticValue<T>> impl_;
 
+    void init_as_stack_var();
+
 public:
 
     using ArithmeticType = T;
 
-    explicit ArithmeticValue(UninitializeFlag) { }
+    ArithmeticValue();
 
-    explicit ArithmeticValue(RC<InternalArithmeticValue<T>> impl);
+    template<typename Arg>
+    ArithmeticValue(const Arg &arg);
 
     ArithmeticValue(const ArithmeticValue &rhs);
+
+    ArithmeticValue(ArithmeticValue &&rhs) noexcept;
 
     template<typename U>
     ArithmeticValue &operator=(const U &rhs);
@@ -292,21 +307,21 @@ public:
 template<typename T>
 class ClassValue
 {
-    RC<InternalClassValue<T>> impl_;
+    RC<InternalClassLeftValue<T>> impl_;
 
 public:
-
+    
     explicit ClassValue(UninitializeFlag) { }
 
-    explicit ClassValue(RC<InternalClassValue<T>> impl);
+    explicit ClassValue(RC<InternalClassLeftValue<T>> impl);
 
     ClassValue(const ClassValue &rhs);
-
+    
     ClassValue &operator=(const ClassValue &rhs);
 
     Pointer<T> address() const;
 
-    RC<InternalClassValue<T>> get_impl() const;
+    RC<InternalClassLeftValue<T>> get_impl() const;
 
     T *operator->() const;
 };
@@ -356,6 +371,8 @@ class Pointer
     RC<InternalPointerValue<T>> impl_;
 
 public:
+
+    struct CUJPointerTag { };
 
     using PointedType = T;
 

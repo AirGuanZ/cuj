@@ -4,10 +4,10 @@
 
 struct Vec3 : cuj::ast::ClassBase<Vec3>
 {
-    cuj::ast::Value<int> x = new_member<int>(0);
-    cuj::ast::Value<int> y = new_member<int>(0);
-    cuj::ast::Value<int> z = new_member<int>(0);
-
+    $member(int, x);
+    $member(int, y);
+    $member(int, z);
+    
     using ClassBase::ClassBase;
 };
 
@@ -17,24 +17,40 @@ int main()
     CUJ_SCOPED_CONTEXT(&context);
 
     context.begin_function("test_func");
+
+    //$var<int>   x = 10;
+    //$var<float> y = 2;
+    //$var<int>   z = x;
+
+    $define_arg(cuj::ast::Pointer<Vec3>, pv);
+
+    $define_var(Vec3, v);
+
+    v = pv.deref();
+
+    v->x = 1;
+    v->y = 2;
+    v->z = 3;
     
-    $var(int,   x, 10);
-    $var(float, y, 2);
-
-    $if(x)
-    {
-        y = x + y;
-    }
-    $else
-    {
-        y = y + y;
-    };
-
-    $while(x)
-    {
-        x = x - 1;
-        y = y + x;
-    };
+    //$if(x)
+    //{
+    //    y = x + y;
+    //}
+    //$else
+    //{
+    //    y = v.y + y;
+    //};
+    //
+    //$while(x)
+    //{
+    //    x = x - 1;
+    //    y = y + x;
+    //
+    //    $if(y - 7.0f)
+    //    {
+    //        $break;
+    //    };
+    //};
 
     context.end_function();
 
@@ -42,7 +58,6 @@ int main()
     context.gen_ir(ir_builder);
 
     cuj::gen::IRPrinter printer;
-    printer.set_indent("  ");
     printer.print(ir_builder.get_prog());
 
     std::cout << printer.get_result() << std::endl;

@@ -39,10 +39,6 @@ private:
 
     void print(const ir::While &while_s);
 
-    void print(const ir::Label &label);
-
-    void print(const ir::Goto &goto_s);
-
     std::string get_typename(const ir::Type *type) const;
 
     std::string get_typename(ir::BuiltinType type) const;
