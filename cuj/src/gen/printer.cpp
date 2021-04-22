@@ -11,10 +11,6 @@ namespace
         {
         case ir::Function::Type::Default:
             return "default";
-        case ir::Function::Type::Host:
-            return "host";
-        case ir::Function::Type::Device:
-            return "device";
         case ir::Function::Type::Kernel:
             return "kernel";
         }
@@ -25,10 +21,19 @@ namespace
     {
         switch(type)
         {
-        case ir::BinaryOp::Type::Add: return "+";
-        case ir::BinaryOp::Type::Sub: return "-";
-        case ir::BinaryOp::Type::Mul: return "*";
-        case ir::BinaryOp::Type::Div: return "/";
+        case ir::BinaryOp::Type::Add:          return "+";
+        case ir::BinaryOp::Type::Sub:          return "-";
+        case ir::BinaryOp::Type::Mul:          return "*";
+        case ir::BinaryOp::Type::Div:          return "/";
+        case ir::BinaryOp::Type::And:          return "&&";
+        case ir::BinaryOp::Type::Or:           return "||";
+        case ir::BinaryOp::Type::XOr:          return "^";
+        case ir::BinaryOp::Type::Equal:        return "==";
+        case ir::BinaryOp::Type::NotEqual:     return "!=";
+        case ir::BinaryOp::Type::Less:         return "<";
+        case ir::BinaryOp::Type::LessEqual:    return "<=";
+        case ir::BinaryOp::Type::Greater:      return ">";
+        case ir::BinaryOp::Type::GreaterEqual: return ">=";
         }
         return "unknown";
     }
@@ -38,6 +43,7 @@ namespace
         switch(type)
         {
         case ir::UnaryOp::Type::Neg: return "-";
+        case ir::UnaryOp::Type::Not: return "!";
         }
         return "unknown";
     }
@@ -58,11 +64,8 @@ void IRPrinter::print(const ir::Program &prog)
         if(auto struct_type = p.second->as_if<ir::StructType>())
         {
             has_struct = true;
-
             CUJ_ASSERT(!struct_names_.count(struct_type));
-            const std::string name =
-                "Struct" + std::to_string(struct_names_.size());
-            struct_names_.insert({ struct_type, name });
+            struct_names_.insert({ struct_type, struct_type->name });
         }
     }
 
@@ -83,7 +86,7 @@ void IRPrinter::print(const ir::Program &prog)
     }
 }
 
-std::string IRPrinter::get_result() const
+std::string IRPrinter::get_string() const
 {
     return str_.get_result();
 }
@@ -182,7 +185,7 @@ void IRPrinter::print(const ir::Store &store)
 void IRPrinter::print(const ir::Assign &assign)
 {
     str_.append(
-        to_string(assign.lhs), " = ", to_string(assign.rhs));
+        to_string(assign.lhs), " <- ", to_string(assign.rhs));
     str_.new_line();
 }
 
@@ -206,19 +209,11 @@ void IRPrinter::print(const ir::Block &block)
 
 void IRPrinter::print(const ir::If &if_s)
 {
-    for(size_t i = 0; i < if_s.then_units.size(); ++i)
-    {
-        auto &u = if_s.then_units[i];
-        if(i == 0)
-            str_.append("if ", to_string(u.cond), " then");
-        else
-            str_.append("elif ", to_string(u.cond), " then");
-        str_.new_line();
-
-        str_.push_indent();
-        print(*u.block);
-        str_.pop_indent();
-    }
+    str_.append("if ", to_string(if_s.cond), " then");
+    str_.new_line();
+    str_.push_indent();
+    print(*if_s.then_block);
+    str_.pop_indent();
 
     if(if_s.else_block)
     {
@@ -259,6 +254,10 @@ std::string IRPrinter::get_typename(const ir::Type *type) const
     {
         return get_typename(t);
     },
+        [this](const ir::IntrinsicType &t)
+    {
+        return get_typename(t);
+    },
         [this](const ir::PointerType &t)
     {
         return get_typename(t);
@@ -291,6 +290,11 @@ std::string IRPrinter::get_typename(ir::BuiltinType type) const
 std::string IRPrinter::get_typename(const ir::ArrayType &type) const
 {
     return get_typename(type.elem_type) + "[" + std::to_string(type.size) + "]";
+}
+
+std::string IRPrinter::get_typename(const ir::IntrinsicType &type) const
+{
+    return "intrinsic " + type.name;
 }
 
 std::string IRPrinter::get_typename(const ir::PointerType &type) const

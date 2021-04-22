@@ -9,6 +9,11 @@ struct BasicTempValue
 {
     const Type *type;
     int         index;
+
+    bool operator<(const BasicTempValue &rhs) const
+    {
+        return index < rhs.index;
+    }
 };
 
 struct BasicImmediateValue

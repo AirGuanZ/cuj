@@ -13,6 +13,13 @@ namespace detail
         return ret;
     }
 
+    template<typename T, typename = void>
+    struct HasStructName : std::false_type { };
+
+    template<typename T>
+    struct HasStructName<T, std::void_t<decltype(T::struct_name())>>
+        : std::true_type{ };
+
 } // namespace detail
 
 template<typename T>
@@ -51,14 +58,30 @@ const ir::Type *Context::get_type()
         
         return type.get();
     }
+    else if constexpr(is_intrinsic<T>)
+    {
+        auto &type = types_[type_idx];
+        type = newRC<ir::Type>(T::get_type());
+        return type.get();
+    }
     else
     {
         auto &type = types_[type_idx];
         type = newRC<ir::Type>(ir::StructType{});
+        auto &s_type = type->as<ir::StructType>();
 
-        StructTypeRecorder type_recorder(&type->as<ir::StructType>());
-        (void)T(&type_recorder);
-        
+        StructTypeRecorder type_recorder(&s_type);
+        T obj(&type_recorder);
+
+        if constexpr(detail::HasStructName<T>::value)
+        {
+            s_type.name = T::struct_name();
+        }
+        else
+        {
+            s_type.name = "CUJStruct" + std::to_string(struct_name_index_++);
+        }
+
         return type.get();
     }
 }

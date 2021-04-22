@@ -2,63 +2,46 @@
 
 #include <cuj/cuj.h>
 
-struct Vec3 : cuj::ast::ClassBase<Vec3>
-{
-    $member(int, x);
-    $member(int, y);
-    $member(int, z);
-    
-    using ClassBase::ClassBase;
-};
+using namespace cuj::builtin;
+
+using cuj::ast::Pointer;
 
 int main()
 {
     cuj::ast::Context context;
     CUJ_SCOPED_CONTEXT(&context);
 
-    context.begin_function("test_func");
+    context.begin_function("vec_add");
 
-    //$var<int>   x = 10;
-    //$var<float> y = 2;
-    //$var<int>   z = x;
+    $define_arg(float*, A);
+    $define_arg(float*, B);
+    $define_arg(float*, C);
+    $define_arg(int,    N);
 
-    $define_arg(cuj::ast::Pointer<Vec3>, pv);
+    $define_var(int, i, cuda::thread_index_x());
 
-    $define_var(Vec3, v);
+    $define_var(int[4], arr);
 
-    v = pv.deref();
-
-    v->x = 1;
-    v->y = 2;
-    v->z = 3;
+    arr[0] = 0;
+    arr[1] = 1;
+    arr[2] = 2;
+    arr[3] = 3;
     
-    //$if(x)
-    //{
-    //    y = x + y;
-    //}
-    //$else
-    //{
-    //    y = v.y + y;
-    //};
-    //
-    //$while(x)
-    //{
-    //    x = x - 1;
-    //    y = y + x;
-    //
-    //    $if(y - 7.0f)
-    //    {
-    //        $break;
-    //    };
-    //};
+    $if(i < N)
+    {
+        C[i] = A[i] + B[i];
+    };
 
     context.end_function();
 
     cuj::ir::IRBuilder ir_builder;
     context.gen_ir(ir_builder);
 
-    cuj::gen::IRPrinter printer;
-    printer.print(ir_builder.get_prog());
+    //cuj::gen::IRPrinter printer;
+    //printer.print(ir_builder.get_prog());
+    //std::cout << printer.get_string() << std::endl;
 
-    std::cout << printer.get_result() << std::endl;
+    cuj::gen::LLVMIRGenerator ir_gen;
+    ir_gen.generate(ir_builder.get_prog());
+    std::cout << ir_gen.get_string() << std::endl;
 }

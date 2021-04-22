@@ -14,7 +14,7 @@ class IfBuilder : public Uncopyable
         RC<InternalArithmeticValue<bool>> cond;
         RC<Block>                         block;
     };
-
+    
     std::vector<ThenUnit> then_units_;
     RC<Block>             else_block_;
 

@@ -31,7 +31,18 @@ auto operator SYM(L lhs, const ArithmeticValue<R> &rhs)                         
 CUJ_OVERLOAD_BINARY_OP(Add, +)
 CUJ_OVERLOAD_BINARY_OP(Sub, -)
 CUJ_OVERLOAD_BINARY_OP(Mul, *)
-CUJ_OVERLOAD_BINARY_OP(Div, / )
+CUJ_OVERLOAD_BINARY_OP(Div, /)
+
+CUJ_OVERLOAD_BINARY_OP(And, &&)
+CUJ_OVERLOAD_BINARY_OP(Or,  ||)
+CUJ_OVERLOAD_BINARY_OP(XOr, ^)
+
+CUJ_OVERLOAD_BINARY_OP(Equal, ==)
+CUJ_OVERLOAD_BINARY_OP(NotEqual, !=)
+CUJ_OVERLOAD_BINARY_OP(Less, <)
+CUJ_OVERLOAD_BINARY_OP(LessEqual, <=)
+CUJ_OVERLOAD_BINARY_OP(Greater, >)
+CUJ_OVERLOAD_BINARY_OP(GreaterEqual, >=)
 
 #undef CUJ_OVERLOAD_BINARY_OP
 
@@ -48,6 +59,7 @@ auto operator SYM(const ArithmeticValue<I> &input)                              
 }
 
 CUJ_OVERLOAD_UNARY_OP(Neg, -)
+CUJ_OVERLOAD_UNARY_OP(Not, !)
 
 // cast
 

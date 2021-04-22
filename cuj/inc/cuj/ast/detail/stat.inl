@@ -50,10 +50,14 @@ void Store<L, R>::gen_ir(ir::IRBuilder &builder) const
     }
 }
 
-inline void If::add_then_unit(
-    RC<InternalArithmeticValue<bool>> cond, RC<Block> block)
+inline void If::set_cond(RC<InternalArithmeticValue<bool>> cond)
 {
-    then_units_.push_back({ std::move(cond), std::move(block) });
+    cond_ = std::move(cond);
+}
+
+inline void If::set_then(RC<Block> then_block)
+{
+    then_block_ = std::move(then_block);
 }
 
 inline void If::set_else(RC<Block> else_block)
@@ -65,18 +69,15 @@ inline void If::gen_ir(ir::IRBuilder &builder) const
 {
     ir::If stat;
 
-    for(auto &u : then_units_)
-    {
-        auto cond = u.cond->gen_ir(builder);
+    stat.cond = cond_->gen_ir(builder);
 
-        auto then_block = newRC<ir::Block>();
-        builder.push_block(then_block);
-        u.then_block->gen_ir(builder);
-        builder.pop_block();
-
-        stat.then_units.push_back({ cond, std::move(then_block) });
-    }
-
+    auto then_block = newRC<ir::Block>();
+    builder.push_block(then_block);
+    then_block_->gen_ir(builder);
+    builder.pop_block();
+    
+    stat.then_block = std::move(then_block);
+    
     if(else_block_)
     {
         auto else_block = newRC<ir::Block>();

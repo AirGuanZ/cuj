@@ -15,7 +15,7 @@ public:
 
     void print(const ir::Program &prog);
 
-    std::string get_result() const;
+    std::string get_string() const;
 
 private:
 
@@ -44,6 +44,8 @@ private:
     std::string get_typename(ir::BuiltinType type) const;
 
     std::string get_typename(const ir::ArrayType &type) const;
+
+    std::string get_typename(const ir::IntrinsicType &type) const;
 
     std::string get_typename(const ir::PointerType &type) const;
 

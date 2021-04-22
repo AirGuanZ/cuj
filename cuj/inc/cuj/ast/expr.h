@@ -22,6 +22,9 @@ template<typename T>
 class InternalPointerValue;
 
 template<typename T>
+class InternalPointerLeftValue;
+
+template<typename T>
 class ArithmeticValue;
 
 template<typename T, size_t N>
@@ -104,10 +107,31 @@ namespace detail
         using Type = ClassValue<T>;
     };
 
+    template<typename T>
+    struct RawToCUJType
+    {
+        using Type = T;
+    };
+
+    template<typename T, size_t N>
+    struct RawToCUJType<T[N]>
+    {
+        using Type = Array<typename RawToCUJType<T>::Type, N>;
+    };
+
+    template<typename T>
+    struct RawToCUJType<T *>
+    {
+        using Type = Pointer<typename RawToCUJType<T>::Type>;
+    };
+
 } // namespace detail
 
 template<typename T>
 using Value = typename detail::CUJValueType<T>::Type;
+
+template<typename T>
+using RawToCUJType = typename detail::RawToCUJType<T>::Type;
 
 template<typename T>
 constexpr bool is_pointer = detail::IsPointerValue<T>::value;
@@ -141,7 +165,7 @@ template<typename T>
 class InternalArithmeticLeftValue : public InternalArithmeticValue<T>
 {
 public:
-
+    
     RC<InternalArithmeticValue<size_t>> address;
 
     bool is_left() const override { return true; }
@@ -279,20 +303,18 @@ class ArithmeticValue
 {
     RC<InternalArithmeticValue<T>> impl_;
 
-    void init_as_stack_var();
-
 public:
 
     using ArithmeticType = T;
 
-    ArithmeticValue();
+    explicit ArithmeticValue(UninitializeFlag) { }
 
-    template<typename Arg>
-    ArithmeticValue(const Arg &arg);
+    explicit ArithmeticValue(RC<InternalArithmeticValue<T>> impl);
 
+    template<typename I, typename = std::enable_if_t<std::is_arithmetic_v<I>>>
+    ArithmeticValue(I val);
+    
     ArithmeticValue(const ArithmeticValue &rhs);
-
-    ArithmeticValue(ArithmeticValue &&rhs) noexcept;
 
     template<typename U>
     ArithmeticValue &operator=(const U &rhs);

@@ -30,6 +30,7 @@ public:
 private:
 
     std::map<std::type_index, RC<ir::Type>> types_;
+    int                                     struct_name_index_ = 0;
 
     std::vector<Box<Function>> completed_funcs_;
     Box<Function>              current_func_;

@@ -45,15 +45,22 @@ template<typename T>
 constexpr BuiltinType to_builtin_type_value = detail::BuiltinTypeAux<T>::Value;
 
 struct ArrayType;
+struct IntrinsicType;
 struct PointerType;
 struct StructType;
 
-using Type = Variant<BuiltinType, ArrayType, PointerType, StructType>;
+using Type = Variant<
+    BuiltinType, ArrayType, IntrinsicType, PointerType, StructType>;
 
 struct ArrayType
 {
     int         size;
     const Type *elem_type;
+};
+
+struct IntrinsicType
+{
+    std::string name;
 };
 
 struct PointerType
@@ -63,6 +70,7 @@ struct PointerType
 
 struct StructType
 {
+    std::string              name;
     std::vector<const Type*> mem_types;
 };
 

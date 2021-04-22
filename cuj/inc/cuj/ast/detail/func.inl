@@ -8,11 +8,11 @@ template<typename T, typename...Args>
 Value<T> Function::alloc_stack_var(bool is_arg, Args &&...args)
 {
     auto alloc_type = get_current_context()->get_type<T>();
-    auto address = alloc_on_stack(alloc_type);
 
+    RC<InternalStackAllocationValue> address = alloc_on_stack(alloc_type);
     if(is_arg)
         arg_indices_.push_back(address->alloc_index);
-    
+
     static_assert(!is_array<T>   || sizeof...(args) == 0);
     static_assert(!is_pointer<T> || sizeof...(args) <= 1);
     static_assert(!std::is_arithmetic_v<T> || sizeof...(args) <= 1);
@@ -49,6 +49,10 @@ Value<T> Function::alloc_stack_var(bool is_arg, Args &&...args)
             ret = (std::forward<Args>(args), ...);
 
         return std::move(ret);
+    }
+    else if constexpr(is_intrinsic<T>)
+    {
+        return T(address, std::forward<Args>(args)...);
     }
     else
     {

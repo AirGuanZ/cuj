@@ -36,4 +36,9 @@ struct UninitializeFlag { };
 
 constexpr inline UninitializeFlag UNINIT;
 
+[[noreturn]] inline void unreachable()
+{
+    std::terminate();
+}
+
 CUJ_NAMESPACE_END(cuj)

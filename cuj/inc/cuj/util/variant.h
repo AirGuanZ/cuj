@@ -59,6 +59,9 @@ public:
 
     template<typename...Vs>
     auto match(Vs...vs);
+
+    template<typename...Vs>
+    auto match(Vs...vs) const;
 };
 
 namespace variant_impl
@@ -99,9 +102,16 @@ auto match_variant(E &&e, Vs...vs)
         overloaded(vs...), variant_impl::to_std_variant(std::forward<E>(e)));
 }
 
-template<typename ... Types>
-template<typename ... Vs>
-auto Variant<Types...>::match(Vs ... vs)
+template<typename...Types>
+template<typename...Vs>
+auto Variant<Types...>::match(Vs ...vs)
+{
+    return cuj::match_variant(*this, std::move(vs)...);
+}
+
+template<typename...Types>
+template<typename...Vs>
+auto Variant<Types...>::match(Vs ...vs) const
 {
     return cuj::match_variant(*this, std::move(vs)...);
 }

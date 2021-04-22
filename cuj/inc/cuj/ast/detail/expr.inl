@@ -163,8 +163,27 @@ ir::BasicValue InternalBinaryOperator<T, L, R>::gen_ir(ir::IRBuilder &builder) c
     auto lhs_val = lhs->gen_ir(builder);
     auto rhs_val = rhs->gen_ir(builder);
 
-    lhs_val = detail::gen_arithmetic_cast<L, T>(lhs_val, builder);
-    rhs_val = detail::gen_arithmetic_cast<R, T>(rhs_val, builder);
+    if(type == ir::BinaryOp::Type::Add ||
+       type == ir::BinaryOp::Type::Sub ||
+       type == ir::BinaryOp::Type::Mul ||
+       type == ir::BinaryOp::Type::Div)
+    {
+        lhs_val = detail::gen_arithmetic_cast<L, T>(lhs_val, builder);
+        rhs_val = detail::gen_arithmetic_cast<R, T>(rhs_val, builder);
+    }
+    else if(type == ir::BinaryOp::Type::And ||
+            type == ir::BinaryOp::Type::Or ||
+            type == ir::BinaryOp::Type::XOr)
+    {
+        lhs_val = detail::gen_arithmetic_cast<L, bool>(lhs_val, builder);
+        rhs_val = detail::gen_arithmetic_cast<R, bool>(rhs_val, builder);
+    }
+    else if constexpr(!std::is_same_v<L, bool> || !std::is_same_v<R, bool>)
+    {
+        using AT = decltype(std::declval<L>() + std::declval<R>());
+        lhs_val = detail::gen_arithmetic_cast<L, AT>(lhs_val, builder);
+        rhs_val = detail::gen_arithmetic_cast<R, AT>(rhs_val, builder);
+    }
 
     auto binary_op = ir::BinaryOp{ type, lhs_val, rhs_val };
 
@@ -191,48 +210,32 @@ ir::BasicValue InternalUnaryOperator<T, I>::gen_ir(ir::IRBuilder &builder) const
 }
 
 template<typename T>
-void ArithmeticValue<T>::init_as_stack_var()
+ArithmeticValue<T>::ArithmeticValue(RC<InternalArithmeticValue<T>> impl)
+    : impl_(std::move(impl))
 {
-    auto impl = newRC<InternalArithmeticLeftValue<T>>();
-    impl->address = get_current_function()->alloc_stack_var<T>();
-    impl_ = std::move(impl);
+    
 }
 
 template<typename T>
-ArithmeticValue<T>::ArithmeticValue()
+template<typename I, typename>
+ArithmeticValue<T>::ArithmeticValue(I val)
 {
-    init_as_stack_var();
-}
-
-template<typename T>
-template<typename Arg>
-ArithmeticValue<T>::ArithmeticValue(const Arg &arg)
-{
-    if constexpr(std::is_convertible_v<Arg, RC<InternalArithmeticValue<T>>>)
-    {
-        impl_ = RC<InternalArithmeticValue<T>>(arg);
-        return;
-    }
-    else if constexpr(std::is_same_v<Arg, UninitializeFlag>)
-        return;
+    auto literial = create_literial(val).get_impl();
+    if constexpr(std::is_same_v<T, I>)
+        impl_ = std::move(literial);
     else
     {
-        init_as_stack_var();
-        *this = arg;
+        auto cast = newRC<InternalCastArithmeticValue<I, T>>();
+        cast->from = std::move(literial);
+        impl_ = std::move(cast);
     }
 }
 
 template<typename T>
 ArithmeticValue<T>::ArithmeticValue(const ArithmeticValue &rhs)
-    : ArithmeticValue()
+    : impl_(rhs.impl_)
 {
-    *this = rhs;
-}
 
-template<typename T>
-ArithmeticValue<T>::ArithmeticValue(ArithmeticValue &&rhs) noexcept
-{
-    std::swap(this->impl_, rhs.impl_);
 }
 
 template<typename T>

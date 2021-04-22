@@ -47,21 +47,18 @@ public:
 
 class If : public Statement
 {
-    struct ThenUnit
-    {
-        RC<InternalArithmeticValue<bool>> cond;
-        RC<Block>                         then_block;
-    };
-
-    std::vector<ThenUnit> then_units_;
-    RC<Block>             else_block_;
+    RC<InternalArithmeticValue<bool>> cond_;
+    RC<Block>                         then_block_;
+    RC<Block>                         else_block_;
 
 public:
     
-    void add_then_unit(RC<InternalArithmeticValue<bool>> cond, RC<Block> block);
+    void set_cond(RC<InternalArithmeticValue<bool>> cond);
+
+    void set_then(RC<Block> then_block);
 
     void set_else(RC<Block> else_block);
-
+    
     void gen_ir(ir::IRBuilder &builder) const override;
 };
 

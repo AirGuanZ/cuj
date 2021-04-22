@@ -9,14 +9,29 @@ inline IfBuilder::~IfBuilder()
 {
     CUJ_ASSERT(!then_units_.empty());
 
-    auto if_stat = newRC<If>();
-    for(auto &u : then_units_)
-        if_stat->add_then_unit(u.cond, u.block);
+    auto entry = newRC<If>();
+
+    auto cur_if = entry;
+    for(size_t i = 0; i < then_units_.size(); ++i)
+    {
+        cur_if->set_cond(then_units_[i].cond);
+        cur_if->set_then(then_units_[i].block);
+
+        if(i + 1 < then_units_.size())
+        {
+            auto next_block = newRC<Block>();
+            auto next_if = newRC<If>();
+            next_block->append(next_if);
+
+            cur_if->set_else(next_block);
+            cur_if = next_if;
+        }
+    }
 
     if(else_block_)
-        if_stat->set_else(else_block_);
+        cur_if->set_else(else_block_);
 
-    get_current_function()->append_statement(std::move(if_stat));
+    get_current_function()->append_statement(std::move(entry));
 }
 
 template<typename T>

@@ -21,10 +21,12 @@ protected:
 public:
 
     struct CUJClassFlag { };
-    
+
+    using ClassAddress = RC<InternalArithmeticValue<size_t>>;
+
     explicit ClassBase(StructTypeRecorder *type_recorder);
 
-    explicit ClassBase(RC<InternalArithmeticValue<size_t>> ref_pointer);
+    explicit ClassBase(ClassAddress ref_pointer);
 
     ClassBase(const ClassBase &) = delete;
 

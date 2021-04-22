@@ -59,6 +59,10 @@ Value<T> ClassBase<C>::new_member(Args &&...args)
 
         return std::move(ret);
     }
+    else if constexpr(is_intrinsic<T>)
+    {
+        return T(address, std::forward<Args>(args)...);
+    }
     else
     {
         auto impl = newRC<InternalClassLeftValue<T>>();

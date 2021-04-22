@@ -12,7 +12,17 @@ struct BinaryOp
         Sub,
         Mul,
         Div,
-        // ...
+
+        And,
+        Or,
+        XOr,
+
+        Equal,
+        NotEqual,
+        Less,
+        LessEqual,
+        Greater,
+        GreaterEqual
     };
 
     Type       type;
@@ -25,7 +35,7 @@ struct UnaryOp
     enum class Type
     {
         Neg,
-        // ...
+        Not,
     };
 
     Type       type;

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <optional>
-
 #include <cuj/ir/op.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::ir)
@@ -46,14 +44,9 @@ struct Block
 
 struct If
 {
-    struct ThenUnit
-    {
-        BasicValue cond;
-        RC<Block>  block;
-    };
-
-    std::vector<ThenUnit> then_units;
-    RC<Block>             else_block;
+    BasicValue cond;
+    RC<Block>  then_block;
+    RC<Block>  else_block;
 };
 
 struct While

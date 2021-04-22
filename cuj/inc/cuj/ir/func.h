@@ -13,8 +13,6 @@ struct Function
     enum class Type
     {
         Default,
-        Host,
-        Device,
         Kernel,
     };
 
