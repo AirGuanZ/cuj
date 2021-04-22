@@ -156,7 +156,7 @@ public:
 
     virtual bool is_left() const { return false; }
 
-    virtual RC<InternalArithmeticValue<size_t>> get_address() const;
+    virtual RC<InternalPointerValue<T>> get_address() const;
 
     virtual ir::BasicValue gen_ir(ir::IRBuilder &builder) const = 0;
 };
@@ -166,11 +166,11 @@ class InternalArithmeticLeftValue : public InternalArithmeticValue<T>
 {
 public:
     
-    RC<InternalArithmeticValue<size_t>> address;
+    RC<InternalPointerValue<T>> address;
 
     bool is_left() const override { return true; }
 
-    RC<InternalArithmeticValue<size_t>> get_address() const override;
+    RC<InternalPointerValue<T>> get_address() const override;
 
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };
@@ -184,26 +184,37 @@ public:
 
     std::unique_ptr<T> obj;
 
-    RC<InternalArithmeticValue<size_t>> address;
-
-    RC<InternalArithmeticValue<size_t>> get_address() const;
+    RC<InternalPointerValue<T>> address;
+    
+    RC<InternalPointerValue<T>> get_address() const;
 };
 
 template<typename T>
 class InternalPointerValue
 {
 public:
-    
-    RC<InternalArithmeticValue<size_t>> value;
 
-    bool is_left() const { return value->is_left(); }
+    virtual ~InternalPointerValue() = default;
 
-    RC<InternalArithmeticValue<size_t>> get_address() const;
+    virtual bool is_left() const { return false; }
 
-    template<typename I, typename = std::enable_if_t<std::is_integral_v<I>>>
-    RC<InternalPointerValue> offset(RC<InternalArithmeticValue<I>> index);
+    virtual RC<InternalPointerValue<Pointer<T>>> get_address() const;
 
-    ir::BasicValue gen_ir(ir::IRBuilder &builder) const;
+    virtual ir::BasicValue gen_ir(ir::IRBuilder &builder) const = 0;
+};
+
+template<typename T>
+class InternalPointerLeftValue : public InternalPointerValue<T>
+{
+public:
+
+    RC<InternalPointerValue<Pointer<T>>> address;
+
+    bool is_left() const override { return true; }
+
+    RC<InternalPointerValue<Pointer<T>>> get_address() const override;
+
+    ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };
 
 template<typename T, size_t N>
@@ -214,24 +225,35 @@ public:
     RC<InternalPointerValue<T>> data_ptr;
 };
 
-template<typename T, typename I>
-class InternalPointerValueOffset : public InternalArithmeticValue<size_t>
+template<typename T>
+class InternalArrayAllocAddress :
+    public InternalPointerValue<typename T::ElementType>
 {
 public:
 
-    RC<InternalArithmeticValue<size_t>> pointer;
-    RC<InternalArithmeticValue<I>>      index;
+    RC<InternalPointerValue<T>> arr_alloc;
 
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };
 
-template<typename C>
-class InternalMemberPointerValueOffset : public InternalArithmeticValue<size_t>
+template<typename T, typename I>
+class InternalPointerValueOffset : public InternalPointerValue<T>
 {
 public:
 
-    RC<InternalArithmeticValue<size_t>> class_pointer;
-    int                                 member_index;
+    RC<InternalPointerValue<T>>    pointer;
+    RC<InternalArithmeticValue<I>> index;
+
+    ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
+};
+
+template<typename C, typename M>
+class InternalMemberPointerValueOffset : public InternalPointerValue<M>
+{
+public:
+
+    RC<InternalPointerValue<C>> class_pointer;
+    int                         member_index;
 
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };
@@ -241,7 +263,7 @@ class InternalArithmeticLoad : public InternalArithmeticValue<T>
 {
 public:
 
-    RC<InternalArithmeticValue<size_t>> pointer;
+    RC<InternalPointerValue<T>> pointer;
 
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };
@@ -256,7 +278,8 @@ public:
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };
 
-class InternalStackAllocationValue : public InternalArithmeticValue<size_t>
+template<typename T>
+class InternalStackAllocationValue : public InternalPointerValue<T>
 {
 public:
 
@@ -438,13 +461,13 @@ RC<InternalArithmeticValue<T>> create_unary_operator(
     RC<InternalArithmeticValue<I>> input);
 
 template<typename T, typename I>
-RC<InternalArithmeticValue<size_t>> create_pointer_offset(
-    RC<InternalArithmeticValue<size_t>> pointer,
-    RC<InternalArithmeticValue<I>>      index);
+RC<InternalPointerValue<T>> create_pointer_offset(
+    RC<InternalPointerValue<T>>    pointer,
+    RC<InternalArithmeticValue<I>> index);
 
-template<typename C>
-RC<InternalArithmeticValue<size_t>> create_member_pointer_offset(
-    RC<InternalArithmeticValue<size_t>> pointer,
-    int                                 member_index);
+template<typename C, typename M>
+RC<InternalPointerValue<M>> create_member_pointer_offset(
+    RC<InternalPointerValue<C>> pointer,
+    int                         member_index);
 
 CUJ_NAMESPACE_END(cuj::ast)

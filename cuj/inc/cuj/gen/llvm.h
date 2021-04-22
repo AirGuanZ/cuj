@@ -59,6 +59,8 @@ private:
 
     void generate_func_allocs(const ir::Function &func);
 
+    void copy_func_args(const ir::Function &func);
+
     void generate(const ir::Statement &s);
 
     void generate(const ir::Store &store);
@@ -88,6 +90,8 @@ private:
     llvm::Value *get_value(const ir::CallOp &v);
 
     llvm::Value *get_value(const ir::CastOp &v);
+
+    llvm::Value *get_value(const ir::ArrayElemAddrOp &v);
 
     llvm::Value *get_value(const ir::IntrinsicOp &v);
 

@@ -19,27 +19,27 @@ int main()
     $define_arg(int,    N);
 
     $define_var(int, i, cuda::thread_index_x());
-
-    $define_var(int[4], arr);
-
-    arr[0] = 0;
-    arr[1] = 1;
-    arr[2] = 2;
-    arr[3] = 3;
     
     $if(i < N)
     {
         C[i] = A[i] + B[i];
     };
 
+    for(int j = 0; j < 5; ++j)
+        N = N * 2;
+
     context.end_function();
 
     cuj::ir::IRBuilder ir_builder;
     context.gen_ir(ir_builder);
 
-    //cuj::gen::IRPrinter printer;
-    //printer.print(ir_builder.get_prog());
-    //std::cout << printer.get_string() << std::endl;
+    std::cout << "=========== cujitter ir ===========" << std::endl << std::endl;
+
+    cuj::gen::IRPrinter printer;
+    printer.print(ir_builder.get_prog());
+    std::cout << printer.get_string() << std::endl;
+
+    std::cout << "=========== llvm ir ===========" << std::endl << std::endl;
 
     cuj::gen::LLVMIRGenerator ir_gen;
     ir_gen.generate(ir_builder.get_prog());

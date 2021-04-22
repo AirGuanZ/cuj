@@ -44,13 +44,13 @@ namespace detail
 } // namespace detail
 
 template<typename T>
-RC<InternalArithmeticValue<size_t>> InternalArithmeticValue<T>::get_address() const
+RC<InternalPointerValue<T>> InternalArithmeticValue<T>::get_address() const
 {
     throw std::runtime_error("getting address of a non-left value");
 }
 
 template<typename T>
-RC<InternalArithmeticValue<size_t>>InternalArithmeticLeftValue<T>::get_address() const
+RC<InternalPointerValue<T>> InternalArithmeticLeftValue<T>::get_address() const
 {
     return address;
 }
@@ -63,36 +63,53 @@ ir::BasicValue InternalArithmeticLeftValue<T>::gen_ir(ir::IRBuilder &builder) co
     auto load = ir::LoadOp{ type, addr };
     auto ret = builder.gen_temp_value(type);
     builder.append_assign(ret, load);
-
     return ret;
 }
 
 template<typename T>
-RC<InternalArithmeticValue<size_t>> InternalClassLeftValue<T>::get_address() const
+RC<InternalPointerValue<T>> InternalClassLeftValue<T>::get_address() const
 {
     return address;
 }
 
 template<typename T>
-RC<InternalArithmeticValue<size_t>> InternalPointerValue<T>::get_address() const
+RC<InternalPointerValue<Pointer<T>>> InternalPointerValue<T>::get_address() const
 {
-    return this->value->get_address();
+    throw std::runtime_error("getting address of a non-left pointer value");
 }
 
 template<typename T>
-template<typename I, typename>
-RC<InternalPointerValue<T>>
-    InternalPointerValue<T>::offset(RC<InternalArithmeticValue<I>> index)
+RC<InternalPointerValue<Pointer<T>>> InternalPointerLeftValue<T>::get_address() const
 {
-    auto ret = newRC<InternalPointerValue>();
-    ret->value = create_pointer_offset<T, I>(value, index);
+    return address;
+}
+
+template<typename T>
+ir::BasicValue InternalPointerLeftValue<T>::gen_ir(ir::IRBuilder &builder) const
+{
+    auto addr = address->gen_ir(builder);
+    auto type = get_current_context()->get_type<Pointer<T>>();
+    auto load = ir::LoadOp{ type, addr };
+    auto ret = builder.gen_temp_value(type);
+    builder.append_assign(ret, load);
     return ret;
 }
 
 template<typename T>
-ir::BasicValue InternalPointerValue<T>::gen_ir(ir::IRBuilder &builder) const
+ir::BasicValue InternalArrayAllocAddress<T>::gen_ir(
+    ir::IRBuilder &builder) const
 {
-    return value->gen_ir(builder);
+    auto ctx = get_current_context();
+
+    auto arr = arr_alloc->gen_ir(builder);
+    auto arr_type  = ctx->get_type<T>();
+    auto elem_type = ctx->get_type<typename T::ElementType>();
+    auto op = ir::ArrayElemAddrOp{ arr_type, elem_type, arr };
+
+    auto ret = builder.gen_temp_value(elem_type);
+    builder.append_assign(ret, op);
+
+    return ret;
 }
 
 template<typename T, typename I>
@@ -111,8 +128,9 @@ ir::BasicValue InternalPointerValueOffset<T, I>::gen_ir(ir::IRBuilder &builder) 
     return ret;
 }
 
-template<typename C>
-ir::BasicValue InternalMemberPointerValueOffset<C>::gen_ir(ir::IRBuilder &builder) const
+template<typename C, typename M>
+ir::BasicValue InternalMemberPointerValueOffset<C, M>::gen_ir(
+    ir::IRBuilder &builder) const
 {
     auto addr = class_pointer->gen_ir(builder);
 
@@ -145,7 +163,8 @@ ir::BasicValue InternalArithmeticLiterial<T>::gen_ir(ir::IRBuilder &builder) con
     return ir::BasicImmediateValue{ literial };
 }
 
-inline ir::BasicValue InternalStackAllocationValue::gen_ir(ir::IRBuilder &builder) const
+template<typename T>
+ir::BasicValue InternalStackAllocationValue<T>::gen_ir(ir::IRBuilder &builder) const
 {
     return ir::AllocAddress{ alloc_index };
 }
@@ -380,7 +399,8 @@ template<typename T, size_t N>
 template<typename I, typename>
 Pointer<T> Array<T, N>::get_element_ptr(const ArithmeticValue<I> &index) const
 {
-    return Pointer<T>(impl_->data_ptr->offset(index.get_impl()));
+    return Pointer<T>(impl_->data_ptr).offset(index);
+    //return Pointer<T>(impl_->data_ptr->offset(index.get_impl()));
 }
 
 template<typename T, size_t N>
@@ -436,13 +456,13 @@ Value<T> Pointer<T>::deref() const
     {
         auto impl = newRC<InternalArrayValue<
             typename T::ElementType, T::ElementCount>>();
-        impl->data_ptr = detail::to_right(impl_->value);
+        impl->data_ptr = detail::to_right(impl_);
         return T(std::move(impl));
     }
     else if constexpr(is_pointer<T>)
     {
         auto value = newRC<InternalArithmeticLeftValue<size_t>>();
-        value->address = impl_->value;
+        value->address = impl_;
         auto impl = newRC<InternalPointerValue<typename T::PointedType>>();
         impl->value = std::move(value);
         return T(std::move(impl));
@@ -450,12 +470,12 @@ Value<T> Pointer<T>::deref() const
     else if constexpr(std::is_arithmetic_v<T>)
     {
         auto impl = newRC<InternalArithmeticLeftValue<T>>();
-        impl->address = impl_->value;
+        impl->address = impl_;
         return ArithmeticValue<T>(std::move(impl));
     }
     else
     {
-        auto addr_value = detail::to_right(impl_->value);
+        auto addr_value = detail::to_right(impl_);
         auto impl = newRC<InternalClassLeftValue<T>>();
         impl->address = addr_value;
         impl->obj     = newBox<T>(addr_value);
@@ -481,7 +501,7 @@ template<typename T>
 template<typename I, typename>
 Pointer<T> Pointer<T>::offset(const ArithmeticValue<I> &index) const
 {
-    return Pointer<T>(impl_->template offset<I>(index.get_impl()));
+    return Pointer<T>(create_pointer_offset(impl_, index.get_impl()));
 }
 
 template<typename T>
@@ -532,9 +552,9 @@ RC<InternalArithmeticValue<T>> create_unary_operator(
 }
 
 template<typename T, typename I>
-RC<InternalArithmeticValue<size_t>> create_pointer_offset(
-    RC<InternalArithmeticValue<size_t>> pointer,
-    RC<InternalArithmeticValue<I>>      index)
+RC<InternalPointerValue<T>> create_pointer_offset(
+    RC<InternalPointerValue<T>>    pointer,
+    RC<InternalArithmeticValue<I>> index)
 {
     auto ret = newRC<InternalPointerValueOffset<T, I>>();
     ret->pointer = std::move(pointer);
@@ -542,12 +562,12 @@ RC<InternalArithmeticValue<size_t>> create_pointer_offset(
     return ret;
 }
 
-template<typename C>
-RC<InternalArithmeticValue<size_t>> create_member_pointer_offset(
-    RC<InternalArithmeticValue<size_t>> pointer,
-    int                                 member_index)
+template<typename C, typename M>
+RC<InternalPointerValue<M>> create_member_pointer_offset(
+    RC<InternalPointerValue<C>> pointer,
+    int                         member_index)
 {
-    auto ret = newRC<InternalMemberPointerValueOffset<C>>();
+    auto ret = newRC<InternalMemberPointerValueOffset<C, M>>();
     ret->class_pointer = std::move(pointer);
     ret->member_index  = member_index;
     return ret;

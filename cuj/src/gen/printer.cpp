@@ -344,6 +344,11 @@ std::string IRPrinter::to_string(const ir::Value &value) const
     {
         return "cast<" + get_typename(v.to_type) + "> " + to_string(v.val);
     },
+        [this](const ir::ArrayElemAddrOp &v)
+    {
+        return "array_elem_ptr<" + get_typename(v.arr_type) + "> "
+             + to_string(v.arr_alloc);
+    },
         [this](const ir::IntrinsicOp &v)
     {
         auto result = "intrinsic " + v.name;

@@ -9,7 +9,7 @@ Value<T> Function::alloc_stack_var(bool is_arg, Args &&...args)
 {
     auto alloc_type = get_current_context()->get_type<T>();
 
-    RC<InternalStackAllocationValue> address = alloc_on_stack(alloc_type);
+    RC<InternalStackAllocationValue<T>> address = alloc_on_stack<T>(alloc_type);
     if(is_arg)
         arg_indices_.push_back(address->alloc_index);
 
@@ -19,20 +19,19 @@ Value<T> Function::alloc_stack_var(bool is_arg, Args &&...args)
 
     if constexpr(is_array<T>)
     {
+        auto cast_addr = newRC<InternalArrayAllocAddress<T>>();
+        cast_addr->arr_alloc = address;
+
         auto impl = newRC<InternalArrayValue<
             typename T::ElementType, T::ElementCount>>();
-        impl->data_ptr = newRC<InternalPointerValue<typename T::ElementType>>();
-        impl->data_ptr->value = std::move(address);
+        impl->data_ptr = cast_addr;
         return Value<T>(std::move(impl));
     }
     else if constexpr(is_pointer<T>)
     {
-        auto impl_value = newRC<InternalArithmeticLeftValue<size_t>>();
-        impl_value->address = std::move(address);
-
-        auto impl = newRC<InternalPointerValue<typename T::PointedType>>();
-        impl->value = std::move(impl_value);
-
+        auto impl = newRC<InternalPointerLeftValue<typename T::PointedType>>();
+        impl->address = std::move(address);
+        
         auto ret = Value<T>(std::move(impl));
         if constexpr(sizeof...(args) == 1)
             ret = (std::forward<Args>(args), ...);
@@ -103,13 +102,14 @@ Value<T> Function::create_stack_var(Args &&...args)
     return alloc_stack_var<T>(false, std::forward<Args>(args)...);
 }
 
-inline RC<InternalStackAllocationValue> Function::alloc_on_stack(
+template<typename T>
+RC<InternalStackAllocationValue<T>> Function::alloc_on_stack(
     const ir::Type *type)
 {
     const int alloc_index = static_cast<int>(stack_allocs_.size());
     stack_allocs_.push_back({ type, alloc_index });
     
-    auto address = newRC<InternalStackAllocationValue>();
+    auto address = newRC<InternalStackAllocationValue<T>>();
     address->alloc_index = alloc_index;
 
     return address;

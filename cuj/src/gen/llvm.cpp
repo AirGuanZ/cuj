@@ -201,7 +201,7 @@ llvm::Type *LLVMIRGenerator::create_llvm_type_record(const ir::PointerType &type
 
 llvm::Type *LLVMIRGenerator::create_llvm_type_record(const ir::StructType &type)
 {
-    auto result = llvm::StructType::get(*data_->context, false);
+    auto result = llvm::StructType::create(*data_->context, type.name);
     return result;
 }
 
@@ -231,12 +231,17 @@ void LLVMIRGenerator::generate_func(const ir::Function &func)
     
     mark_func_type(func, data_->function);
 
-    auto root_block =
-        llvm::BasicBlock::Create(*data_->context, "root", data_->function);
-    data_->ir_builder->SetInsertPoint(root_block);
+    auto entry_block =
+        llvm::BasicBlock::Create(*data_->context, "entry", data_->function);
+    data_->ir_builder->SetInsertPoint(entry_block);
 
     generate_func_allocs(func);
+
+    copy_func_args(func);
+
     generate(*func.body);
+
+    data_->ir_builder->CreateRetVoid();
 
     std::string err_msg;
     llvm::raw_string_ostream err_stream(err_msg);
@@ -302,7 +307,7 @@ void LLVMIRGenerator::mark_func_type(
 
 void LLVMIRGenerator::generate_func_allocs(const ir::Function &func)
 {
-    constexpr int LOCAL_ADDRESS_SPACE = 5;
+    constexpr int LOCAL_ADDRESS_SPACE = 0;
 
     for(auto &p : func.index_to_allocs)
     {
@@ -312,6 +317,16 @@ void LLVMIRGenerator::generate_func_allocs(const ir::Function &func)
             "local" + std::to_string(p.first));
 
         data_->index_to_allocas[p.first] = alloca_inst;
+    }
+}
+
+void LLVMIRGenerator::copy_func_args(const ir::Function &func)
+{
+    size_t arg_idx = 0;
+    for(auto &arg : data_->function->args())
+    {
+        auto alloc = data_->index_to_allocas[func.args[arg_idx++].alloc_index];
+        data_->ir_builder->CreateStore(&arg, alloc);
     }
 }
 
@@ -366,20 +381,27 @@ void LLVMIRGenerator::generate(const ir::If &if_s)
     auto cond = get_value(if_s.cond);
 
     auto then_block  = llvm::BasicBlock::Create(*data_->context, "then");
-    auto else_block  = llvm::BasicBlock::Create(*data_->context, "else");
     auto merge_block = llvm::BasicBlock::Create(*data_->context, "merge");
 
-    data_->ir_builder->CreateCondBr(cond, then_block, else_block);
+    auto else_block = if_s.else_block ?
+        llvm::BasicBlock::Create(*data_->context, "else") : nullptr;
+
+    data_->ir_builder->CreateCondBr(
+        cond, then_block, else_block ? else_block : merge_block);
 
     data_->function->getBasicBlockList().push_back(then_block);
     data_->ir_builder->SetInsertPoint(then_block);
     generate(*if_s.then_block);
     data_->ir_builder->CreateBr(merge_block);
 
-    data_->function->getBasicBlockList().push_back(else_block);
-    data_->ir_builder->SetInsertPoint(else_block);
-    generate(*if_s.else_block);
-    data_->ir_builder->CreateBr(merge_block);
+    if(else_block)
+    {
+        data_->function->getBasicBlockList().push_back(else_block);
+        data_->ir_builder->SetInsertPoint(else_block);
+        if(if_s.else_block)
+            generate(*if_s.else_block);
+        data_->ir_builder->CreateBr(merge_block);
+    }
 
     data_->function->getBasicBlockList().push_back(merge_block);
     data_->ir_builder->SetInsertPoint(merge_block);
@@ -424,6 +446,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::Value &v)
         [this](const ir::LoadOp          &v) { return get_value(v); },
         [this](const ir::CallOp          &v) { return get_value(v); },
         [this](const ir::CastOp          &v) { return get_value(v); },
+        [this](const ir::ArrayElemAddrOp &v) { return get_value(v); },
         [this](const ir::IntrinsicOp     &v) { return get_value(v); },
         [this](const ir::MemberPtrOp     &v) { return get_value(v); },
         [this](const ir::PointerOffsetOp &v) { return get_value(v); });
@@ -607,6 +630,19 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::CastOp &v)
     return convert_arithmetic(from, from_type, to_type);
 }
 
+llvm::Value *LLVMIRGenerator::get_value(const ir::ArrayElemAddrOp &v)
+{
+    auto arr = get_value(v.arr_alloc);
+    
+    std::vector<llvm::Value *> indices(2);
+    indices[0] = llvm::ConstantInt::get(
+        *data_->context, llvm::APInt(32, 0, false));
+    indices[1] = llvm::ConstantInt::get(
+        *data_->context, llvm::APInt(32, 0, false));
+
+    return data_->ir_builder->CreateGEP(arr, indices, "array_element");
+}
+
 llvm::Value *LLVMIRGenerator::get_value(const ir::IntrinsicOp &v)
 {
 #if CUJ_ENABLE_CUDA
@@ -648,21 +684,15 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::MemberPtrOp &v)
     indices[1] = llvm::ConstantInt::get(
         *data_->context, llvm::APInt(32, v.member_index, true));
 
-    return data_->ir_builder->CreateGEP(
-        struct_type, struct_ptr, indices, "member_pointer");
+    return data_->ir_builder->CreateGEP(struct_type, struct_ptr, indices);
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::PointerOffsetOp &v)
 {
     auto ptr = get_value(v.ptr);
     auto idx = get_value(v.index);
-
-    std::vector<llvm::Value *> indices(2);
-    indices[0] = llvm::ConstantInt::get(
-        *data_->context, llvm::APInt(32, 0, true));
-    indices[1] = idx;
-
-    return data_->ir_builder->CreateGEP(ptr, indices, "pointer_offset");
+    std::vector<llvm::Value *> indices = { idx };
+    return data_->ir_builder->CreateGEP(ptr, indices);
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::BasicTempValue &v)
@@ -835,7 +865,7 @@ ir::BuiltinType LLVMIRGenerator::get_arithmetic_type(const ir::BasicValue &v)
     },
         [](const ir::AllocAddress &)
     {
-        //unreachable();
+        // unreachable
         return ir::BuiltinType::U8;
     });
 }

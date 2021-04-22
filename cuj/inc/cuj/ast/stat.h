@@ -33,14 +33,14 @@ public:
 template<typename L, typename R>
 class Store : public Statement
 {
-    RC<InternalArithmeticValue<size_t>> lhs_;
-    RC<InternalArithmeticValue<R>>      rhs_;
+    RC<InternalPointerValue<L>>    lhs_;
+    RC<InternalArithmeticValue<R>> rhs_;
 
 public:
 
     Store(
-        RC<InternalArithmeticValue<size_t>> lhs,
-        RC<InternalArithmeticValue<R>>      rhs);
+        RC<InternalPointerValue<L>>    lhs,
+        RC<InternalArithmeticValue<R>> rhs);
 
     void gen_ir(ir::IRBuilder &builder) const override;
 };

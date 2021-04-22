@@ -8,8 +8,8 @@ CUJ_NAMESPACE_BEGIN(cuj::ast)
 template<typename C>
 class ClassBase
 {
-    StructTypeRecorder                 *type_recorder_;
-    RC<InternalArithmeticValue<size_t>> ref_pointer_;
+    StructTypeRecorder         *type_recorder_;
+    RC<InternalPointerValue<C>> ref_pointer_;
 
     int member_count_ = 0;
 
@@ -22,7 +22,7 @@ public:
 
     struct CUJClassFlag { };
 
-    using ClassAddress = RC<InternalArithmeticValue<size_t>>;
+    using ClassAddress = RC<InternalPointerValue<C>>;
 
     explicit ClassBase(StructTypeRecorder *type_recorder);
 

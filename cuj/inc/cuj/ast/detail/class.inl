@@ -20,7 +20,8 @@ Value<T> ClassBase<C>::new_member(Args &&...args)
 
     CUJ_ASSERT(ref_pointer_);
 
-    auto address = create_member_pointer_offset<C>(ref_pointer_, member_count_++);
+    auto address = create_member_pointer_offset<C, T>(
+        ref_pointer_, member_count_++);
 
     static_assert(!is_array<T>   || sizeof...(args) == 0);
     static_assert(!is_pointer<T> || sizeof...(args) <= 1);
@@ -28,10 +29,12 @@ Value<T> ClassBase<C>::new_member(Args &&...args)
 
     if constexpr(is_array<T>)
     {
+        auto cast_addr = newRC<InternalArrayAllocAddress<T>>();
+        cast_addr->arr_alloc = address;
+        
         auto impl = newRC<InternalArrayValue<
             typename T::ElementType, T::ElementCount>>();
-        impl->data_ptr = newRC<InternalPointerValue<typename T::ElementType>>();
-        impl->data_ptr->value = std::move(address);
+        impl->data_ptr->value = cast_addr;
         return Value<T>(std::move(impl));
     }
     else if constexpr(is_pointer<T>)
@@ -80,7 +83,7 @@ ClassBase<C>::ClassBase(StructTypeRecorder *type_recorder)
 }
 
 template<typename C>
-ClassBase<C>::ClassBase(RC<InternalArithmeticValue<size_t>> ref_pointer)
+ClassBase<C>::ClassBase(ClassAddress ref_pointer)
     : type_recorder_(nullptr), ref_pointer_(std::move(ref_pointer))
 {
 

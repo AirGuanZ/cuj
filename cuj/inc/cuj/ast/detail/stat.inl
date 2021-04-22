@@ -17,8 +17,8 @@ inline void Block::gen_ir(ir::IRBuilder &builder) const
 
 template<typename L, typename R>
 Store<L, R>::Store(
-    RC<InternalArithmeticValue<size_t>> lhs,
-    RC<InternalArithmeticValue<R>>      rhs)
+    RC<InternalPointerValue<L>>    lhs,
+    RC<InternalArithmeticValue<R>> rhs)
     : lhs_(std::move(lhs)), rhs_(std::move(rhs))
 {
     

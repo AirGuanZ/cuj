@@ -66,6 +66,13 @@ struct CastOp
     BasicValue  val;
 };
 
+struct ArrayElemAddrOp
+{
+    const Type *arr_type;
+    const Type *elem_type;
+    BasicValue  arr_alloc;
+};
+
 struct MemberPtrOp
 {
     BasicValue  ptr;
@@ -87,6 +94,7 @@ using Value = Variant<
     LoadOp,
     CallOp,
     CastOp,
+    ArrayElemAddrOp,
     IntrinsicOp,
     MemberPtrOp,
     PointerOffsetOp>;
