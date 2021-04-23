@@ -3,30 +3,50 @@
 #include <cuj/cuj.h>
 
 using namespace cuj::builtin;
+using namespace cuj::ast;
 
-using cuj::ast::Pointer;
+class Vec4 : public ClassBase<Vec4>
+{
+public:
+
+    $mem(float, x);
+    $mem(float, y);
+    $mem(float, z);
+    $mem(float, w);
+
+    using ClassBase::ClassBase;
+};
+
+Value<Vec4> operator+(const Value<Vec4> &a, const Value<Vec4> &b)
+{
+    $var(Vec4, result);
+    result->x = a->x + b->x;
+    result->y = a->y + b->y;
+    result->z = a->z + b->z;
+    result->w = a->w + b->w;
+    return result;
+}
 
 int main()
 {
-    cuj::ast::Context context;
+    Context context;
     CUJ_SCOPED_CONTEXT(&context);
 
-    context.begin_function("vec_add");
+    context.begin_function("vec_add", cuj::ir::Function::Type::Kernel);
+    
+    $arg(float*, A);
+    $arg(float*, B);
+    $arg(float*, C);
+    $arg(int,    N);
 
-    $define_arg(float*, A);
-    $define_arg(float*, B);
-    $define_arg(float*, C);
-    $define_arg(int,    N);
+    $var(int, i);
 
-    $define_var(int, i, cuda::thread_index_x());
+    i = cuda::thread_index_x() + cuda::block_index_x() * cuda::block_dim_x();
     
     $if(i < N)
     {
         C[i] = A[i] + B[i];
     };
-
-    for(int j = 0; j < 5; ++j)
-        N = N * 2;
 
     context.end_function();
 
@@ -42,6 +62,15 @@ int main()
     std::cout << "=========== llvm ir ===========" << std::endl << std::endl;
 
     cuj::gen::LLVMIRGenerator ir_gen;
+    ir_gen.set_target(cuj::gen::LLVMIRGenerator::Target::PTX);
     ir_gen.generate(ir_builder.get_prog());
     std::cout << ir_gen.get_string() << std::endl;
+
+    std::cout << "=========== ptx ===========" << std::endl << std::endl;
+
+    cuj::gen::PTXGenerator ptx_gen;
+
+    ptx_gen.set_target(cuj::gen::PTXGenerator::Target::PTX64);
+    ptx_gen.generate(ir_builder.get_prog());
+    std::cout << ptx_gen.get_result() << std::endl;
 }

@@ -29,18 +29,6 @@ namespace detail
         return ret;
     }
 
-    template<typename T>
-    RC<InternalArithmeticValue<T>> to_right(RC<InternalArithmeticValue<T>> value)
-    {
-        if(auto l = std::dynamic_pointer_cast<InternalArithmeticLeftValue<T>>(value))
-        {
-            auto impl = newRC<InternalArithmeticLoad<T>>();
-            impl->pointer = value->get_address();
-            return impl;
-        }
-        return value;
-    }
-
 } // namespace detail
 
 template<typename T>
@@ -400,7 +388,6 @@ template<typename I, typename>
 Pointer<T> Array<T, N>::get_element_ptr(const ArithmeticValue<I> &index) const
 {
     return Pointer<T>(impl_->data_ptr).offset(index);
-    //return Pointer<T>(impl_->data_ptr->offset(index.get_impl()));
 }
 
 template<typename T, size_t N>
@@ -456,7 +443,7 @@ Value<T> Pointer<T>::deref() const
     {
         auto impl = newRC<InternalArrayValue<
             typename T::ElementType, T::ElementCount>>();
-        impl->data_ptr = detail::to_right(impl_);
+        impl->data_ptr = impl_;
         return T(std::move(impl));
     }
     else if constexpr(is_pointer<T>)
@@ -475,7 +462,7 @@ Value<T> Pointer<T>::deref() const
     }
     else
     {
-        auto addr_value = detail::to_right(impl_);
+        auto addr_value = impl_;
         auto impl = newRC<InternalClassLeftValue<T>>();
         impl->address = addr_value;
         impl->obj     = newBox<T>(addr_value);

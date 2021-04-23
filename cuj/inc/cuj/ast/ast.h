@@ -15,17 +15,17 @@
 #include <cuj/ast/detail/stat.inl>
 #include <cuj/ast/detail/stat_builder.inl>
 
-#define $define_var(TYPE, NAME, ...)                                            \
+#define $var(TYPE, NAME, ...)                                                   \
     ::cuj::ast::Value<::cuj::ast::RawToCUJType<TYPE>> NAME =                    \
         ::cuj::ast::get_current_function()                                      \
             ->create_stack_var<::cuj::ast::RawToCUJType<TYPE>>(##__VA_ARGS__)
 
-#define $define_arg(TYPE, NAME)                                                 \
+#define $arg(TYPE, NAME)                                                        \
     ::cuj::ast::Value<::cuj::ast::RawToCUJType<TYPE>> NAME =                    \
         ::cuj::ast::get_current_function()                                      \
             ->create_arg<::cuj::ast::RawToCUJType<TYPE>>()
 
-#define $define_member(TYPE, NAME, ...)                                         \
+#define $mem(TYPE, NAME, ...)                                                   \
     ::cuj::ast::Value<::cuj::ast::RawToCUJType<TYPE>> NAME =                    \
         new_member<::cuj::ast::RawToCUJType<TYPE>>(##__VA_ARGS__)
 

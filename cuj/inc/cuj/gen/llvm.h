@@ -8,8 +8,10 @@
 namespace llvm
 {
 
+    class DataLayout;
     class Function;
     class FunctionType;
+    class Module;
     class Type;
     class Value;
 
@@ -35,7 +37,13 @@ public:
 
     void set_target(Target target);
 
+    void set_machine(
+        const llvm::DataLayout *data_layout,
+        const char             *target_triple);
+
     void generate(const ir::Program &prog);
+
+    llvm::Module *get_module() const;
 
     std::string get_string() const;
 
@@ -115,6 +123,9 @@ private:
     ir::BuiltinType get_arithmetic_type(const ir::BasicValue &v);
 
     Target target_ = Target::Host;
+
+    const llvm::DataLayout *data_layout_ = nullptr;
+    const char             *target_triple_ = nullptr;
 
     Data *data_ = nullptr;
 };

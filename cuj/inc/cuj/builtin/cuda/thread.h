@@ -37,9 +37,9 @@ class Dim3 : public ast::ClassBase<Dim3>
 {
 public:
 
-    $define_member(int, x);
-    $define_member(int, y);
-    $define_member(int, z);
+    $mem(int, x);
+    $mem(int, y);
+    $mem(int, z);
 
     using ClassBase::ClassBase;
 };

@@ -14,6 +14,12 @@
 
 #endif // #if CUJ_ENABLE_LLVM
 
+#if CUJ_ENABLE_CUDA && CUJ_ENABLE_LLVM
+
+#include <cuj/gen/ptx.h>
+
+#endif // #if CUJ_ENABLE_CUDA && CUJ_ENABLE_LLVM
+
 #include <cuj/gen/printer.h>
 
 #include <cuj/ir/builder.h>
