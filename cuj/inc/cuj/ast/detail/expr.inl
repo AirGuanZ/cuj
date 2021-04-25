@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdexcept>
-
 #include <cuj/ast/context.h>
 #include <cuj/ast/expr.h>
 #include <cuj/ast/func_context.h>
@@ -34,7 +32,7 @@ namespace detail
 template<typename T>
 RC<InternalPointerValue<T>> InternalArithmeticValue<T>::get_address() const
 {
-    throw std::runtime_error("getting address of a non-left value");
+    throw CUJException("getting address of a non-left value");
 }
 
 template<typename T>
@@ -63,7 +61,7 @@ RC<InternalPointerValue<T>> InternalClassLeftValue<T>::get_address() const
 template<typename T>
 RC<InternalPointerValue<Pointer<T>>> InternalPointerValue<T>::get_address() const
 {
-    throw std::runtime_error("getting address of a non-left pointer value");
+    throw CUJException("getting address of a non-left pointer value");
 }
 
 template<typename T>
@@ -165,7 +163,7 @@ ir::BasicValue InternalCastArithmeticValue<From, To>::gen_ir(ir::IRBuilder &buil
 }
 
 template<typename R, typename...Args>
-InternalFunctionCall<R, Args...>::InternalFunctionCall(
+InternalArithmeticFunctionCall<R, Args...>::InternalArithmeticFunctionCall(
     int index, const Value<Args> &...args)
     : func_index(index), args{ args... }
 {
@@ -173,7 +171,8 @@ InternalFunctionCall<R, Args...>::InternalFunctionCall(
 }
 
 template<typename R, typename ...Args>
-ir::BasicValue InternalFunctionCall<R, Args...>::gen_ir(ir::IRBuilder &builder) const
+ir::BasicValue InternalArithmeticFunctionCall<R, Args...>::gen_ir(
+    ir::IRBuilder &builder) const
 {
     auto context = get_current_context();
     auto func = context->get_function_context(func_index);
@@ -187,6 +186,39 @@ ir::BasicValue InternalFunctionCall<R, Args...>::gen_ir(ir::IRBuilder &builder) 
         ((arg_vals.push_back(arg.get_impl()->gen_ir(builder))), ...);
     }, args);
     
+    auto ret = builder.gen_temp_value(ret_type);
+    builder.append_assign(
+        ret, ir::CallOp{ func->get_name(), std::move(arg_vals), ret_type });
+
+    return ret;
+}
+
+template<typename R, typename ... Args>
+InternalPointerFunctionCall<R, Args...>::InternalPointerFunctionCall(
+    int index, const Value<Args> &... args)
+    : func_index(index), args{ args... }
+{
+    
+}
+
+template<typename R, typename ... Args>
+ir::BasicValue InternalPointerFunctionCall<R, Args...>::gen_ir(
+    ir::IRBuilder &builder) const
+{
+    static_assert(is_pointer<R>);
+
+    auto context = get_current_context();
+    auto func = context->get_function_context(func_index);
+
+    auto ret_type = context->get_type<R>();
+
+    std::vector<ir::BasicValue> arg_vals;
+    std::apply(
+        [&](const auto &...arg)
+    {
+        ((arg_vals.push_back(arg.get_impl()->gen_ir(builder))), ...);
+    }, args);
+
     auto ret = builder.gen_temp_value(ret_type);
     builder.append_assign(
         ret, ir::CallOp{ func->get_name(), std::move(arg_vals), ret_type });

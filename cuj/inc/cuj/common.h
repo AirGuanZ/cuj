@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 
 #define CUJ_NAMESPACE_BEGIN(NAME) namespace NAME {
@@ -40,5 +41,12 @@ constexpr inline UninitializeFlag UNINIT;
 {
     std::terminate();
 }
+
+class CUJException : std::runtime_error
+{
+public:
+
+    using runtime_error::runtime_error;
+};
 
 CUJ_NAMESPACE_END(cuj)

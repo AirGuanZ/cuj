@@ -1,8 +1,10 @@
 #pragma once
 
-#include <stdexcept>
-
 #include <cuj/ast/context.h>
+
+#if CUJ_ENABLE_CUDA && CUJ_ENABLE_LLVM
+#include <cuj/gen/ptx.h>
+#endif
 
 CUJ_NAMESPACE_BEGIN(cuj::ast)
 
@@ -97,7 +99,7 @@ Function<FuncType> Context::get_function(std::string_view name) const
 {
     const auto it = func_name_to_index_.find(name);
     if(it == func_name_to_index_.end())
-        throw std::runtime_error("unknown function name: " + std::string(name));
+        throw CUJException("unknown function name: " + std::string(name));
     return get_function<FuncType>(it->second);
 }
 
@@ -125,7 +127,7 @@ Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
     return add_function_impl<Ret>(
         std::move(name), type,
         std::forward<Callable>(callable),
-        FunctionArgs<RawToCUJType<Ret>, Callable>(),
+        reinterpret_cast<FunctionArgs<RawToCUJType<Ret>, Callable>*>(nullptr),
         std::make_index_sequence<
             std::tuple_size_v<FunctionArgs<RawToCUJType<Ret>, Callable>>>());
 }
@@ -155,7 +157,7 @@ Function<FuncType> Context::begin_function(
     std::string name, ir::Function::Type type)
 {
     if(func_name_to_index_.count(name))
-        throw std::runtime_error("repeated function name");
+        throw CUJException("repeated function name");
 
     auto ret_type = get_type<typename Function<FuncType>::ReturnType>();
 
@@ -177,23 +179,39 @@ inline void Context::end_function()
     func_stack_.pop();
 }
 
-inline void Context::gen_ir(ir::IRBuilder &builder) const
+inline ir::Program Context::gen_ir() const
 {
-    CUJ_ASSERT(func_stack_.empty());
-
-    for(auto &p : types_)
-        builder.add_type(p.first, p.second);
-
-    for(auto &f : funcs_)
-        f->gen_ir(builder);
+    ir::IRBuilder builder;
+    gen_ir_impl(builder);
+    return builder.get_prog();
 }
+
+#if CUJ_ENABLE_CUDA && CUJ_ENABLE_LLVM
+
+inline std::string Context::gen_ptx32() const
+{
+    gen::PTXGenerator generator;
+    generator.set_target(gen::PTXGenerator::Target::PTX32);
+    generator.generate(gen_ir());
+    return generator.get_result();
+}
+
+inline std::string Context::gen_ptx64() const
+{
+    gen::PTXGenerator generator;
+    generator.set_target(gen::PTXGenerator::Target::PTX64);
+    generator.generate(gen_ir());
+    return generator.get_result();
+}
+
+#endif // #if CUJ_ENABLE_CUDA && CUJ_ENABLE_LLVM
 
 template<typename Ret, typename Callable, typename...Args, size_t...Is>
 Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function_impl(
     std::string        name,
     ir::Function::Type type,
     Callable         &&callable,
-    std::tuple<Args...>,
+    std::tuple<Args...>*,
     std::index_sequence<Is...>)
 {
     using ArgsTuple = std::tuple<Args...>;
@@ -210,6 +228,17 @@ Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function_impl(
     std::apply(std::forward<Callable>(callable), args);
 
     return ret;
+}
+
+inline void Context::gen_ir_impl(ir::IRBuilder &builder) const
+{
+    CUJ_ASSERT(func_stack_.empty());
+
+    for(auto &p : types_)
+        builder.add_type(p.first, p.second);
+
+    for(auto &f : funcs_)
+        f->gen_ir(builder);
 }
 
 inline FunctionContext *Context::get_current_function()

@@ -22,8 +22,8 @@ namespace func_trait_detail
             std::function{ std::declval<rm_cvref_t<T>>() })>>::FuncType;
     };
 
-    template<typename UsrRet, typename Ret, typename...Args>
-    struct FunctionTrait<UsrRet, std::function<Ret(Args...)>>
+    template<typename UsrRet, typename...Args>
+    struct FunctionTrait<UsrRet, std::function<void(Args...)>>
     {
         using ArgTypes = std::tuple<
             typename detail::DeArithmeticValueType<rm_cvref_t<Args>>::Type...>;

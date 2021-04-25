@@ -260,7 +260,7 @@ llvm::Type *LLVMIRGenerator::create_llvm_type_record(const ir::ArrayType &type)
 
 llvm::Type *LLVMIRGenerator::create_llvm_type_record(const ir::IntrinsicType &type)
 {
-    throw std::runtime_error("unknown intrinsic type: " + type.name);
+    throw CUJException("unknown intrinsic type: " + type.name);
 }
 
 llvm::Type *LLVMIRGenerator::create_llvm_type_record(const ir::PointerType &type)
@@ -322,19 +322,28 @@ void LLVMIRGenerator::generate_func(const ir::Function &func)
 
     generate(*func.body);
 
-    const ir::BuiltinType ret_type = func.ret_type->as<ir::BuiltinType>();
-    if(ret_type == ir::BuiltinType::Void)
-        data_->ir_builder->CreateRetVoid();
+    if(auto builtin_type = func.ret_type->as_if<ir::BuiltinType>())
+    {
+        if(*builtin_type == ir::BuiltinType::Void)
+            data_->ir_builder->CreateRetVoid();
+        else
+        {
+            auto zero = get_builtin_zero(*builtin_type, *data_->ir_builder);
+            data_->ir_builder->CreateRet(zero);
+        }
+    }
     else
     {
-        auto zero = get_builtin_zero(ret_type, *data_->ir_builder);
-        data_->ir_builder->CreateRet(zero);
+        CUJ_ASSERT(func.ret_type->is<ir::PointerType>());
+        data_->ir_builder->CreateRet(
+            llvm::ConstantPointerNull::get(
+                static_cast<llvm::PointerType*>(find_llvm_type(func.ret_type))));
     }
 
     std::string err_msg;
     llvm::raw_string_ostream err_stream(err_msg);
     if(verifyFunction(*data_->function, &err_stream))
-        throw std::runtime_error(err_msg);
+        throw CUJException(err_msg);
 
     data_->fpm->run(*data_->function);
 
@@ -369,7 +378,7 @@ void LLVMIRGenerator::mark_func_type(
     {
         if(func.type != ir::Function::Type::Default)
         {
-            throw std::runtime_error(
+            throw CUJException(
                 "only default function is supported by host llvm ir generator");
         }
     }
@@ -396,7 +405,7 @@ void LLVMIRGenerator::mark_func_type(
     }
 #endif // #if CUJ_ENABLE_CUDA
     else
-        throw std::runtime_error("unknown target type");
+        throw CUJException("unknown target type");
 }
 
 void LLVMIRGenerator::generate_func_allocs(const ir::Function &func)
@@ -455,14 +464,14 @@ void LLVMIRGenerator::generate(const ir::Assign &assign)
 void LLVMIRGenerator::generate(const ir::Break &)
 {
     if(data_->break_dests.empty())
-        throw std::runtime_error("invalid break statement: no outer loop");
+        throw CUJException("invalid break statement: no outer loop");
     data_->ir_builder->CreateBr(data_->break_dests.top());
 }
 
 void LLVMIRGenerator::generate(const ir::Continue &)
 {
     if(data_->continue_dests.empty())
-        throw std::runtime_error("invalid continue statement: no outer loop");
+        throw CUJException("invalid continue statement: no outer loop");
     data_->ir_builder->CreateBr(data_->continue_dests.top());
 }
 
@@ -780,7 +789,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::IntrinsicOp &v)
         {                                                                       \
             if(target_ != Target::PTX)                                          \
             {                                                                   \
-                throw std::runtime_error(                                       \
+                throw CUJException(                                             \
                     "cuda intrinsic is not supported in host mode");            \
             }                                                                   \
             return data_->ir_builder->CreateIntrinsic(                          \
@@ -802,7 +811,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::IntrinsicOp &v)
 
 #endif // #if CUJ_ENABLE_CUDA
 
-    throw std::runtime_error("unknown intrinsic calling: " + v.name);
+    throw CUJException("unknown intrinsic calling: " + v.name);
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::MemberPtrOp &v)

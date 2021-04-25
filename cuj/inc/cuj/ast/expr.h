@@ -114,10 +114,10 @@ namespace detail
 } // namespace detail
 
 template<typename T>
-using Value = decltype(detail::CUJValueTypeAux<T>());
+using RawToCUJType = typename detail::RawToCUJType<T>::Type;
 
 template<typename T>
-using RawToCUJType = typename detail::RawToCUJType<T>::Type;
+using Value = decltype(detail::CUJValueTypeAux<RawToCUJType<T>>());
 
 template<typename T>
 constexpr bool is_pointer = detail::IsPointerValue<T>::value;
@@ -285,14 +285,28 @@ public:
 };
 
 template<typename R, typename...Args>
-class InternalFunctionCall : public InternalArithmeticValue<R>
+class InternalArithmeticFunctionCall : public InternalArithmeticValue<R>
 {
 public:
 
     int                        func_index;
     std::tuple<Value<Args>...> args;
 
-    InternalFunctionCall(int index, const Value<Args> &...args);
+    InternalArithmeticFunctionCall(int index, const Value<Args> &...args);
+
+    ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
+};
+
+template<typename R, typename...Args>
+class InternalPointerFunctionCall :
+    public InternalPointerValue<typename R::PointedType>
+{
+public:
+
+    int                        func_index;
+    std::tuple<Value<Args>...> args;
+
+    InternalPointerFunctionCall(int index, const Value<Args> &...args);
 
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };

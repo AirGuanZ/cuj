@@ -129,25 +129,25 @@ inline void Continue::gen_ir(ir::IRBuilder &builder) const
 }
 
 template<typename T>
-Return<T>::Return(RC<InternalArithmeticValue<T>> value)
+ReturnArithmetic<T>::ReturnArithmetic(RC<InternalArithmeticValue<T>> value)
     : value_(std::move(value))
 {
     if(!value_)
     {
         if(get_current_function()->get_return_type() !=
            get_current_context()->get_type<void>())
-            throw std::runtime_error("return.type != function.type");
+            throw CUJException("return.type != function.type");
     }
     else
     {
         if(get_current_function()->get_return_type() !=
            get_current_context()->get_type<T>())
-            throw std::runtime_error("return.type != function.type");
+            throw CUJException("return.type != function.type");
     }
 }
 
 template<typename T>
-void Return<T>::gen_ir(ir::IRBuilder &builder) const
+void ReturnArithmetic<T>::gen_ir(ir::IRBuilder &builder) const
 {
     if(!value_)
     {
@@ -159,6 +159,20 @@ void Return<T>::gen_ir(ir::IRBuilder &builder) const
         auto val = value_->gen_ir(builder);
         builder.append_statment(newRC<ir::Statement>(ir::Return{ val }));
     }
+}
+
+template<typename T>
+ReturnPointer<T>::ReturnPointer(RC<InternalPointerValue<T>> pointer)
+    : pointer_(std::move(pointer))
+{
+    
+}
+
+template<typename T>
+void ReturnPointer<T>::gen_ir(ir::IRBuilder &builder) const
+{
+    auto val = pointer_->gen_ir(builder);
+    builder.append_statment(newRC<ir::Statement>(ir::Return{ val }));
 }
 
 template<typename...Args>

@@ -53,7 +53,15 @@ public:
 
     void end_function();
 
-    void gen_ir(ir::IRBuilder &builder) const;
+    ir::Program gen_ir() const;
+
+#if CUJ_ENABLE_CUDA && CUJ_ENABLE_LLVM
+
+    std::string gen_ptx32() const;
+
+    std::string gen_ptx64() const;
+
+#endif
 
 private:
 
@@ -62,8 +70,10 @@ private:
         std::string        name,
         ir::Function::Type type,
         Callable         &&callable,
-        std::tuple<Args...>,
+        std::tuple<Args...>*,
         std::index_sequence<Is...>);
+
+    void gen_ir_impl(ir::IRBuilder &builder) const;
 
     std::map<std::type_index, RC<ir::Type>> types_;
     int                                     struct_name_index_ = 0;

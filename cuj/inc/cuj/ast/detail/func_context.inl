@@ -13,9 +13,9 @@ Value<T> FunctionContext::alloc_stack_var(bool is_arg, Args &&...args)
     if(is_arg)
     {
         if(arg_indices_.size() > arg_types_.size())
-            throw std::runtime_error("too many function argments");
+            throw CUJException("too many function argments");
         if(alloc_type != arg_types_[arg_indices_.size()])
-            throw std::runtime_error("unmatched function argument type");
+            throw CUJException("unmatched function argument type");
         arg_indices_.push_back(address->alloc_index);
     }
 
@@ -160,7 +160,7 @@ inline void FunctionContext::gen_ir(ir::IRBuilder &builder) const
 
     if(arg_indices_.size() != arg_types_.size())
     {
-        throw std::runtime_error(
+        throw CUJException(
             "function argument(s) is(are) declared but not defined");
     }
 

@@ -40,29 +40,24 @@ std::string generate_ptx()
 
     std::cout << "=========== cujitter ir ===========" << std::endl << std::endl;
 
-    cuj::ir::IRBuilder ir_builder;
-    context.gen_ir(ir_builder);
-
+    auto ir = context.gen_ir();
     cuj::gen::IRPrinter printer;
-    printer.print(ir_builder.get_prog());
+    printer.print(ir);
     std::cout << printer.get_string() << std::endl;
 
     std::cout << "=========== llvm ir ===========" << std::endl << std::endl;
 
     cuj::gen::LLVMIRGenerator llvm_gen;
     llvm_gen.set_target(cuj::gen::LLVMIRGenerator::Target::PTX);
-    llvm_gen.generate(ir_builder.get_prog());
+    llvm_gen.generate(ir);
     std::cout << llvm_gen.get_string() << std::endl;
 
     std::cout << "=========== ptx ===========" << std::endl << std::endl;
 
-    cuj::gen::PTXGenerator ptx_gen;
+    auto ptx = context.gen_ptx64();
+    std::cout << ptx << std::endl;
 
-    ptx_gen.set_target(cuj::gen::PTXGenerator::Target::PTX64);
-    ptx_gen.generate(ir_builder.get_prog());
-    std::cout << ptx_gen.get_result() << std::endl;
-
-    return ptx_gen.get_result();
+    return ptx;
 }
 
 void test_ptx(const std::string &ptx)

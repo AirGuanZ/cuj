@@ -54,6 +54,9 @@ public:
     template<typename T>
     ReturnBuilder(const ArithmeticValue<T> &val);
 
+    template<typename T>
+    ReturnBuilder(const Pointer<T> &val);
+
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     ReturnBuilder(T val);
 };

@@ -43,7 +43,7 @@ void PTXGenerator::generate(const ir::Program &prog)
     const char *target_triple = get_target_triple(target_);
     auto target = llvm::TargetRegistry::lookupTarget(target_triple, err);
     if(!target)
-        throw std::runtime_error(err);
+        throw CUJException(err);
 
     auto machine = target->createTargetMachine(target_triple, "", {}, {}, {});
 
@@ -62,7 +62,7 @@ void PTXGenerator::generate(const ir::Program &prog)
     llvm::legacy::PassManager passes;
     if(machine->addPassesToEmitFile(
         passes, output_stream, nullptr, llvm::CGFT_AssemblyFile))
-        throw std::runtime_error("ptx file emission is not supported");
+        throw CUJException("ptx file emission is not supported");
 
     passes.run(*llvm_module);
 

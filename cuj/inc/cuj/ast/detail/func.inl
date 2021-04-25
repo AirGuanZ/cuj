@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdexcept>
-
 #include <cuj/ast/context.h>
 #include <cuj/ast/func.h>
 #include <cuj/ast/func_context.h>
@@ -11,7 +9,6 @@ CUJ_NAMESPACE_BEGIN(cuj::ast)
 namespace detail
 {
 
-
     template<typename From, typename To>
     Value<To> convert_func_arg_type(const Value<From> &from)
     {
@@ -20,7 +17,7 @@ namespace detail
         else if constexpr(std::is_arithmetic_v<To> && std::is_arithmetic_v<From>)
             return cast<To, From>(from);
         else
-            throw std::runtime_error("invalid function arg type conversion");
+            throw CUJException("invalid function arg type conversion");
     }
 
     template<typename ResultType, typename ToArgs, typename FromArgs, size_t...Is>
@@ -60,13 +57,25 @@ typename detail::FuncRetType<Ret>::Type
 
         return;
     }
-    else
+    else if(std::is_arithmetic_v<Ret>)
     {
-        using InternalCallType = InternalFunctionCall<Ret, Args...>;
+        using InternalCallType = InternalArithmeticFunctionCall<Ret, Args...>;
 
         auto call = detail::create_call_obj<InternalCallType, ToTuple>(
             index_, args_tuple, std::make_index_sequence<sizeof...(Args)>());
         
+        auto var = func->create_stack_var<Ret>();
+        var = Value<Ret>(std::move(call));
+
+        return var;
+    }
+    else
+    {
+        using InternalCallType = InternalPointerFunctionCall<Ret, Args...>;
+
+        auto call = detail::create_call_obj<InternalCallType, ToTuple>(
+            index_, args_tuple, std::make_index_sequence<sizeof...(Args)>());
+
         auto var = func->create_stack_var<Ret>();
         var = Value<Ret>(std::move(call));
 
@@ -79,9 +88,9 @@ FunctionImpl<Ret, Args...>::FunctionImpl(int func_index)
     : index_(func_index)
 {
     if(!check_return_type())
-        throw std::runtime_error("unmatched function return type");
+        throw CUJException("unmatched function return type");
     if(!check_param_types())
-        throw std::runtime_error("unmatched function argument type(s)");
+        throw CUJException("unmatched function argument type(s)");
 }
 
 template<typename Ret, typename...Args>

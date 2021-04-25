@@ -125,11 +125,11 @@ inline ReturnBuilder::ReturnBuilder()
     auto func = get_current_function();
     if(func->get_return_type()->as<ir::BuiltinType>() != ir::BuiltinType::Void)
     {
-        throw std::runtime_error(
+        throw CUJException(
             "return void in a function with non-void return type");
     }
 
-    auto ret = newRC<Return<int>>(nullptr);
+    auto ret = newRC<ReturnArithmetic<int>>(nullptr);
     func->append_statement(std::move(ret));
 }
 
@@ -148,7 +148,7 @@ ReturnBuilder::ReturnBuilder(const ArithmeticValue<T> &val)
         switch(func->get_return_type()->as<ir::BuiltinType>())
         {
         case ir::BuiltinType::Void:
-            throw std::runtime_error(
+            throw CUJException(
                 "convert value to void in return statement");
         CUJ_AUTO_CAST_RETURN(U8,   uint8_t)
         CUJ_AUTO_CAST_RETURN(U16,  uint16_t)
@@ -168,7 +168,19 @@ ReturnBuilder::ReturnBuilder(const ArithmeticValue<T> &val)
         unreachable();
     }
 
-    func->append_statement(newRC<Return<T>>(val.get_impl()));
+    func->append_statement(newRC<ReturnArithmetic<T>>(val.get_impl()));
+}
+
+template<typename T>
+ReturnBuilder::ReturnBuilder(const Pointer<T> &val)
+{
+    auto context = get_current_context();
+    auto func = context->get_current_function();
+    auto val_type = context->get_type<Pointer<T>>();
+    if(val_type != func->get_return_type())
+        throw CUJException("return.type != function.type");
+
+    func->append_statement(newRC<ReturnPointer<T>>(val.get_impl()));
 }
 
 template<typename T, typename>

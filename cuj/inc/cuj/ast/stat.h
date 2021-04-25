@@ -89,13 +89,25 @@ public:
 };
 
 template<typename T>
-class Return : public Statement
+class ReturnArithmetic : public Statement
 {
     RC<InternalArithmeticValue<T>> value_;
 
 public:
 
-    explicit Return(RC<InternalArithmeticValue<T>> value);
+    explicit ReturnArithmetic(RC<InternalArithmeticValue<T>> value);
+
+    void gen_ir(ir::IRBuilder &builder) const override;
+};
+
+template<typename T>
+class ReturnPointer : public Statement
+{
+    RC<InternalPointerValue<T>> pointer_;
+
+public:
+
+    explicit ReturnPointer(RC<InternalPointerValue<T>> pointer);
 
     void gen_ir(ir::IRBuilder &builder) const override;
 };

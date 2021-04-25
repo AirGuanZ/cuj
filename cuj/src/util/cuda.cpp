@@ -1,7 +1,6 @@
 #if CUJ_ENABLE_CUDA
 
 #include <fstream>
-#include <stdexcept>
 #include <vector>
 
 #include <cuda.h>
@@ -20,7 +19,7 @@ namespace
         {
             const char *err_msg;
             cuGetErrorString(result, &err_msg);
-            throw std::runtime_error(err_msg);
+            throw CUJException(err_msg);
         }
     }
 
@@ -56,19 +55,19 @@ void CUDAModule::load_ptx_from_file(const std::string &filename)
 {
     std::ifstream fin(filename, std::ios::in | std::ios::binary);
     if(!fin)
-        throw std::runtime_error("failed to open file: " + filename);
+        throw CUJException("failed to open file: " + filename);
 
     fin.seekg(0, std::ios::end);
     const auto len = fin.tellg();
     fin.seekg(0, std::ios::beg);
 
     if(!len)
-        throw std::runtime_error("empty ptx file: " + filename);
+        throw CUJException("empty ptx file: " + filename);
 
     std::vector<char> data(static_cast<size_t>(len) + 1, '\0');
     fin.read(data.data(), len);
     if(!fin)
-        throw std::runtime_error("failed to read context from " + filename);
+        throw CUJException("failed to read context from " + filename);
 
     load_ptx_from_memory(data.data(), data.size());
 }
