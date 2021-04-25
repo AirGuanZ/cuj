@@ -2,6 +2,8 @@
 
 #include <cuj/ast/context.h>
 
+#include <cuj/gen/printer.h>
+
 #if CUJ_ENABLE_CUDA && CUJ_ENABLE_LLVM
 #include <cuj/gen/ptx.h>
 #endif
@@ -186,6 +188,24 @@ inline ir::Program Context::gen_ir() const
     return builder.get_prog();
 }
 
+inline std::string Context::gen_ir_string() const
+{
+    gen::IRPrinter printer;
+    printer.print(gen_ir());
+    return printer.get_string();
+}
+
+#if CUJ_ENABLE_LLVM
+
+inline gen::NativeJIT Context::gen_native_jit() const
+{
+    gen::NativeJIT jit;
+    jit.generate(gen_ir());
+    return jit;
+}
+
+#endif // #if CUJ_ENABLE_LLVM
+
 #if CUJ_ENABLE_CUDA && CUJ_ENABLE_LLVM
 
 inline std::string Context::gen_ptx32() const
@@ -219,14 +239,12 @@ Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function_impl(
     auto ret = begin_function<FunctionType<RawToCUJType<Ret>, Callable>>(
         std::move(name), type);
     CUJ_SCOPE_GUARD({ end_function(); });
-
-    std::tuple<Value<Args>...> args{ Value<Args>(UNINIT)... };
-    (std::get<Is>(args).set_impl(
-        get_current_function()->create_arg<
-            std::tuple_element_t<Is, ArgsTuple>>().get_impl()), ...);
-
-    std::apply(std::forward<Callable>(callable), args);
-
+    
+    std::apply(
+        std::forward<Callable>(callable),
+        std::tuple{ get_current_function()->create_arg<
+            std::tuple_element_t<Is, ArgsTuple>>()... });
+    
     return ret;
 }
 

@@ -6,8 +6,9 @@ SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
 ################ global options ################
 
-OPTION(CUJ_ENABLE_CUDA "enable CUDA backend" ON)
-OPTION(CUJ_ENABLE_LLVM "enable LLVM backend" ON)
+OPTION(CUJ_ENABLE_CUDA   "enable CUDA backend" ON)
+OPTION(CUJ_ENABLE_LLVM   "enable LLVM backend" ON)
+OPTION(CUJ_BUILD_EXAMPLE "build cuj examples"  ON)
 
 IF(CUJ_ENABLE_CUDA)
     ENABLE_LANGUAGE(CUDA)
@@ -57,7 +58,7 @@ IF(CUJ_ENABLE_LLVM)
 
     llvm_map_components_to_libnames(
         LLVM_LIBS
-        Core ExecutionEngine Support nvptxcodegen)
+        Core ExecutionEngine Interpreter Support mcjit nativecodegen nvptxcodegen)
     TARGET_LINK_LIBRARIES(cuj PUBLIC ${LLVM_LIBS})
 ELSE()
     TARGET_COMPILE_DEFINITIONS(cuj PUBLIC CUJ_ENABLE_LLVM=0)
@@ -65,4 +66,6 @@ ENDIF()
 
 ################ examples ################
 
-ADD_SUBDIRECTORY(./example)
+IF(CUJ_BUILD_EXAMPLE)
+    ADD_SUBDIRECTORY(./example)
+ENDIF()

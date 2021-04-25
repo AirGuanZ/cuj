@@ -45,6 +45,8 @@ public:
 
     llvm::Module *get_module() const;
 
+    std::unique_ptr<llvm::Module> get_module_ownership();
+
     std::string get_string() const;
 
 private:

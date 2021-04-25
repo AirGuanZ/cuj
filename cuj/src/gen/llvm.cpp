@@ -194,6 +194,11 @@ llvm::Module *LLVMIRGenerator::get_module() const
     return data_->top_module.get();
 }
 
+std::unique_ptr<llvm::Module> LLVMIRGenerator::get_module_ownership()
+{
+    return std::move(data_->top_module);
+}
+
 std::string LLVMIRGenerator::get_string() const
 {
     std::string result;

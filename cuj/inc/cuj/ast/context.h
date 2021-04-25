@@ -11,11 +11,19 @@
 #include <cuj/util/scope_guard.h>
 #include <cuj/util/uncopyable.h>
 
+#if CUJ_ENABLE_LLVM
+
+#include <cuj/gen/native.h>
+
+#endif
+
 CUJ_NAMESPACE_BEGIN(cuj::ast)
 
 class Context : public Uncopyable
 {
 public:
+
+    // global info retrieve
 
     template<typename T>
     const ir::Type *get_type();
@@ -29,6 +37,8 @@ public:
 
     template<typename FuncType>
     Function<FuncType> get_function(int index) const;
+
+    // function definition
 
     template<typename Ret, typename Callable>
     Function<FunctionType<RawToCUJType<Ret>, Callable>> add_function(
@@ -53,7 +63,17 @@ public:
 
     void end_function();
 
+    // codegen
+
     ir::Program gen_ir() const;
+
+    std::string gen_ir_string() const;
+
+#if CUJ_ENABLE_LLVM
+
+    gen::NativeJIT gen_native_jit() const;
+
+#endif
 
 #if CUJ_ENABLE_CUDA && CUJ_ENABLE_LLVM
 
