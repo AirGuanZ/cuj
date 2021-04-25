@@ -23,9 +23,9 @@ ENDIF()
 ################ cuj ################
 
 FILE(GLOB_RECURSE CUJ_SRC
-		"${PROJECT_SOURCE_DIR}/cuj/*.h"
-		"${PROJECT_SOURCE_DIR}/cuj/*.inl"
-		"${PROJECT_SOURCE_DIR}/cuj/*.cpp")
+        "${PROJECT_SOURCE_DIR}/cuj/*.h"
+        "${PROJECT_SOURCE_DIR}/cuj/*.inl"
+        "${PROJECT_SOURCE_DIR}/cuj/*.cpp")
 
 ADD_LIBRARY(cuj STATIC ${CUJ_SRC})
 

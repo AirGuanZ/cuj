@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include <cuj/ir/op.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::ir)
@@ -11,9 +13,11 @@ struct Continue;
 struct Block;
 struct If;
 struct While;
+struct Return;
+struct Call;
 
 using Statement = Variant<
-    Store, Assign, Break, Continue, Block, If, While>;
+    Store, Assign, Break, Continue, Block, If, While, Return, Call>;
 
 struct Store
 {
@@ -54,6 +58,16 @@ struct While
     RC<Block>  calculate_cond;
     BasicValue cond;
     RC<Block>  body;
+};
+
+struct Return
+{
+    std::optional<BasicValue> value;
+};
+
+struct Call
+{
+    CallOp op;
 };
 
 CUJ_NAMESPACE_END(cuj::ir)

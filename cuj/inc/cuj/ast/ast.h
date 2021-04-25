@@ -4,14 +4,18 @@
 #include <cuj/ast/context.h>
 #include <cuj/ast/expr.h>
 #include <cuj/ast/func.h>
+#include <cuj/ast/func_context.h>
 #include <cuj/ast/opr.h>
 #include <cuj/ast/stat.h>
 #include <cuj/ast/stat_builder.h>
+
+#include <cuj/util/macro_overloading.h>
 
 #include <cuj/ast/detail/class.inl>
 #include <cuj/ast/detail/context.inl>
 #include <cuj/ast/detail/expr.inl>
 #include <cuj/ast/detail/func.inl>
+#include <cuj/ast/detail/func_context.inl>
 #include <cuj/ast/detail/stat.inl>
 #include <cuj/ast/detail/stat_builder.inl>
 
@@ -41,3 +45,12 @@
 #define $continue                                                               \
     ::cuj::ast::get_current_function()->append_statement(                       \
         ::cuj::newRC<::cuj::ast::Continue>())
+
+#define $return_void(DUMMY) ::cuj::ast::ReturnBuilder()
+#define $return_value(DUMMY, ...) \
+    do {\
+        ::cuj::ast::ReturnBuilder(##__VA_ARGS__); \
+    } while(false)
+
+#define $return(...) \
+    ::cuj::ast::ReturnBuilder ret_builder##__LINE__(##__VA_ARGS__)

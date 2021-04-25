@@ -24,7 +24,7 @@ public:
 
 private:
 
-    Target target_ = Target::PTX64;
+    Target target_ = sizeof(void*) == 4 ? Target::PTX32 : Target::PTX64;
 
     std::string result_;
 };

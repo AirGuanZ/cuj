@@ -71,7 +71,7 @@ Value<T> ClassBase<C>::new_member(Args &&...args)
         auto impl = newRC<InternalClassLeftValue<T>>();
         impl->address = address;
         impl->obj     = newBox<T>(std::move(address), std::forward<Args>(args)...);
-        return commit_member_record<T>(Value<T>(std::move(impl)));
+        return Value<T>(std::move(impl));
     }
 }
 

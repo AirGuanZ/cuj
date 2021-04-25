@@ -88,4 +88,29 @@ public:
     void gen_ir(ir::IRBuilder &builder) const override;
 };
 
+template<typename T>
+class Return : public Statement
+{
+    RC<InternalArithmeticValue<T>> value_;
+
+public:
+
+    explicit Return(RC<InternalArithmeticValue<T>> value);
+
+    void gen_ir(ir::IRBuilder &builder) const override;
+};
+
+template<typename...Args>
+class CallVoid : public Statement
+{
+    int                        func_index_;
+    std::tuple<Value<Args>...> args_;
+
+public:
+
+    explicit CallVoid(int func_index, const Value<Args> &...args);
+
+    void gen_ir(ir::IRBuilder &builder) const override;
+};
+
 CUJ_NAMESPACE_END(cuj::ast)

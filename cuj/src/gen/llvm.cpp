@@ -50,6 +50,7 @@ namespace
         case ir::BuiltinType::S64:
         case ir::BuiltinType::Bool:
             return true;
+        case ir::BuiltinType::Void:
         case ir::BuiltinType::F32:
         case ir::BuiltinType::F64:
             return false;
@@ -61,6 +62,7 @@ namespace
     {
         switch(t)
         {
+        case ir::BuiltinType::Void:
         case ir::BuiltinType::U8:
         case ir::BuiltinType::U16:
         case ir::BuiltinType::U32:
@@ -78,6 +80,34 @@ namespace
         unreachable();
     }
 
+    llvm::Value *get_builtin_zero(ir::BuiltinType type, llvm::IRBuilder<> &ir)
+    {
+        CUJ_ASSERT(type != ir::BuiltinType::Void);
+        switch(type)
+        {
+        case ir::BuiltinType::Void:
+            unreachable();
+        case ir::BuiltinType::Bool:
+        case ir::BuiltinType::U8:
+        case ir::BuiltinType::S8:
+            return ir.getInt8(0);
+        case ir::BuiltinType::U16:
+        case ir::BuiltinType::S16:
+            return ir.getInt16(0);
+        case ir::BuiltinType::U32:
+        case ir::BuiltinType::S32:
+            return ir.getInt32(0);
+        case ir::BuiltinType::U64:
+        case ir::BuiltinType::S64:
+            return ir.getInt64(0);
+        case ir::BuiltinType::F32:
+            return llvm::ConstantFP::get(ir.getFloatTy(), 0);
+        case ir::BuiltinType::F64:
+            return llvm::ConstantFP::get(ir.getDoubleTy(), 0);
+        }
+        unreachable();
+    }
+
 } // namespace anonymous
 
 struct LLVMIRGenerator::Data
@@ -91,6 +121,7 @@ struct LLVMIRGenerator::Data
     std::unique_ptr<llvm::legacy::FunctionPassManager> fpm;
 
     std::map<const ir::Type *, llvm::Type *> types;
+    std::map<std::string, llvm::Function *>  functions;
 
     // per function
 
@@ -152,6 +183,9 @@ void LLVMIRGenerator::generate(const ir::Program &prog)
         construct_struct_type_body(p.second.get());
 
     for(auto &f : prog.funcs)
+        generate_func_decl(*f);
+
+    for(auto &f : prog.funcs)
         generate_func(*f);
 }
 
@@ -194,6 +228,8 @@ llvm::Type *LLVMIRGenerator::create_llvm_type_record(ir::BuiltinType type)
 {
     switch(type)
     {
+    case ir::BuiltinType::Void:
+        return data_->ir_builder->getVoidTy();
     case ir::BuiltinType::U8:
     case ir::BuiltinType::S8:
     case ir::BuiltinType::Bool:
@@ -254,17 +290,27 @@ void LLVMIRGenerator::construct_struct_type_body(const ir::Type *type)
     llvm_type->setBody(mem_types);
 }
 
+void LLVMIRGenerator::generate_func_decl(const ir::Function &func)
+{
+    auto func_type = generate_func_type(func);
+
+    auto llvm_func = llvm::Function::Create(
+        func_type, llvm::GlobalValue::ExternalLinkage,
+        func.name, data_->top_module.get());
+
+    mark_func_type(func, llvm_func);
+
+    data_->functions[func.name] = llvm_func;
+}
+
 void LLVMIRGenerator::generate_func(const ir::Function &func)
 {
     CUJ_ASSERT(data_);
     CUJ_ASSERT(!data_->function);
 
-    auto func_type = generate_func_type(func);
-    data_->function = llvm::Function::Create(
-        func_type, llvm::GlobalValue::ExternalLinkage,
-        func.name, data_->top_module.get());
-    
-    mark_func_type(func, data_->function);
+    auto func_it = data_->functions.find(func.name);
+    CUJ_ASSERT(func_it != data_->functions.end());
+    data_->function = func_it->second;
 
     auto entry_block =
         llvm::BasicBlock::Create(*data_->context, "entry", data_->function);
@@ -276,7 +322,14 @@ void LLVMIRGenerator::generate_func(const ir::Function &func)
 
     generate(*func.body);
 
-    data_->ir_builder->CreateRetVoid();
+    const ir::BuiltinType ret_type = func.ret_type->as<ir::BuiltinType>();
+    if(ret_type == ir::BuiltinType::Void)
+        data_->ir_builder->CreateRetVoid();
+    else
+    {
+        auto zero = get_builtin_zero(ret_type, *data_->ir_builder);
+        data_->ir_builder->CreateRet(zero);
+    }
 
     std::string err_msg;
     llvm::raw_string_ostream err_stream(err_msg);
@@ -287,6 +340,10 @@ void LLVMIRGenerator::generate_func(const ir::Function &func)
 
     data_->function = nullptr;
     data_->index_to_allocas.clear();
+    data_->temp_values_.clear();
+
+    CUJ_ASSERT(data_->break_dests.empty());
+    CUJ_ASSERT(data_->continue_dests.empty());
 }
 
 llvm::FunctionType *LLVMIRGenerator::generate_func_type(const ir::Function &func)
@@ -301,8 +358,8 @@ llvm::FunctionType *LLVMIRGenerator::generate_func_type(const ir::Function &func
         arg_types.push_back(llvm_arg_type);
     }
 
-    auto void_type = llvm::Type::getVoidTy(*data_->context);
-    return llvm::FunctionType::get(void_type, arg_types, false);
+    auto ret_type = find_llvm_type(func.ret_type);
+    return llvm::FunctionType::get(ret_type, arg_types, false);
 }
 
 void LLVMIRGenerator::mark_func_type(
@@ -376,7 +433,9 @@ void LLVMIRGenerator::generate(const ir::Statement &s)
         [this](const ir::Continue &_s) { generate(_s); },
         [this](const ir::Block    &_s) { generate(_s); },
         [this](const ir::If       &_s) { generate(_s); },
-        [this](const ir::While    &_s) { generate(_s); });
+        [this](const ir::While    &_s) { generate(_s); },
+        [this](const ir::Return   &_s) { generate(_s); },
+        [this](const ir::Call     &_s) { generate(_s); });
 }
 
 void LLVMIRGenerator::generate(const ir::Store &store)
@@ -472,6 +531,31 @@ void LLVMIRGenerator::generate(const ir::While &while_s)
 
     data_->function->getBasicBlockList().push_back(merge_block);
     data_->ir_builder->SetInsertPoint(merge_block);
+}
+
+void LLVMIRGenerator::generate(const ir::Return &return_s)
+{
+    if(return_s.value)
+    {
+        auto value = get_value(*return_s.value);
+        data_->ir_builder->CreateRet(value);
+    }
+    else
+        data_->ir_builder->CreateRetVoid();
+
+    auto block = llvm::BasicBlock::Create(
+        *data_->context, "after_return", data_->function);
+    data_->ir_builder->SetInsertPoint(block);
+}
+
+void LLVMIRGenerator::generate(const ir::Call &call)
+{
+    std::vector<llvm::Value *> args;
+    for(auto &a : call.op.args)
+        args.push_back(get_value(a));
+
+    auto func = data_->top_module->getFunction(call.op.name);
+    data_->ir_builder->CreateCall(func, args);
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::Value &v)
@@ -624,6 +708,8 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::UnaryOp &v)
     case ir::UnaryOp::Type::Neg:
         switch(input_type)
         {
+        case ir::BuiltinType::Void:
+            std::terminate();
         case ir::BuiltinType::U8:
         case ir::BuiltinType::U16:
         case ir::BuiltinType::U32:
@@ -656,7 +742,11 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::LoadOp &v)
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::CallOp &v)
 {
-    throw std::runtime_error("LLVMIRGenerator: CallOp is not implemented");
+    std::vector<llvm::Value *> args;
+    for(auto &a : v.args)
+        args.push_back(get_value(a));
+    auto func = data_->top_module->getFunction(v.name);
+    return data_->ir_builder->CreateCall(func, args);
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::CastOp &v)
@@ -815,7 +905,9 @@ llvm::Value *LLVMIRGenerator::convert_to_bool(
 llvm::Value *LLVMIRGenerator::convert_from_bool(
     llvm::Value *from, ir::BuiltinType to_type)
 {
+    CUJ_ASSERT(to_type != ir::BuiltinType::Void);
     CUJ_ASSERT(from->getType() == data_->ir_builder->getInt8Ty());
+
     if(to_type == ir::BuiltinType::Bool)
         return from;
 
@@ -840,6 +932,9 @@ llvm::Value *LLVMIRGenerator::convert_from_bool(
 llvm::Value *LLVMIRGenerator::convert_arithmetic(
     llvm::Value *from, ir::BuiltinType from_type, ir::BuiltinType to_type)
 {
+    CUJ_ASSERT(from_type != ir::BuiltinType::Void);
+    CUJ_ASSERT(to_type != ir::BuiltinType::Void);
+
     if(from_type == to_type)
         return from;
     if(from_type == ir::BuiltinType::Bool)

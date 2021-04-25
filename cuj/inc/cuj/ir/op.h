@@ -50,8 +50,9 @@ struct LoadOp
 
 struct CallOp
 {
-    int                     func_index;
+    std::string             name;
     std::vector<BasicValue> args;
+    const Type             *ret_type;
 };
 
 struct IntrinsicOp

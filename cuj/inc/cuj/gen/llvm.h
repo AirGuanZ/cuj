@@ -59,6 +59,8 @@ private:
 
     void construct_struct_type_body(const ir::Type *type);
 
+    void generate_func_decl(const ir::Function &func);
+
     void generate_func(const ir::Function &func);
 
     llvm::FunctionType *generate_func_type(const ir::Function &func);
@@ -84,6 +86,10 @@ private:
     void generate(const ir::If &if_s);
 
     void generate(const ir::While &while_s);
+
+    void generate(const ir::Return &return_s);
+
+    void generate(const ir::Call &call);
 
     llvm::Value *get_value(const ir::Value &v);
 

@@ -120,4 +120,61 @@ inline void WhileBuilder::operator+(const std::function<void()> &body_func)
     block_ = std::move(block);
 }
 
+inline ReturnBuilder::ReturnBuilder()
+{
+    auto func = get_current_function();
+    if(func->get_return_type()->as<ir::BuiltinType>() != ir::BuiltinType::Void)
+    {
+        throw std::runtime_error(
+            "return void in a function with non-void return type");
+    }
+
+    auto ret = newRC<Return<int>>(nullptr);
+    func->append_statement(std::move(ret));
+}
+
+template<typename T>
+ReturnBuilder::ReturnBuilder(const ArithmeticValue<T> &val)
+{
+    auto context = get_current_context();
+    auto func = get_current_function();
+    auto val_type = context->get_type<T>();
+
+    if(val_type != func->get_return_type())
+    {
+#define CUJ_AUTO_CAST_RETURN(TYPE, TO) \
+    case ir::BuiltinType::TYPE: (void)ReturnBuilder(cast<TO>(val)); return;
+
+        switch(func->get_return_type()->as<ir::BuiltinType>())
+        {
+        case ir::BuiltinType::Void:
+            throw std::runtime_error(
+                "convert value to void in return statement");
+        CUJ_AUTO_CAST_RETURN(U8,   uint8_t)
+        CUJ_AUTO_CAST_RETURN(U16,  uint16_t)
+        CUJ_AUTO_CAST_RETURN(U32,  uint32_t)
+        CUJ_AUTO_CAST_RETURN(U64,  uint64_t)
+        CUJ_AUTO_CAST_RETURN(S8,   int8_t)
+        CUJ_AUTO_CAST_RETURN(S16,  int16_t)
+        CUJ_AUTO_CAST_RETURN(S32,  int32_t)
+        CUJ_AUTO_CAST_RETURN(S64,  int64_t)
+        CUJ_AUTO_CAST_RETURN(F32,  float)
+        CUJ_AUTO_CAST_RETURN(F64,  double)
+        CUJ_AUTO_CAST_RETURN(Bool, bool)
+        }
+
+#undef CUJ_AUTO_CAST_RETURN
+
+        unreachable();
+    }
+
+    func->append_statement(newRC<Return<T>>(val.get_impl()));
+}
+
+template<typename T, typename>
+ReturnBuilder::ReturnBuilder(T val)
+{
+    (void)ReturnBuilder(create_literial(val));
+}
+
 CUJ_NAMESPACE_END(cuj::ast)

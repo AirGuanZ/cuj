@@ -45,4 +45,17 @@ public:
     void operator+(const std::function<void()> &body_func);
 };
 
+class ReturnBuilder : public Uncopyable
+{
+public:
+
+    ReturnBuilder();
+
+    template<typename T>
+    ReturnBuilder(const ArithmeticValue<T> &val);
+
+    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    ReturnBuilder(T val);
+};
+
 CUJ_NAMESPACE_END(cuj::ast)

@@ -82,30 +82,16 @@ namespace detail
             T, Array<typename T::ElementType, T::ElementCount>>);
     };
 
-    template<typename T, typename = void>
-    struct CUJValueType
-    {
-        static_assert(
-            IsPointerValue<T>  ::value ||
-            IsArrayValue<T>    ::value ||
-            IsIntrinsicValue<T>::value);
-
-        using Type = T;
-    };
-
     template<typename T>
-    struct CUJValueType
-        <T, std::void_t<std::enable_if_t<std::is_arithmetic_v<T>>>>
+    auto CUJValueTypeAux()
     {
-        using Type = ArithmeticValue<T>;
-    };
-
-    template<typename T>
-    struct CUJValueType
-        <T, std::void_t<std::enable_if_t<IsDerivedFromClassBase<T>::value>>>
-    {
-        using Type = ClassValue<T>;
-    };
+        if constexpr(std::is_arithmetic_v<T>)
+            return ArithmeticValue<T>(UNINIT);
+        else if constexpr(IsDerivedFromClassBase<T>::value)
+            return ClassValue<T>(UNINIT);
+        else
+            return std::declval<T>();
+    }
 
     template<typename T>
     struct RawToCUJType
@@ -128,7 +114,7 @@ namespace detail
 } // namespace detail
 
 template<typename T>
-using Value = typename detail::CUJValueType<T>::Type;
+using Value = decltype(detail::CUJValueTypeAux<T>());
 
 template<typename T>
 using RawToCUJType = typename detail::RawToCUJType<T>::Type;
@@ -298,6 +284,19 @@ public:
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };
 
+template<typename R, typename...Args>
+class InternalFunctionCall : public InternalArithmeticValue<R>
+{
+public:
+
+    int                        func_index;
+    std::tuple<Value<Args>...> args;
+
+    InternalFunctionCall(int index, const Value<Args> &...args);
+
+    ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
+};
+
 template<typename T, typename L, typename R>
 class InternalBinaryOperator : public InternalArithmeticValue<T>
 {
@@ -347,6 +346,8 @@ public:
     Pointer<T> address() const;
 
     RC<InternalArithmeticValue<T>> get_impl() const;
+
+    void set_impl(RC<InternalArithmeticValue<T>> impl);
 };
 
 template<typename T>
@@ -367,6 +368,8 @@ public:
     Pointer<T> address() const;
 
     RC<InternalClassLeftValue<T>> get_impl() const;
+
+    void set_impl(RC<InternalClassLeftValue<T>> impl);
 
     T *operator->() const;
 };
@@ -393,6 +396,8 @@ public:
     Pointer<Array<T, N>> address() const;
 
     RC<InternalArrayValue<T, N>> get_impl() const;
+
+    void set_impl(RC<InternalArrayValue<T, N>> impl);
 
     template<typename I, typename = std::enable_if_t<std::is_integral_v<I>>>
     Pointer<T> get_element_ptr(const ArithmeticValue<I> &index) const;
@@ -434,6 +439,8 @@ public:
     Pointer<Pointer<T>> address() const;
 
     RC<InternalPointerValue<T>> get_impl() const;
+
+    void set_impl(RC<InternalPointerValue<T>> impl);
 
     template<typename I, typename = std::enable_if_t<std::is_integral_v<I>>>
     Pointer<T> offset(const ArithmeticValue<I> &index) const;

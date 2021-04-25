@@ -13,7 +13,8 @@ void IRBuilder::add_type(std::type_index type_index, RC<Type> type)
     prog_.types.insert({ type_index, std::move(type) });
 }
 
-void IRBuilder::begin_function(std::string name, Function::Type type)
+void IRBuilder::begin_function(
+    std::string name, Function::Type type, const Type *ret_type)
 {
     CUJ_ASSERT(!cur_func_);
     CUJ_ASSERT(blocks_.empty());
@@ -22,6 +23,8 @@ void IRBuilder::begin_function(std::string name, Function::Type type)
     cur_func_->name = std::move(name);
     cur_func_->type = type;
     cur_func_->body = newRC<Block>();
+
+    cur_func_->ret_type = ret_type;
 
     next_temp_value_ = 0;
 

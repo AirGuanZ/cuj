@@ -39,6 +39,10 @@ private:
 
     void print(const ir::While &while_s);
 
+    void print(const ir::Return &return_s);
+
+    void print(const ir::Call &call);
+
     std::string get_typename(const ir::Type *type) const;
 
     std::string get_typename(ir::BuiltinType type) const;

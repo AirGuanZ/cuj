@@ -111,7 +111,7 @@ void IRPrinter::print(const ir::Function &func)
         str_.append(arg_name, " : ", get_typename(type));
         alloc_names_[func.args[i].alloc_index] = std::move(arg_name);
     }
-    str_.append(")");
+    str_.append(") -> ", get_typename(func.ret_type));
     
     str_.new_line();
     str_.push_indent();
@@ -170,7 +170,9 @@ void IRPrinter::print(const ir::Statement &stat)
         MATCH_STAT(Continue),
         MATCH_STAT(Block),
         MATCH_STAT(If),
-        MATCH_STAT(While));
+        MATCH_STAT(While),
+        MATCH_STAT(Return),
+        MATCH_STAT(Call));
 
 #undef MATCH_STAT
 }
@@ -242,6 +244,22 @@ void IRPrinter::print(const ir::While &while_s)
     str_.pop_indent();
 }
 
+void IRPrinter::print(const ir::Return &return_s)
+{
+    str_.append("return");
+    if(return_s.value)
+        str_.append(" ", to_string(*return_s.value));
+    str_.new_line();
+}
+
+void IRPrinter::print(const ir::Call &call)
+{
+    str_.append("call ", call.op.name);
+    for(auto &a : call.op.args)
+        str_.append(" ", to_string(a));
+    str_.new_line();
+}
+
 std::string IRPrinter::get_typename(const ir::Type *type) const
 {
     return match_variant(
@@ -272,6 +290,7 @@ std::string IRPrinter::get_typename(ir::BuiltinType type) const
 {
     switch(type)
     {
+    case ir::BuiltinType::Void: return "void";
     case ir::BuiltinType::U8:   return "u8";
     case ir::BuiltinType::U16:  return "u16";
     case ir::BuiltinType::U32:  return "u32";
@@ -335,9 +354,10 @@ std::string IRPrinter::to_string(const ir::Value &value) const
     },
         [this](const ir::CallOp &v)
     {
-        auto result = "call " + std::to_string(v.func_index);
+        auto result = "call " + v.name;
         for(auto &a : v.args)
             result += " " + to_string(a);
+        result += " -> " + get_typename(v.ret_type);
         return result;
     },
         [this](const ir::CastOp &v)

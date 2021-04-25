@@ -19,7 +19,8 @@ public:
 
     // function signature
 
-    void begin_function(std::string name, Function::Type type);
+    void begin_function(
+        std::string name, Function::Type type, const Type *ret_type);
 
     void end_function();
 

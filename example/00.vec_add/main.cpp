@@ -19,7 +19,8 @@ std::string generate_ptx()
     Context context;
     CUJ_SCOPED_CONTEXT(&context);
 
-    context.begin_function("vec_add", cuj::ir::Function::Type::Kernel);
+    context.begin_function<void(float*,float*,float*,int)>(
+        "vec_add", cuj::ir::Function::Type::Kernel);
     
     $arg(float*, A);
     $arg(float*, B);
@@ -29,7 +30,7 @@ std::string generate_ptx()
     $var(int, i);
 
     i = cuda::thread_index_x() + cuda::block_index_x() * cuda::block_dim_x();
-    
+
     $if(i < N)
     {
         C[i] = A[i] + B[i];
@@ -64,10 +65,8 @@ std::string generate_ptx()
     return ptx_gen.get_result();
 }
 
-int main()
+void test_ptx(const std::string &ptx)
 {
-    auto ptx = generate_ptx();
-
     CUdevice cuDevice;
     CUcontext context;
     cuInit(0);
@@ -77,7 +76,8 @@ int main()
 
     cuj::CUDAModule cuda_module;
     cuda_module.load_ptx_from_memory(ptx.data(), ptx.size());
-        constexpr int N = 20;
+
+    constexpr int N = 20;
 
     std::vector<float> data_A, data_B, data_C;
     for(int j = 0; j < N; ++j)
@@ -113,7 +113,6 @@ int main()
     cuda_module.launch(
         "vec_add", { blockCount }, { blockSize },
         device_A, device_B, device_C, n);
-    check_cuda_error(cudaDeviceSynchronize());
 
     check_cuda_error(cudaMemcpy(
         data_C.data(), device_C, sizeof(float) * N, cudaMemcpyDeviceToHost));
@@ -132,4 +131,16 @@ int main()
     std::cout << "C: ";
     for(float c : data_C) std::cout << c << " ";
     std::cout << std::endl;
+}
+
+int main()
+{
+    try
+    {
+        test_ptx(generate_ptx());
+    }
+    catch(const std::exception &err)
+    {
+        std::cerr << err.what() << std::endl;
+    }
 }

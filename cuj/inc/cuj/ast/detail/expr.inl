@@ -4,7 +4,7 @@
 
 #include <cuj/ast/context.h>
 #include <cuj/ast/expr.h>
-#include <cuj/ast/func.h>
+#include <cuj/ast/func_context.h>
 #include <cuj/ast/stat.h>
 #include <cuj/util/type_list.h>
 
@@ -164,6 +164,36 @@ ir::BasicValue InternalCastArithmeticValue<From, To>::gen_ir(ir::IRBuilder &buil
     return detail::gen_arithmetic_cast<From, To>(from_val, builder);
 }
 
+template<typename R, typename...Args>
+InternalFunctionCall<R, Args...>::InternalFunctionCall(
+    int index, const Value<Args> &...args)
+    : func_index(index), args{ args... }
+{
+    
+}
+
+template<typename R, typename ...Args>
+ir::BasicValue InternalFunctionCall<R, Args...>::gen_ir(ir::IRBuilder &builder) const
+{
+    auto context = get_current_context();
+    auto func = context->get_function_context(func_index);
+    
+    auto ret_type = context->get_type<R>();
+
+    std::vector<ir::BasicValue> arg_vals;
+    std::apply(
+        [&](const auto &...arg)
+    {
+        ((arg_vals.push_back(arg.get_impl()->gen_ir(builder))), ...);
+    }, args);
+    
+    auto ret = builder.gen_temp_value(ret_type);
+    builder.append_assign(
+        ret, ir::CallOp{ func->get_name(), std::move(arg_vals), ret_type });
+
+    return ret;
+}
+
 template<typename T, typename L, typename R>
 ir::BasicValue InternalBinaryOperator<T, L, R>::gen_ir(ir::IRBuilder &builder) const
 {
@@ -297,6 +327,12 @@ RC<InternalArithmeticValue<T>> ArithmeticValue<T>::get_impl() const
 }
 
 template<typename T>
+void ArithmeticValue<T>::set_impl(RC<InternalArithmeticValue<T>> impl)
+{
+    impl_ = std::move(impl);
+}
+
+template<typename T>
 ClassValue<T>::ClassValue(RC<InternalClassLeftValue<T>> impl)
     : impl_(std::move(impl))
 {
@@ -327,6 +363,12 @@ template<typename T>
 RC<InternalClassLeftValue<T>> ClassValue<T>::get_impl() const
 {
     return impl_;
+}
+
+template<typename T>
+void ClassValue<T>::set_impl(RC<InternalClassLeftValue<T>> impl)
+{
+    impl_ = std::move(impl);
 }
 
 template<typename T>
@@ -381,6 +423,12 @@ template<typename T, size_t N>
 RC<InternalArrayValue<T, N>> Array<T, N>::get_impl() const
 {
     return impl_;
+}
+
+template<typename T, size_t N>
+void Array<T, N>::set_impl(RC<InternalArrayValue<T, N>> impl)
+{
+    impl_ = std::move(impl);
 }
 
 template<typename T, size_t N>
@@ -482,6 +530,12 @@ template<typename T>
 RC<InternalPointerValue<T>> Pointer<T>::get_impl() const
 {
     return impl_;
+}
+
+template<typename T>
+void Pointer<T>::set_impl(RC<InternalPointerValue<T>> impl)
+{
+    impl_ = std::move(impl);
 }
 
 template<typename T>

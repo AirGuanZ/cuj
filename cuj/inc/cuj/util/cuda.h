@@ -32,7 +32,6 @@ public:
 private:
 
     void link();
-    
 
     template<typename Arg0>
     void take_kernel_arg_ptrs(void **arg_ptrs, Arg0 &arg0) const;

@@ -24,7 +24,9 @@ struct Function
     Type        type;
     std::string name;
 
-    std::vector<Arg>              args;
+    std::vector<Arg> args;
+    const ir::Type  *ret_type;
+
     std::map<int, RC<Allocation>> index_to_allocs;
 
     RC<Block> body;

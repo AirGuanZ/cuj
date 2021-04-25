@@ -128,4 +128,66 @@ inline void Continue::gen_ir(ir::IRBuilder &builder) const
     builder.append_statment(newRC<ir::Statement>(ir::Continue{}));
 }
 
+template<typename T>
+Return<T>::Return(RC<InternalArithmeticValue<T>> value)
+    : value_(std::move(value))
+{
+    if(!value_)
+    {
+        if(get_current_function()->get_return_type() !=
+           get_current_context()->get_type<void>())
+            throw std::runtime_error("return.type != function.type");
+    }
+    else
+    {
+        if(get_current_function()->get_return_type() !=
+           get_current_context()->get_type<T>())
+            throw std::runtime_error("return.type != function.type");
+    }
+}
+
+template<typename T>
+void Return<T>::gen_ir(ir::IRBuilder &builder) const
+{
+    if(!value_)
+    {
+        builder.append_statment(
+            newRC<ir::Statement>(ir::Return{ std::nullopt }));
+    }
+    else
+    {
+        auto val = value_->gen_ir(builder);
+        builder.append_statment(newRC<ir::Statement>(ir::Return{ val }));
+    }
+}
+
+template<typename...Args>
+CallVoid<Args...>::CallVoid(int func_index, const Value<Args> &... args)
+    : func_index_(func_index), args_{ args... }
+{
+    
+}
+
+template<typename...Args>
+void CallVoid<Args...>::gen_ir(ir::IRBuilder &builder) const
+{
+    auto context = get_current_context();
+    auto func = context->get_function_context(func_index_);
+
+    auto ret_type = context->get_type<void>();
+
+    std::vector<ir::BasicValue> arg_vals;
+    std::apply(
+        [&](const auto &...arg)
+    {
+        ((arg_vals.push_back(arg.get_impl()->gen_ir(builder))), ...);
+    }, args_);
+
+    builder.append_statment(newRC<ir::Statement>(ir::Call{
+        ir::CallOp{
+            func->get_name(), std::move(arg_vals), ret_type
+        }
+    }));
+}
+
 CUJ_NAMESPACE_END(cuj::ast)
