@@ -7,9 +7,11 @@
 CUJ_NAMESPACE_BEGIN(cuj::ast)
 
 template<typename C>
-template<typename T, typename...Args>
-Value<T> ClassBase<C>::new_member(Args &&...args)
+template<typename _T, typename...Args>
+Value<_T> ClassBase<C>::new_member(Args &&...args)
 {
+    using T = typename detail::DeArithmeticValueType<_T>::Type;
+
     if(type_recorder_)
     {
         CUJ_ASSERT(!ref_pointer_);
@@ -87,6 +89,13 @@ ClassBase<C>::ClassBase(ClassAddress ref_pointer)
     : type_recorder_(nullptr), ref_pointer_(std::move(ref_pointer))
 {
 
+}
+
+template<typename C>
+ClassBase<C>::ClassBase(ClassAddress ref_pointer, UninitializeFlag)
+    : ClassBase(std::move(ref_pointer))
+{
+    
 }
 
 template<typename C>

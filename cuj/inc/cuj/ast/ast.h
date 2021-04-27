@@ -19,10 +19,26 @@
 #include <cuj/ast/detail/stat.inl>
 #include <cuj/ast/detail/stat_builder.inl>
 
+#define $int    ::cuj::ast::Value<int>
+#define $uint   ::cuj::ast::Value<unsigned>
+#define $float  ::cuj::ast::Value<float>
+#define $double ::cuj::ast::Value<double>
+#define $bool   ::cuj::ast::Value<bool>
+#define $i8     ::cuj::ast::Value<int8_t>
+#define $i16    ::cuj::ast::Value<int16_t>
+#define $i32    ::cuj::ast::Value<int32_t>
+#define $i64    ::cuj::ast::Value<int64_t>
+#define $u8     ::cuj::ast::Value<uint8_t>
+#define $u16    ::cuj::ast::Value<uint16_t>
+#define $u32    ::cuj::ast::Value<uint32_t>
+#define $u64    ::cuj::ast::Value<uint64_t>
+#define $f32    ::cuj::ast::Value<float>
+#define $f64    ::cuj::ast::Value<double>
+
 #define $var(TYPE, NAME, ...)                                                   \
     ::cuj::ast::Value<::cuj::ast::RawToCUJType<TYPE>> NAME =                    \
         ::cuj::ast::get_current_function()                                      \
-            ->create_stack_var<::cuj::ast::RawToCUJType<TYPE>>(##__VA_ARGS__)
+            ->create_stack_var<::cuj::ast::RawToCUJType<TYPE>>(__VA_ARGS__)
 
 #define $arg(TYPE, NAME)                                                        \
     ::cuj::ast::Value<::cuj::ast::RawToCUJType<TYPE>> NAME =                    \
@@ -31,7 +47,7 @@
 
 #define $mem(TYPE, NAME, ...)                                                   \
     ::cuj::ast::Value<::cuj::ast::RawToCUJType<TYPE>> NAME =                    \
-        new_member<::cuj::ast::RawToCUJType<TYPE>>(##__VA_ARGS__)
+        new_member<::cuj::ast::RawToCUJType<TYPE>>(__VA_ARGS__)
 
 #define $if(COND)   ::cuj::ast::IfBuilder()+(COND)+[&]
 #define $elif(COND) +(COND)+[&]
@@ -46,11 +62,7 @@
     ::cuj::ast::get_current_function()->append_statement(                       \
         ::cuj::newRC<::cuj::ast::Continue>())
 
-#define $return_void(DUMMY) ::cuj::ast::ReturnBuilder()
-#define $return_value(DUMMY, ...) \
-    do {\
-        ::cuj::ast::ReturnBuilder(##__VA_ARGS__); \
+#define $return(...)                                                            \
+    do {                                                                        \
+        ::cuj::ast::ReturnBuilder(__VA_ARGS__);                                 \
     } while(false)
-
-#define $return(...) \
-    ::cuj::ast::ReturnBuilder ret_builder##__LINE__(##__VA_ARGS__)

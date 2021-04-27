@@ -28,6 +28,8 @@ public:
 
     explicit ClassBase(ClassAddress ref_pointer);
 
+    ClassBase(ClassAddress ref_pointer, UninitializeFlag);
+
     ClassBase(const ClassBase &) = delete;
 
     ClassBase &operator=(const ClassBase &other);

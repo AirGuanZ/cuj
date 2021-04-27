@@ -48,7 +48,7 @@ namespace detail
     struct IsDerivedFromClassBase<T, std::void_t<typename T::CUJClassFlag>>
         : std::true_type
     {
-        static_assert(std::is_base_of_v<ClassBase<T>, T>);
+
     };
 
     template<typename T, typename = void>
@@ -118,6 +118,9 @@ using RawToCUJType = typename detail::RawToCUJType<T>::Type;
 
 template<typename T>
 using Value = decltype(detail::CUJValueTypeAux<RawToCUJType<T>>());
+
+template<typename T>
+using Var = decltype(detail::CUJValueTypeAux<RawToCUJType<T>>());
 
 template<typename T>
 constexpr bool is_pointer = detail::IsPointerValue<T>::value;
@@ -302,6 +305,8 @@ class InternalPointerFunctionCall :
     public InternalPointerValue<typename R::PointedType>
 {
 public:
+
+    static_assert(is_pointer<R>);
 
     int                        func_index;
     std::tuple<Value<Args>...> args;

@@ -57,7 +57,7 @@ typename detail::FuncRetType<Ret>::Type
 
         return;
     }
-    else if(std::is_arithmetic_v<Ret>)
+    else if constexpr(std::is_arithmetic_v<Ret>)
     {
         using InternalCallType = InternalArithmeticFunctionCall<Ret, Args...>;
 

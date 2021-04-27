@@ -2,7 +2,14 @@
 
 Run-time program generator in C++
 
-## Getting Started
+## Requirements
+
+* LLVM 11.1.0 and CUDA 10 (other versions may work but haven't been tested)
+* A C++17 compiler
+
+## Usage
+
+### Getting Started
 
 ```
 git clone https://github.com/AirGuanZ/cuj.git
@@ -12,14 +19,4 @@ cd build
 cmake -DLLVM_DIR="your_llvm_dir" ..
 ```
 
-## Example
-
-See `./example/00.vec_add`
-
-## Roadmap
-
-- [ ] native codegen
-- [ ] doc, tests and examples 
-- [ ] function calling
-- [ ] intrinsic types for shading language
-
+TODO

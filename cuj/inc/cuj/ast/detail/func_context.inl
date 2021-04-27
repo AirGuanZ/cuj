@@ -63,7 +63,16 @@ Value<T> FunctionContext::alloc_stack_var(bool is_arg, Args &&...args)
     {
         auto impl = newRC<InternalClassLeftValue<T>>();
         impl->address = address;
-        impl->obj     = newBox<T>(std::move(address), std::forward<Args>(args)...);
+        if(is_arg)
+        {
+            CUJ_ASSERT(!sizeof...(Args));
+            impl->obj = newBox<T>(std::move(address), UNINIT);
+        }
+        else
+        {
+            impl->obj = newBox<T>(
+                std::move(address), std::forward<Args>(args)...);
+        }
         return Value<T>(std::move(impl));
     }
 }
@@ -132,7 +141,8 @@ inline const ir::Type *FunctionContext::get_return_type() const
 template<typename T, typename...Args>
 Value<T> FunctionContext::create_stack_var(Args &&...args)
 {
-    return alloc_stack_var<T>(false, std::forward<Args>(args)...);
+    return alloc_stack_var<typename detail::DeArithmeticValueType<T>::Type>(
+        false, std::forward<Args>(args)...);
 }
 
 template<typename T>

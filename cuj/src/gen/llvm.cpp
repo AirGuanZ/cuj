@@ -367,9 +367,19 @@ llvm::FunctionType *LLVMIRGenerator::generate_func_type(const ir::Function &func
     {
         auto it = func.index_to_allocs.find(arg.alloc_index);
         CUJ_ASSERT(it != func.index_to_allocs.end());
-        auto &alloc = it->second;
-        auto llvm_arg_type = find_llvm_type(alloc->type);
-        arg_types.push_back(llvm_arg_type);
+        auto alloc_type = it->second->type;
+
+        if(alloc_type->is<ir::StructType>() || alloc_type->is<ir::ArrayType>())
+        {
+            auto llvm_deref_type = find_llvm_type(alloc_type);
+            auto llvm_type = llvm::PointerType::get(llvm_deref_type, 0);
+            arg_types.push_back(llvm_type);
+        }
+        else
+        {
+            auto llvm_arg_type = find_llvm_type(alloc_type);
+            arg_types.push_back(llvm_arg_type);
+        }
     }
 
     auto ret_type = find_llvm_type(func.ret_type);
@@ -433,8 +443,20 @@ void LLVMIRGenerator::copy_func_args(const ir::Function &func)
     size_t arg_idx = 0;
     for(auto &arg : data_->function->args())
     {
-        auto alloc = data_->index_to_allocas[func.args[arg_idx++].alloc_index];
-        data_->ir_builder->CreateStore(&arg, alloc);
+        const int alloc_index = func.args[arg_idx++].alloc_index;
+        auto alloc = data_->index_to_allocas[alloc_index];
+
+        auto alloc_it = func.index_to_allocs.find(alloc_index);
+        CUJ_ASSERT(alloc_it != func.index_to_allocs.end());
+        auto alloc_type = alloc_it->second->type;
+
+        if(alloc_type->is<ir::StructType>() || alloc_type->is<ir::ArrayType>())
+        {
+            auto val = data_->ir_builder->CreateLoad(&arg);
+            data_->ir_builder->CreateStore(val, alloc);
+        }
+        else
+            data_->ir_builder->CreateStore(&arg, alloc);
     }
 }
 

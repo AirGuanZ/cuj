@@ -117,7 +117,7 @@ class CallVoid : public Statement
 {
     int                        func_index_;
     std::tuple<Value<Args>...> args_;
-
+    
 public:
 
     explicit CallVoid(int func_index, const Value<Args> &...args);

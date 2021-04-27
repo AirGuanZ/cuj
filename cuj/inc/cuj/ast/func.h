@@ -31,6 +31,24 @@ namespace detail
     };
 
     template<typename T>
+    struct MakeArgValue<ClassValue<T>>
+    {
+        static auto process(const ClassValue<T> &val)
+        {
+            return val;
+        }
+    };
+
+    template<typename T, size_t N>
+    struct MakeArgValue<Array<T, N>>
+    {
+        static auto process(const Array<T, N> &val)
+        {
+            return val;
+        }
+    };
+
+    template<typename T>
     struct MakeArgValue<ArithmeticValue<T>>
     {
         static auto process(const ArithmeticValue<T> &val)
@@ -56,6 +74,12 @@ namespace detail
 
     template<typename T>
     struct DeArithmeticValueType<ArithmeticValue<T>>
+    {
+        using Type = T;
+    };
+
+    template<typename T>
+    struct DeArithmeticValueType<ClassValue<T>>
     {
         using Type = T;
     };

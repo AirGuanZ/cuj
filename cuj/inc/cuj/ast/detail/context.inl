@@ -129,7 +129,7 @@ Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
     return add_function_impl<Ret>(
         std::move(name), type,
         std::forward<Callable>(callable),
-        reinterpret_cast<FunctionArgs<RawToCUJType<Ret>, Callable>*>(nullptr),
+        reinterpret_cast<FunctionArgs<RawToCUJType<Ret>, Callable>*>(0),
         std::make_index_sequence<
             std::tuple_size_v<FunctionArgs<RawToCUJType<Ret>, Callable>>>());
 }

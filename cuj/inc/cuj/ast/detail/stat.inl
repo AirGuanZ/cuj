@@ -1,6 +1,9 @@
 #pragma once
 
+#include <cuj/ast/func.h>
 #include <cuj/ast/stat.h>
+
+#include <cuj/ast/detail/call_arg.inl>
 
 CUJ_NAMESPACE_BEGIN(cuj::ast)
 
@@ -176,10 +179,10 @@ void ReturnPointer<T>::gen_ir(ir::IRBuilder &builder) const
 }
 
 template<typename...Args>
-CallVoid<Args...>::CallVoid(int func_index, const Value<Args> &... args)
+CallVoid<Args...>::CallVoid(int func_index, const Value<Args> &...args)
     : func_index_(func_index), args_{ args... }
 {
-    
+
 }
 
 template<typename...Args>
@@ -191,10 +194,13 @@ void CallVoid<Args...>::gen_ir(ir::IRBuilder &builder) const
     auto ret_type = context->get_type<void>();
 
     std::vector<ir::BasicValue> arg_vals;
+
     std::apply(
         [&](const auto &...arg)
     {
-        ((arg_vals.push_back(arg.get_impl()->gen_ir(builder))), ...);
+        (call_detail::prepare_arg<
+            typename detail::DeArithmeticValueType<rm_cvref_t<decltype(arg)>>::Type>(
+                builder, arg, arg_vals), ...);
     }, args_);
 
     builder.append_statment(newRC<ir::Statement>(ir::Call{

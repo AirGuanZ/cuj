@@ -6,6 +6,8 @@
 #include <cuj/ast/stat.h>
 #include <cuj/util/type_list.h>
 
+#include <cuj/ast/detail/call_arg.inl>
+
 CUJ_NAMESPACE_BEGIN(cuj::ast)
 
 namespace detail
@@ -181,9 +183,11 @@ ir::BasicValue InternalArithmeticFunctionCall<R, Args...>::gen_ir(
 
     std::vector<ir::BasicValue> arg_vals;
     std::apply(
-        [&](const auto &...arg)
+        [&](auto ...arg)
     {
-        ((arg_vals.push_back(arg.get_impl()->gen_ir(builder))), ...);
+        (call_detail::prepare_arg<
+            typename detail::DeArithmeticValueType<rm_cvref_t<decltype(arg)>>::Type>(
+                builder, arg, arg_vals), ...);
     }, args);
     
     auto ret = builder.gen_temp_value(ret_type);
@@ -216,7 +220,9 @@ ir::BasicValue InternalPointerFunctionCall<R, Args...>::gen_ir(
     std::apply(
         [&](const auto &...arg)
     {
-        ((arg_vals.push_back(arg.get_impl()->gen_ir(builder))), ...);
+        (call_detail::prepare_arg<
+            typename detail::DeArithmeticValueType<rm_cvref_t<decltype(arg)>>::Type>(
+                builder, arg, arg_vals), ...);
     }, args);
 
     auto ret = builder.gen_temp_value(ret_type);
@@ -388,7 +394,7 @@ ClassValue<T> &ClassValue<T>::operator=(const ClassValue &rhs)
 template<typename T>
 Pointer<T> ClassValue<T>::address() const
 {
-    return Pointer<T>(impl_.get_address());
+    return Pointer<T>(impl_->get_address());
 }
 
 template<typename T>
