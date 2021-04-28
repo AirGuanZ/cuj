@@ -7,7 +7,7 @@ SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 ################ global options ################
 
 OPTION(CUJ_ENABLE_CUDA   "enable CUDA backend" ON)
-OPTION(CUJ_ENABLE_LLVM   "enable LLVM backend" ON)
+OPTION(CUJ_BUILD_TEST    "build cuj tests"     ON)
 OPTION(CUJ_BUILD_EXAMPLE "build cuj examples"  ON)
 
 IF(CUJ_ENABLE_CUDA)
@@ -15,11 +15,9 @@ IF(CUJ_ENABLE_CUDA)
     FIND_PACKAGE(CUDAToolkit REQUIRED)
 ENDIF()
 
-IF(CUJ_ENABLE_LLVM)
-    FIND_PACKAGE(LLVM REQUIRED)
-    SET_TARGET_PROPERTIES(
-        acc_gen intrinsics_gen omp_gen PROPERTIES FOLDER "ThirdParty")
-ENDIF()
+FIND_PACKAGE(LLVM REQUIRED)
+SET_TARGET_PROPERTIES(
+    acc_gen intrinsics_gen omp_gen PROPERTIES FOLDER "ThirdParty")
 
 ################ cuj ################
 
@@ -51,17 +49,18 @@ ELSE()
     TARGET_COMPILE_DEFINITIONS(cuj PUBLIC CUJ_ENABLE_CUDA=0)
 ENDIF()
 
-IF(CUJ_ENABLE_LLVM)
-    TARGET_COMPILE_DEFINITIONS(cuj PUBLIC CUJ_ENABLE_LLVM=1)
-    TARGET_COMPILE_DEFINITIONS(cuj PUBLIC ${LLVM_DEFINITIONS})
-    TARGET_INCLUDE_DIRECTORIES(cuj PUBLIC ${LLVM_INCLUDE_DIRS})
+TARGET_COMPILE_DEFINITIONS(cuj PUBLIC ${LLVM_DEFINITIONS})
+TARGET_INCLUDE_DIRECTORIES(cuj PUBLIC ${LLVM_INCLUDE_DIRS})
 
-    llvm_map_components_to_libnames(
-        LLVM_LIBS
-        Core ExecutionEngine Interpreter Support mcjit nativecodegen nvptxcodegen)
-    TARGET_LINK_LIBRARIES(cuj PUBLIC ${LLVM_LIBS})
-ELSE()
-    TARGET_COMPILE_DEFINITIONS(cuj PUBLIC CUJ_ENABLE_LLVM=0)
+llvm_map_components_to_libnames(
+    LLVM_LIBS
+    Core ExecutionEngine Interpreter Support mcjit nativecodegen nvptxcodegen)
+TARGET_LINK_LIBRARIES(cuj PUBLIC ${LLVM_LIBS})
+
+################ tests ################
+
+IF(CUJ_BUILD_TEST)
+	ADD_SUBDIRECTORY(./test)
 ENDIF()
 
 ################ examples ################

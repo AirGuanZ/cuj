@@ -1,7 +1,5 @@
 #pragma once
 
-#if CUJ_ENABLE_LLVM
-
 #include <cuj/ir/prog.h>
 #include <cuj/util/uncopyable.h>
 
@@ -37,10 +35,6 @@ public:
 
     void set_target(Target target);
 
-    void set_machine(
-        const llvm::DataLayout *data_layout,
-        const char             *target_triple);
-
     void generate(const ir::Program &prog);
 
     llvm::Module *get_module() const;
@@ -63,7 +57,7 @@ private:
 
     void generate_func_decl(const ir::Function &func);
 
-    void generate_func(const ir::Function &func);
+    llvm::Function *generate_func(const ir::Function &func);
 
     llvm::FunctionType *generate_func_type(const ir::Function &func);
 
@@ -129,15 +123,10 @@ private:
         llvm::Value *from, ir::BuiltinType from_type, ir::BuiltinType to_type);
 
     ir::BuiltinType get_arithmetic_type(const ir::BasicValue &v);
-
+    
     Target target_ = Target::Host;
-
-    const llvm::DataLayout *data_layout_ = nullptr;
-    const char             *target_triple_ = nullptr;
-
+    
     Data *data_ = nullptr;
 };
 
 CUJ_NAMESPACE_END(cuj::gen)
-
-#endif // #if CUJ_ENABLE_LLVM

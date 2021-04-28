@@ -26,12 +26,12 @@ namespace func_trait_detail
     struct FunctionTrait<UsrRet, std::function<void(Args...)>>
     {
         using ArgTypes = std::tuple<
-            typename detail::DeArithmeticValueType<rm_cvref_t<Args>>::Type...>;
+            typename detail::DeValueType<rm_cvref_t<Args>>::Type...>;
 
         using RetType = UsrRet;
 
         using FuncType = RetType(
-            typename detail::DeArithmeticValueType<rm_cvref_t<Args>>::Type...);
+            typename detail::DeValueType<rm_cvref_t<Args>>::Type...);
     };
 
 } // namespace func_trait_detail

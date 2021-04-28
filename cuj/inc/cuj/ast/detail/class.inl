@@ -10,7 +10,7 @@ template<typename C>
 template<typename _T, typename...Args>
 Value<_T> ClassBase<C>::new_member(Args &&...args)
 {
-    using T = typename detail::DeArithmeticValueType<_T>::Type;
+    using T = typename detail::DeValueType<_T>::Type;
 
     if(type_recorder_)
     {

@@ -26,7 +26,7 @@ namespace detail
     {
         return newRC<ResultType>(
             index, convert_func_arg_type<
-                        typename DeArithmeticValueType<
+                        typename DeValueType<
                             std::tuple_element_t<Is, FromArgs>>::Type,
                         std::tuple_element_t<Is, ToArgs>>(
                                 std::get<Is>(from_args))...);
@@ -81,6 +81,12 @@ typename detail::FuncRetType<Ret>::Type
 
         return var;
     }
+}
+
+template<typename Ret, typename ... Args>
+const std::string &FunctionImpl<Ret, Args...>::get_name() const
+{
+    return get_current_context()->get_function_context(index_)->get_name();
 }
 
 template<typename Ret, typename...Args>

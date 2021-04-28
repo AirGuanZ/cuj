@@ -66,24 +66,6 @@ namespace detail
         }
     };
 
-    template<typename T>
-    struct DeArithmeticValueType
-    {
-        using Type = T;
-    };
-
-    template<typename T>
-    struct DeArithmeticValueType<ArithmeticValue<T>>
-    {
-        using Type = T;
-    };
-
-    template<typename T>
-    struct DeArithmeticValueType<ClassValue<T>>
-    {
-        using Type = T;
-    };
-
 } // namespace detail
 
 class Context;
@@ -99,6 +81,8 @@ public:
     template<typename...CallArgs>
     typename detail::FuncRetType<Ret>::Type
         operator()(const CallArgs &...args) const;
+
+    const std::string &get_name() const;
 
 private:
     
@@ -123,9 +107,15 @@ public:
 
     using ReturnType = RawToCUJType<Ret>;
 
+    using FunctionType = RawToCUJType<Ret>(RawToCUJType<Args>...);
+
+    using FunctionPointer = FunctionType*;
+
     template<typename...CallArgs>
     typename detail::FuncRetType<RawToCUJType<Ret>>::Type
         operator()(const CallArgs &...args) const;
+
+    using FunctionImpl<RawToCUJType<Ret>, RawToCUJType<Args>...>::get_name;
 
 private:
 

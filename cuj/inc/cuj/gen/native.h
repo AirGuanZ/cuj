@@ -1,7 +1,6 @@
 #pragma once
 
-#if CUJ_ENABLE_LLVM
-
+#include <cuj/ast/func.h>
 #include <cuj/ir/prog.h>
 #include <cuj/util/uncopyable.h>
 
@@ -24,6 +23,10 @@ public:
     template<typename FuncType>
     FuncType *get_symbol(const std::string &name) const;
 
+    template<typename FuncType>
+    typename ast::Function<FuncType>::FunctionPointer
+        get_symbol(const ast::Function<FuncType> &func) const;
+
 private:
 
     void *get_symbol_impl(const std::string &name) const;
@@ -39,6 +42,12 @@ FuncType *NativeJIT::get_symbol(const std::string &name) const
     return reinterpret_cast<FuncType *>(get_symbol_impl(name));
 }
 
-CUJ_NAMESPACE_END(cuj::gen)
+template<typename FuncType>
+typename ast::Function<FuncType>::FunctionPointer
+    NativeJIT::get_symbol(const ast::Function<FuncType> &func) const
+{
+    return reinterpret_cast<typename ast::Function<FuncType>::FunctionPointer>(
+        this->get_symbol_impl(func.get_name()));
+}
 
-#endif // #if CUJ_ENABLE_LLVM
+CUJ_NAMESPACE_END(cuj::gen)

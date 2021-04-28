@@ -7,15 +7,10 @@
 #include <cuj/ast/func.h>
 #include <cuj/ast/func_context.h>
 #include <cuj/ast/func_trait.h>
+#include <cuj/gen/native.h>
 #include <cuj/ir/type.h>
 #include <cuj/util/scope_guard.h>
 #include <cuj/util/uncopyable.h>
-
-#if CUJ_ENABLE_LLVM
-
-#include <cuj/gen/native.h>
-
-#endif
 
 CUJ_NAMESPACE_BEGIN(cuj::ast)
 
@@ -68,18 +63,12 @@ public:
     ir::Program gen_ir() const;
 
     std::string gen_ir_string() const;
-
-#if CUJ_ENABLE_LLVM
-
+    
     gen::NativeJIT gen_native_jit() const;
-
-#endif
-
-#if CUJ_ENABLE_CUDA && CUJ_ENABLE_LLVM
-
-    std::string gen_ptx32() const;
-
-    std::string gen_ptx64() const;
+    
+#if CUJ_ENABLE_CUDA
+    
+    std::string gen_ptx() const;
 
 #endif
 
@@ -117,6 +106,13 @@ auto to_callable(Callable &&callable)
 {
     return get_current_context()
         ->add_function<Ret>(std::forward<Callable>(callable));
+}
+
+template<typename Ret, typename Callable>
+auto to_callable(std::string name, Callable &&callable)
+{
+    return get_current_context()
+        ->add_function<Ret>(std::move(name), std::forward<Callable>(callable));
 }
 
 #define CUJ_SCOPED_CONTEXT(CTX_PTR)                                             \

@@ -199,7 +199,7 @@ void CallVoid<Args...>::gen_ir(ir::IRBuilder &builder) const
         [&](const auto &...arg)
     {
         (call_detail::prepare_arg<
-            typename detail::DeArithmeticValueType<rm_cvref_t<decltype(arg)>>::Type>(
+            typename detail::DeValueType<rm_cvref_t<decltype(arg)>>::Type>(
                 builder, arg, arg_vals), ...);
     }, args_);
 

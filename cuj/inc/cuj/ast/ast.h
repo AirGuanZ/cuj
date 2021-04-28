@@ -24,6 +24,7 @@
 #define $float  ::cuj::ast::Value<float>
 #define $double ::cuj::ast::Value<double>
 #define $bool   ::cuj::ast::Value<bool>
+
 #define $i8     ::cuj::ast::Value<int8_t>
 #define $i16    ::cuj::ast::Value<int16_t>
 #define $i32    ::cuj::ast::Value<int32_t>
@@ -64,5 +65,5 @@
 
 #define $return(...)                                                            \
     do {                                                                        \
-        ::cuj::ast::ReturnBuilder(__VA_ARGS__);                                 \
+        ::cuj::ast::ReturnBuilder t(__VA_ARGS__);                               \
     } while(false)

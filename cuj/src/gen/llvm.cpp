@@ -1,5 +1,3 @@
-#if CUJ_ENABLE_LLVM
-
 #include <stack>
 
 #ifdef _MSC_VER
@@ -12,11 +10,14 @@
 #endif
 
 #include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Transforms/InstCombine/InstCombine.h>
+#include <llvm/Transforms/IPO/GlobalDCE.h>
+#include <llvm/Transforms/IPO/PassManagerBuilder.h>
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/Scalar/GVN.h>
 #include "llvm/Transforms/Utils.h"
@@ -108,7 +109,34 @@ namespace
         unreachable();
     }
 
+    const char *get_target_name(LLVMIRGenerator::Target target)
+    {
+        switch(target)
+        {
+        case LLVMIRGenerator::Target::Host: return "host";
+        case LLVMIRGenerator::Target::PTX:  return "ptx";
+        }
+        unreachable();
+    }
+
 } // namespace anonymous
+
+void link_with_libdevice(
+    llvm::LLVMContext *context,
+    llvm::Module      *dest_module);
+
+llvm::Value *process_cuda_intrinsic(
+    llvm::Module                     *top_module,
+    llvm::IRBuilder<>                &ir,
+    const std::string                &name,
+    const std::vector<llvm::Value *> &args);
+
+llvm::Value *process_host_intrinsic(
+    llvm::LLVMContext                *context,
+    llvm::Module                     *top_module,
+    llvm::IRBuilder<>                &ir,
+    const std::string                &name,
+    const std::vector<llvm::Value *> &args);
 
 struct LLVMIRGenerator::Data
 {
@@ -118,10 +146,10 @@ struct LLVMIRGenerator::Data
     std::unique_ptr<llvm::IRBuilder<>> ir_builder;
     std::unique_ptr<llvm::Module>      top_module;
 
-    std::unique_ptr<llvm::legacy::FunctionPassManager> fpm;
-
     std::map<const ir::Type *, llvm::Type *> types;
     std::map<std::string, llvm::Function *>  functions;
+
+    std::map<std::string, llvm::Function *> external_functions;
 
     // per function
 
@@ -136,20 +164,12 @@ struct LLVMIRGenerator::Data
 
 LLVMIRGenerator::~LLVMIRGenerator()
 {
-    if(data_)
-        delete data_;
+    delete data_;
 }
 
 void LLVMIRGenerator::set_target(Target target)
 {
     target_ = target;
-}
-
-void LLVMIRGenerator::set_machine(
-    const llvm::DataLayout *data_layout, const char *target_triple)
-{
-    data_layout_   = data_layout;
-    target_triple_ = target_triple;
 }
 
 void LLVMIRGenerator::generate(const ir::Program &prog)
@@ -161,20 +181,23 @@ void LLVMIRGenerator::generate(const ir::Program &prog)
     data_->ir_builder = newBox<llvm::IRBuilder<>>(*data_->context);
     data_->top_module = newBox<llvm::Module>("cuj", *data_->context);
 
-    if(data_layout_)
-        data_->top_module->setDataLayout(*data_layout_);
-    if(target_triple_)
-        data_->top_module->setTargetTriple(target_triple_);
+    if(target_ == Target::PTX)
+    {
+        data_->top_module->setTargetTriple("nvptx64-nvidia-cuda");
+        link_with_libdevice(data_->context.get(), data_->top_module.get());
+    }
 
-    data_->fpm = newBox<llvm::legacy::FunctionPassManager>(data_->top_module.get());
-    data_->fpm->add(llvm::createPromoteMemoryToRegisterPass());
-    data_->fpm->add(llvm::createSROAPass());
-    data_->fpm->add(llvm::createEarlyCSEPass());
-    data_->fpm->add(llvm::createInstructionCombiningPass());
-    data_->fpm->add(llvm::createReassociatePass());
-    data_->fpm->add(llvm::createGVNPass());
-    data_->fpm->add(llvm::createCFGSimplificationPass());
-    data_->fpm->doInitialization();
+    // IMPROVE: func-level opt pipeline
+    llvm::legacy::FunctionPassManager fpm(data_->top_module.get());
+    fpm.add(llvm::createPromoteMemoryToRegisterPass());
+    fpm.add(llvm::createSROAPass());
+    fpm.add(llvm::createEarlyCSEPass());
+    fpm.add(llvm::createInstructionCombiningPass());
+    fpm.add(llvm::createReassociatePass());
+    fpm.add(llvm::createGVNPass());
+    fpm.add(llvm::createDeadCodeEliminationPass());
+    fpm.add(llvm::createCFGSimplificationPass());
+    fpm.doInitialization();
 
     for(auto &p : prog.types)
         find_llvm_type(p.second.get());
@@ -186,7 +209,14 @@ void LLVMIRGenerator::generate(const ir::Program &prog)
         generate_func_decl(*f);
 
     for(auto &f : prog.funcs)
-        generate_func(*f);
+    {
+        auto llvm_func = generate_func(*f);
+        fpm.run(*llvm_func);
+    }
+
+    // IMPROVE: module-level opt pipeline
+    llvm::ModuleAnalysisManager mam;
+    llvm::GlobalDCEPass().run(*data_->top_module, mam);
 }
 
 llvm::Module *LLVMIRGenerator::get_module() const
@@ -308,7 +338,7 @@ void LLVMIRGenerator::generate_func_decl(const ir::Function &func)
     data_->functions[func.name] = llvm_func;
 }
 
-void LLVMIRGenerator::generate_func(const ir::Function &func)
+llvm::Function *LLVMIRGenerator::generate_func(const ir::Function &func)
 {
     CUJ_ASSERT(data_);
     CUJ_ASSERT(!data_->function);
@@ -350,7 +380,7 @@ void LLVMIRGenerator::generate_func(const ir::Function &func)
     if(verifyFunction(*data_->function, &err_stream))
         throw CUJException(err_msg);
 
-    data_->fpm->run(*data_->function);
+    auto ret = data_->function;
 
     data_->function = nullptr;
     data_->index_to_allocas.clear();
@@ -358,6 +388,8 @@ void LLVMIRGenerator::generate_func(const ir::Function &func)
 
     CUJ_ASSERT(data_->break_dests.empty());
     CUJ_ASSERT(data_->continue_dests.empty());
+
+    return ret;
 }
 
 llvm::FunctionType *LLVMIRGenerator::generate_func_type(const ir::Function &func)
@@ -817,7 +849,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::IntrinsicOp &v)
             if(target_ != Target::PTX)                                          \
             {                                                                   \
                 throw CUJException(                                             \
-                    "cuda intrinsic is not supported in host mode");            \
+                    "cuda intrinsic is not supported in non-ptx mode");         \
             }                                                                   \
             return data_->ir_builder->CreateIntrinsic(                          \
                 llvm::Intrinsic::nvvm_read_ptx_sreg_##ID, {}, {});              \
@@ -838,7 +870,30 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::IntrinsicOp &v)
 
 #endif // #if CUJ_ENABLE_CUDA
 
-    throw CUJException("unknown intrinsic calling: " + v.name);
+    std::vector<llvm::Value *> args;
+    for(auto &a : v.args)
+        args.push_back(get_value(a));
+
+    if(target_ == Target::Host)
+    {
+        auto ret = process_host_intrinsic(
+            data_->context.get(), data_->top_module.get(),
+            *data_->ir_builder, v.name, args);
+        if(ret)
+            return ret;
+    }
+
+    if(target_ == Target::PTX)
+    {
+        auto ret = process_cuda_intrinsic(
+            data_->top_module.get(), *data_->ir_builder, v.name, args);
+        if(ret)
+            return ret;
+    }
+
+    throw CUJException(
+        "unknown intrinsic " + v.name +
+        " on target " + get_target_name(target_));
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::MemberPtrOp &v)
@@ -1024,16 +1079,16 @@ ir::BuiltinType LLVMIRGenerator::get_arithmetic_type(const ir::BasicValue &v)
         [](const ir::BasicImmediateValue &t)
     {
         return t.value.match(
-            [](uint8_t)  { return ir::BuiltinType::U8; },
-            [](uint16_t) { return ir::BuiltinType::U16; },
-            [](uint32_t) { return ir::BuiltinType::U32; },
-            [](uint64_t) { return ir::BuiltinType::U64; },
-            [](int8_t)   { return ir::BuiltinType::S8; },
-            [](int16_t)  { return ir::BuiltinType::S16; },
-            [](int32_t)  { return ir::BuiltinType::S32; },
-            [](int64_t)  { return ir::BuiltinType::S64; },
-            [](float)    { return ir::BuiltinType::F32; },
-            [](double)   { return ir::BuiltinType::F64; },
+            [](uint8_t)  { return ir::BuiltinType::U8;   },
+            [](uint16_t) { return ir::BuiltinType::U16;  },
+            [](uint32_t) { return ir::BuiltinType::U32;  },
+            [](uint64_t) { return ir::BuiltinType::U64;  },
+            [](int8_t)   { return ir::BuiltinType::S8;   },
+            [](int16_t)  { return ir::BuiltinType::S16;  },
+            [](int32_t)  { return ir::BuiltinType::S32;  },
+            [](int64_t)  { return ir::BuiltinType::S64;  },
+            [](float)    { return ir::BuiltinType::F32;  },
+            [](double)   { return ir::BuiltinType::F64;  },
             [](bool)     { return ir::BuiltinType::Bool; });
     },
         [](const ir::AllocAddress &) -> ir::BuiltinType
@@ -1043,5 +1098,3 @@ ir::BuiltinType LLVMIRGenerator::get_arithmetic_type(const ir::BasicValue &v)
 }
 
 CUJ_NAMESPACE_END(cuj::gen)
-
-#endif // #if CUJ_ENABLE_LLVM

@@ -4,7 +4,7 @@
 
 #include <cuj/gen/printer.h>
 
-#if CUJ_ENABLE_CUDA && CUJ_ENABLE_LLVM
+#if CUJ_ENABLE_CUDA
 #include <cuj/gen/ptx.h>
 #endif
 
@@ -195,8 +195,6 @@ inline std::string Context::gen_ir_string() const
     return printer.get_string();
 }
 
-#if CUJ_ENABLE_LLVM
-
 inline gen::NativeJIT Context::gen_native_jit() const
 {
     gen::NativeJIT jit;
@@ -204,27 +202,16 @@ inline gen::NativeJIT Context::gen_native_jit() const
     return jit;
 }
 
-#endif // #if CUJ_ENABLE_LLVM
+#if CUJ_ENABLE_CUDA
 
-#if CUJ_ENABLE_CUDA && CUJ_ENABLE_LLVM
-
-inline std::string Context::gen_ptx32() const
+inline std::string Context::gen_ptx() const
 {
     gen::PTXGenerator generator;
-    generator.set_target(gen::PTXGenerator::Target::PTX32);
     generator.generate(gen_ir());
     return generator.get_result();
 }
 
-inline std::string Context::gen_ptx64() const
-{
-    gen::PTXGenerator generator;
-    generator.set_target(gen::PTXGenerator::Target::PTX64);
-    generator.generate(gen_ir());
-    return generator.get_result();
-}
-
-#endif // #if CUJ_ENABLE_CUDA && CUJ_ENABLE_LLVM
+#endif // #if CUJ_ENABLE_CUDA
 
 template<typename Ret, typename Callable, typename...Args, size_t...Is>
 Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function_impl(

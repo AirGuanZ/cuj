@@ -110,6 +110,24 @@ namespace detail
     {
         using Type = Pointer<typename RawToCUJType<T>::Type>;
     };
+    
+    template<typename T>
+    struct DeValueType
+    {
+        using Type = T;
+    };
+
+    template<typename T>
+    struct DeValueType<ArithmeticValue<T>>
+    {
+        using Type = T;
+    };
+
+    template<typename T>
+    struct DeValueType<ClassValue<T>>
+    {
+        using Type = T;
+    };
 
 } // namespace detail
 

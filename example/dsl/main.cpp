@@ -10,17 +10,11 @@ void run()
 {
     Context ctx;
     CUJ_SCOPED_CONTEXT(&ctx);
-
-    auto my_dot = ctx.add_function<float>(
-        "dot", [](Float2 a, Float2 b)
-    {
-        $return(dot(a, b));
-    });
-
+    
     ctx.add_function<float>(
-        "get_vec_sum", [&]
+        "test_sqrt", [&]($float x)
     {
-        $return(my_dot(make_float2(1, 2), make_float2(3, 4)));
+        $return(sqrt(x));
     });
     
     cuj::gen::LLVMIRGenerator llvm_gen;
@@ -28,8 +22,8 @@ void run()
     std::cout << llvm_gen.get_string() << std::endl;
 
     auto jit = ctx.gen_native_jit();
-    auto entry = jit.get_symbol<float()>("get_vec_sum");
-    std::cout << entry() << std::endl;
+    auto entry = jit.get_symbol<float(float)>("test_sqrt");
+    std::cout << entry(2) << std::endl;
 }
 
 int main()
