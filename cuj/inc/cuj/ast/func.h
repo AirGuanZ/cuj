@@ -109,7 +109,7 @@ public:
 
     using CFunctionType = std::conditional_t<
         is_cuj_class<ReturnType> || is_array<ReturnType>,
-        void(ReturnType *, RawToCUJType<Args>...),
+        void(void *, RawToCUJType<Args>...),
         RawToCUJType<ReturnType>(RawToCUJType<Args>...)>;
 
     using CFunctionPointer = CFunctionType*;

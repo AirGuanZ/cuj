@@ -103,4 +103,36 @@ $int    isfinite ($double x);
 $int    isinf    ($double x);
 $int    isnan    ($double x);
 
+template<typename T>
+ast::ArithmeticValue<T> min(
+    const ast::ArithmeticValue<T> &lhs, const ast::ArithmeticValue<T> &rhs)
+{
+    $var(T, ret);
+    $if(lhs < rhs)
+    {
+        ret = lhs;
+    }
+    $else
+    {
+        ret = rhs;
+    };
+    return ret;
+}
+
+template<typename T>
+ast::ArithmeticValue<T> max(
+    const ast::ArithmeticValue<T> &lhs, const ast::ArithmeticValue<T> &rhs)
+{
+    $var(T, ret);
+    $if(lhs > rhs)
+    {
+        ret = lhs;
+    }
+    $else
+    {
+        ret = rhs;
+    };
+    return ret;
+}
+
 CUJ_NAMESPACE_END(cuj::builtin::math)

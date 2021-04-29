@@ -4,78 +4,63 @@
 
 CUJ_NAMESPACE_BEGIN(cuj::builtin::math)
 
-namespace detail
+class Float2Impl : public ast::ClassBase<Float2Impl>
 {
+public:
 
-    class Float2Impl : public ast::ClassBase<Float2Impl>
-    {
-    public:
+    $mem(float, x);
+    $mem(float, y);
 
-        $mem(float, x);
-        $mem(float, y);
+    using ClassBase::ClassBase;
 
-        using ClassBase::ClassBase;
+    explicit Float2Impl(ClassAddress addr);
 
-        explicit Float2Impl(ClassAddress addr)
-            : Float2Impl(addr, 0, 0)
-        {
-            
-        }
+    Float2Impl(ClassAddress addr, $float v);
 
-        Float2Impl(ClassAddress addr, $float v)
-            : Float2Impl(addr, v, v)
-        {
-            
-        }
+    Float2Impl(ClassAddress addr, $float _x, $float _y);
 
-        Float2Impl(ClassAddress addr, $float _x, $float _y)
-            : ClassBase<Float2Impl>(addr)
-        {
-            x = _x;
-            y = _y;
-        }
+    Float2Impl(ClassAddress addr, const ast::Value<Float2Impl> &other);
 
-        Float2Impl(ClassAddress addr, const ast::Value<Float2Impl> &other)
-            : Float2Impl(addr, other->x, other->y)
-        {
-            
-        }
-    };
+    $float length_square() const;
 
-} // namespace detail
+    $float length() const;
 
-using Float2 = ast::Var<detail::Float2Impl>;
+    $float min_elem() const;
+
+    $float max_elem() const;
+
+    ast::Value<Float2Impl> normalize() const;
+};
+
+using Float2 = ast::Value<Float2Impl>;
+
+Float2 make_float2();
+Float2 make_float2($float v);
+Float2 make_float2($float x, $float y);
+
+Float2 operator+(const Float2 &lhs, const Float2 &rhs);
+Float2 operator-(const Float2 &lhs, const Float2 &rhs);
+Float2 operator*(const Float2 &lhs, const Float2 &rhs);
+Float2 operator/(const Float2 &lhs, const Float2 &rhs);
+
+Float2 operator+(const Float2 &lhs, $float rhs);
+Float2 operator-(const Float2 &lhs, $float rhs);
+Float2 operator*(const Float2 &lhs, $float rhs);
+Float2 operator/(const Float2 &lhs, $float rhs);
+
+Float2 operator+($float lhs, const Float2 &rhs);
+Float2 operator-($float lhs, const Float2 &rhs);
+Float2 operator*($float lhs, const Float2 &rhs);
+Float2 operator/($float lhs, const Float2 &rhs);
+
+$float dot(const Float2 &a, const Float2 &b);
+$float cos(const Float2 &a, const Float2 &b);
 
 CUJ_NAMESPACE_END(cuj::builtin::math)
 
 CUJ_NAMESPACE_BEGIN(cuj::ast)
 
 ClassValue(builtin::math::Float2) ->
-    ClassValue<builtin::math::detail::Float2Impl>;
+ClassValue<builtin::math::Float2Impl>;
 
 CUJ_NAMESPACE_END(cuj::ast)
-
-CUJ_NAMESPACE_BEGIN(cuj::builtin::math)
-
-inline Float2 make_float2($float x, $float y)
-{
-    $var(Float2, ret, x, y);
-    return ret;
-}
-
-inline Float2 make_float2($float v)
-{
-    return make_float2(v, v);
-}
-
-inline Float2 make_float2()
-{
-    return make_float2(0);
-}
-
-inline $float dot(const Float2 &a, const Float2 &b)
-{
-    return a->x * b->x + a->y * b->y;
-}
-
-CUJ_NAMESPACE_END(cuj::builtin::math)

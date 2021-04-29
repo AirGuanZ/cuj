@@ -1,6 +1,4 @@
-﻿ADD_SUBDIRECTORY(dsl)
-
-ADD_SUBDIRECTORY(native_codegen)
+﻿ADD_SUBDIRECTORY(native_codegen)
 
 IF(CUJ_ENABLE_CUDA)
 	ADD_SUBDIRECTORY(vec_sqrt_add)
