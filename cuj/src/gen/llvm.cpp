@@ -153,6 +153,8 @@ struct LLVMIRGenerator::Data
 
     // per function
 
+    llvm::Value *func_ret_class_ptr_arg = nullptr;
+
     llvm::Function                   *function = nullptr;
     std::map<int, llvm::AllocaInst *> index_to_allocas;
 
@@ -347,6 +349,9 @@ llvm::Function *LLVMIRGenerator::generate_func(const ir::Function &func)
     CUJ_ASSERT(func_it != data_->functions.end());
     data_->function = func_it->second;
 
+    if(func.ret_type->is<ir::StructType>() || func.ret_type->is<ir::ArrayType>())
+        data_->func_ret_class_ptr_arg = &*data_->function->arg_begin();
+
     auto entry_block =
         llvm::BasicBlock::Create(*data_->context, "entry", data_->function);
     data_->ir_builder->SetInsertPoint(entry_block);
@@ -367,12 +372,17 @@ llvm::Function *LLVMIRGenerator::generate_func(const ir::Function &func)
             data_->ir_builder->CreateRet(zero);
         }
     }
-    else
+    else if(func.ret_type->is<ir::PointerType>())
     {
-        CUJ_ASSERT(func.ret_type->is<ir::PointerType>());
         data_->ir_builder->CreateRet(
             llvm::ConstantPointerNull::get(
                 static_cast<llvm::PointerType*>(find_llvm_type(func.ret_type))));
+    }
+    else
+    {
+        CUJ_ASSERT(func.ret_type->is<ir::StructType>() ||
+                   func.ret_type->is<ir::ArrayType>());
+        data_->ir_builder->CreateRetVoid();
     }
 
     std::string err_msg;
@@ -382,7 +392,9 @@ llvm::Function *LLVMIRGenerator::generate_func(const ir::Function &func)
 
     auto ret = data_->function;
 
-    data_->function = nullptr;
+    data_->function               = nullptr;
+    data_->func_ret_class_ptr_arg = nullptr;
+
     data_->index_to_allocas.clear();
     data_->temp_values_.clear();
 
@@ -394,7 +406,19 @@ llvm::Function *LLVMIRGenerator::generate_func(const ir::Function &func)
 
 llvm::FunctionType *LLVMIRGenerator::generate_func_type(const ir::Function &func)
 {
+    const bool is_ret_struct_or_arr =
+        func.ret_type->is<ir::StructType>() ||
+        func.ret_type->is<ir::ArrayType>();
+
     std::vector<llvm::Type *> arg_types;
+
+    if(is_ret_struct_or_arr)
+    {
+        auto llvm_ret_type = find_llvm_type(func.ret_type);
+        auto arg_type = llvm::PointerType::get(llvm_ret_type, 0);
+        arg_types.push_back(arg_type);
+    }
+
     for(auto &arg : func.args)
     {
         auto it = func.index_to_allocs.find(arg.alloc_index);
@@ -414,7 +438,8 @@ llvm::FunctionType *LLVMIRGenerator::generate_func_type(const ir::Function &func
         }
     }
 
-    auto ret_type = find_llvm_type(func.ret_type);
+    auto ret_type = is_ret_struct_or_arr ? data_->ir_builder->getVoidTy()
+                                         : find_llvm_type(func.ret_type);
     return llvm::FunctionType::get(ret_type, arg_types, false);
 }
 
@@ -472,9 +497,17 @@ void LLVMIRGenerator::generate_func_allocs(const ir::Function &func)
 
 void LLVMIRGenerator::copy_func_args(const ir::Function &func)
 {
+    auto it  = data_->function->arg_begin();
+    auto end = data_->function->arg_end();
+
+    if(func.ret_type->is<ir::StructType>() || func.ret_type->is<ir::ArrayType>())
+        ++it;
+
     size_t arg_idx = 0;
-    for(auto &arg : data_->function->args())
+    while(it != end)
     {
+        auto &arg = *it++;
+
         const int alloc_index = func.args[arg_idx++].alloc_index;
         auto alloc = data_->index_to_allocas[alloc_index];
 
@@ -495,15 +528,17 @@ void LLVMIRGenerator::copy_func_args(const ir::Function &func)
 void LLVMIRGenerator::generate(const ir::Statement &s)
 {
     s.match(
-        [this](const ir::Store    &_s) { generate(_s); },
-        [this](const ir::Assign   &_s) { generate(_s); },
-        [this](const ir::Break    &_s) { generate(_s); },
-        [this](const ir::Continue &_s) { generate(_s); },
-        [this](const ir::Block    &_s) { generate(_s); },
-        [this](const ir::If       &_s) { generate(_s); },
-        [this](const ir::While    &_s) { generate(_s); },
-        [this](const ir::Return   &_s) { generate(_s); },
-        [this](const ir::Call     &_s) { generate(_s); });
+        [this](const ir::Store       &_s) { generate(_s); },
+        [this](const ir::Assign      &_s) { generate(_s); },
+        [this](const ir::Break       &_s) { generate(_s); },
+        [this](const ir::Continue    &_s) { generate(_s); },
+        [this](const ir::Block       &_s) { generate(_s); },
+        [this](const ir::If          &_s) { generate(_s); },
+        [this](const ir::While       &_s) { generate(_s); },
+        [this](const ir::Return      &_s) { generate(_s); },
+        [this](const ir::ReturnClass &_s) { generate(_s); },
+        [this](const ir::ReturnArray &_s) { generate(_s); },
+        [this](const ir::Call        &_s) { generate(_s); });
 }
 
 void LLVMIRGenerator::generate(const ir::Store &store)
@@ -614,6 +649,20 @@ void LLVMIRGenerator::generate(const ir::Return &return_s)
     auto block = llvm::BasicBlock::Create(
         *data_->context, "after_return", data_->function);
     data_->ir_builder->SetInsertPoint(block);
+}
+
+void LLVMIRGenerator::generate(const ir::ReturnClass &return_class)
+{
+    auto src_ptr = get_value(return_class.class_ptr);
+    auto src_val = data_->ir_builder->CreateLoad(src_ptr);
+    data_->ir_builder->CreateStore(src_val, data_->func_ret_class_ptr_arg);
+}
+
+void LLVMIRGenerator::generate(const ir::ReturnArray &return_array)
+{
+    auto src_ptr = get_value(return_array.array_ptr);
+    auto src_val = data_->ir_builder->CreateLoad(src_ptr);
+    data_->ir_builder->CreateStore(src_val, data_->func_ret_class_ptr_arg);
 }
 
 void LLVMIRGenerator::generate(const ir::Call &call)

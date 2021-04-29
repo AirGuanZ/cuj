@@ -112,6 +112,34 @@ public:
     void gen_ir(ir::IRBuilder &builder) const override;
 };
 
+template<typename T>
+class ReturnClass : public Statement
+{
+    static_assert(is_cuj_class<T>);
+
+    RC<InternalPointerValue<T>> pointer_;
+
+public:
+
+    explicit ReturnClass(RC<InternalPointerValue<T>> pointer);
+
+    void gen_ir(ir::IRBuilder &builder) const override;
+};
+
+template<typename T>
+class ReturnArray : public Statement
+{
+    static_assert(is_array<T>);
+
+    RC<InternalPointerValue<T>> pointer_;
+
+public:
+
+    explicit ReturnArray(RC<InternalPointerValue<T>> pointer);
+
+    void gen_ir(ir::IRBuilder &builder) const override;
+};
+
 template<typename...Args>
 class CallVoid : public Statement
 {
@@ -121,6 +149,40 @@ class CallVoid : public Statement
 public:
 
     explicit CallVoid(int func_index, const Value<Args> &...args);
+
+    void gen_ir(ir::IRBuilder &builder) const override;
+};
+
+template<typename Ret, typename...Args>
+class CallClass : public Statement
+{
+    static_assert(is_cuj_class<Ret>);
+
+    int                        func_index_;
+    Pointer<Ret>               ret_ptr_;
+    std::tuple<Value<Args>...> args_;
+
+public:
+
+    CallClass(
+        int func_index, const Pointer<Ret> &ret_ptr, const Value<Args> &...args);
+
+    void gen_ir(ir::IRBuilder &builder) const override;
+};
+
+template<typename Ret, typename...Args>
+class CallArray : public Statement
+{
+    static_assert(is_array<Ret>);
+
+    int                        func_index_;
+    Pointer<Ret>               ret_ptr_;
+    std::tuple<Value<Args>...> args_;
+
+public:
+
+    CallArray(
+        int func_index, const Pointer<Ret> &ret_ptr, const Value<Args> &...args);
 
     void gen_ir(ir::IRBuilder &builder) const override;
 };

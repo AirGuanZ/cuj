@@ -34,6 +34,12 @@ namespace detail
             x = _x;
             y = _y;
         }
+
+        Float2Impl(ClassAddress addr, const ast::Value<Float2Impl> &other)
+            : Float2Impl(addr, other->x, other->y)
+        {
+            
+        }
     };
 
 } // namespace detail

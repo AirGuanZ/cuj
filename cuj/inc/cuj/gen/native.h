@@ -24,7 +24,7 @@ public:
     FuncType *get_symbol(const std::string &name) const;
 
     template<typename FuncType>
-    typename ast::Function<FuncType>::FunctionPointer
+    typename ast::Function<FuncType>::CFunctionPointer
         get_symbol(const ast::Function<FuncType> &func) const;
 
 private:
@@ -43,10 +43,10 @@ FuncType *NativeJIT::get_symbol(const std::string &name) const
 }
 
 template<typename FuncType>
-typename ast::Function<FuncType>::FunctionPointer
+typename ast::Function<FuncType>::CFunctionPointer
     NativeJIT::get_symbol(const ast::Function<FuncType> &func) const
 {
-    return reinterpret_cast<typename ast::Function<FuncType>::FunctionPointer>(
+    return reinterpret_cast<typename ast::Function<FuncType>::CFunctionPointer>(
         this->get_symbol_impl(func.get_name()));
 }
 

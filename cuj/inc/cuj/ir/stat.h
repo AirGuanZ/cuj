@@ -14,10 +14,16 @@ struct Block;
 struct If;
 struct While;
 struct Return;
+struct ReturnArray;
+struct ReturnClass;
 struct Call;
 
 using Statement = Variant<
-    Store, Assign, Break, Continue, Block, If, While, Return, Call>;
+    Store, Assign,
+    Break, Continue,
+    Block, If, While,
+    Return, ReturnArray, ReturnClass,
+    Call>;
 
 struct Store
 {
@@ -63,6 +69,16 @@ struct While
 struct Return
 {
     std::optional<BasicValue> value;
+};
+
+struct ReturnClass
+{
+    BasicValue class_ptr;
+};
+
+struct ReturnArray
+{
+    BasicValue array_ptr;
 };
 
 struct Call

@@ -183,6 +183,34 @@ ReturnBuilder::ReturnBuilder(const Pointer<T> &val)
     func->append_statement(newRC<ReturnPointer<T>>(val.get_impl()));
 }
 
+template<typename T>
+ReturnBuilder::ReturnBuilder(const ClassValue<T> &val)
+{
+    auto context = get_current_context();
+    auto func = context->get_current_function();
+
+    auto val_type = context->get_type<T>();
+    if(val_type != func->get_return_type())
+        throw CUJException("return.type != function.type");
+
+    auto ret_ptr = val.address();
+    func->append_statement(newRC<ReturnClass<T>>(ret_ptr.get_impl()));
+}
+
+template<typename T, size_t N>
+ReturnBuilder::ReturnBuilder(const Array<T, N> &val)
+{
+    auto context = get_current_context();
+    auto func = context->get_current_function();
+
+    auto val_type = context->get_type<Array<T, N>>();
+    if(val_type != func->get_return_type())
+        throw CUJException("return.type != function.type");
+
+    auto ret_ptr = val.address();
+    func->append_statement(newRC<ReturnArray<Array<T, N>>>(ret_ptr.get_impl()));
+}
+
 template<typename T, typename>
 ReturnBuilder::ReturnBuilder(T val)
 {

@@ -85,6 +85,10 @@ private:
 
     void generate(const ir::Return &return_s);
 
+    void generate(const ir::ReturnClass &return_class);
+
+    void generate(const ir::ReturnArray &return_array);
+
     void generate(const ir::Call &call);
 
     llvm::Value *get_value(const ir::Value &v);

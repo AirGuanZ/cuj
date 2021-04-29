@@ -432,19 +432,8 @@ Array<T, N>::Array(const Array &rhs)
 template<typename T, size_t N>
 Array<T, N> &Array<T, N>::operator=(const Array &rhs)
 {
-    for(size_t i = 0; i < impl_->elem_count; ++i)
-    {
-        auto literial_i = newRC<InternalArithmeticLiterial<size_t>>();
-        literial_i->literial = i;
-        
-        auto lval_ptr = impl_->data_ptr->offset(literial_i);
-        auto rval_ptr = rhs.impl_->data_ptr->offset(literial_i);
-
-        auto lval = Pointer<T>(lval_ptr).dereference();
-        auto rval = Pointer<T>(rval_ptr).dereference();
-
-        lval = rval;
-    }    
+    for(size_t i = 0; i < N; ++i)
+        this->operator[](i) = rhs[i];
 
     return *this;
 }
@@ -452,9 +441,7 @@ Array<T, N> &Array<T, N>::operator=(const Array &rhs)
 template<typename T, size_t N>
 Pointer<Array<T, N>> Array<T, N>::address() const
 {
-    auto impl = newRC<InternalPointerValue<Array<T, N>>>();
-    impl->value = impl_->data_ptr->value;
-    return Pointer<Array<T, N>>(std::move(impl));
+    return Pointer<Array<T, N>>(impl_->data_ptr->arr_alloc);
 }
 
 template<typename T, size_t N>

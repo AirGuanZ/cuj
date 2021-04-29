@@ -19,7 +19,7 @@ Value<T> FunctionContext::alloc_stack_var(bool is_arg, Args &&...args)
         arg_indices_.push_back(address->alloc_index);
     }
 
-    static_assert(!is_array<T>   || sizeof...(args) == 0);
+    static_assert(!is_array<T>   || sizeof...(args) <= 1);
     static_assert(!is_pointer<T> || sizeof...(args) <= 1);
     static_assert(!std::is_arithmetic_v<T> || sizeof...(args) <= 1);
 
@@ -31,7 +31,12 @@ Value<T> FunctionContext::alloc_stack_var(bool is_arg, Args &&...args)
         auto impl = newRC<InternalArrayValue<
             typename T::ElementType, T::ElementCount>>();
         impl->data_ptr = cast_addr;
-        return Value<T>(std::move(impl));
+
+        auto ret = Value<T>(std::move(impl));
+        if constexpr(sizeof...(args) == 1)
+            ret = (std::forward<Args>(args), ...);
+
+        return ret;
     }
     else if constexpr(is_pointer<T>)
     {

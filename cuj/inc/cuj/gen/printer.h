@@ -41,6 +41,10 @@ private:
 
     void print(const ir::Return &return_s);
 
+    void print(const ir::ReturnClass &return_class);
+
+    void print(const ir::ReturnArray &return_array);
+
     void print(const ir::Call &call);
 
     std::string get_typename(const ir::Type *type) const;

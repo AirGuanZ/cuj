@@ -32,6 +32,21 @@ namespace detail
                                 std::get<Is>(from_args))...);
     }
 
+    template<typename ResultType, typename RetClass,
+             typename ToArgs, typename FromArgs, size_t...Is>
+    auto create_call_class_obj(
+        int index, const Pointer<RetClass> &ret_ptr,
+        const FromArgs &from_args, std::index_sequence<Is...>)
+    {
+        return newRC<ResultType>(
+            index, ret_ptr,
+            convert_func_arg_type<
+                typename DeValueType<
+                    std::tuple_element_t<Is, FromArgs>>::Type,
+                std::tuple_element_t<Is, ToArgs>>(
+                    std::get<Is>(from_args))...);
+    }
+
 } // namespace detail
 
 template<typename Ret, typename...Args>
@@ -66,6 +81,32 @@ typename detail::FuncRetType<Ret>::Type
         
         auto var = func->create_stack_var<Ret>();
         var = Value<Ret>(std::move(call));
+
+        return var;
+    }
+    else if constexpr(is_cuj_class<Ret>)
+    {
+        using CallStatType = CallClass<Ret, Args...>;
+
+        auto var = func->create_stack_var<Ret>();
+        auto call = detail::create_call_class_obj<CallStatType, Ret, ToTuple>(
+            index_, var.address(), args_tuple,
+            std::make_index_sequence<sizeof...(Args)>());
+
+        func->append_statement(std::move(call));
+
+        return var;
+    }
+    else if constexpr(is_array<Ret>)
+    {
+        using CallStatType = CallArray<Ret, Args...>;
+
+        auto var = func->create_stack_var<Ret>();
+        auto call = detail::create_call_class_obj<CallStatType, Ret, ToTuple>(
+            index_, var.address(), args_tuple,
+            std::make_index_sequence<sizeof...(Args)>());
+
+        func->append_statement(std::move(call));
 
         return var;
     }
@@ -133,10 +174,10 @@ bool FunctionImpl<Ret, Args...>::check_param_types_aux(std::index_sequence<Is...
 
 template<typename Ret, typename ... Args>
 template<typename ... CallArgs>
-typename detail::FuncRetType<RawToCUJType<Ret>>::Type
+typename detail::FuncRetType<typename Function<Ret(Args ...)>::ReturnType>::Type
     Function<Ret(Args ...)>::operator()(const CallArgs &... args) const
 {
-    return FunctionImpl<RawToCUJType<Ret>, RawToCUJType<Args>...>::operator()(
+    return FunctionImpl<ReturnType, RawToCUJType<Args>...>::operator()(
         detail::MakeArgValue<CallArgs>::process(args)...);
 }
 

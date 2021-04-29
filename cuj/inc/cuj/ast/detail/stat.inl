@@ -178,6 +178,36 @@ void ReturnPointer<T>::gen_ir(ir::IRBuilder &builder) const
     builder.append_statment(newRC<ir::Statement>(ir::Return{ val }));
 }
 
+template<typename T>
+ReturnClass<T>::ReturnClass(RC<InternalPointerValue<T>> pointer)
+    : pointer_(std::move(pointer))
+{
+    
+}
+
+template<typename T>
+void ReturnClass<T>::gen_ir(ir::IRBuilder &builder) const
+{
+    auto class_ptr = pointer_->gen_ir(builder);
+    auto ret_stat = ir::ReturnClass{ class_ptr };
+    builder.append_statment(newRC<ir::Statement>(ret_stat));
+}
+
+template<typename T>
+ReturnArray<T>::ReturnArray(RC<InternalPointerValue<T>> pointer)
+    : pointer_(std::move(pointer))
+{
+    
+}
+
+template<typename T>
+void ReturnArray<T>::gen_ir(ir::IRBuilder &builder) const
+{
+    auto class_ptr = pointer_->gen_ir(builder);
+    auto ret_stat = ir::ReturnArray{ class_ptr };
+    builder.append_statment(newRC<ir::Statement>(ret_stat));
+}
+
 template<typename...Args>
 CallVoid<Args...>::CallVoid(int func_index, const Value<Args> &...args)
     : func_index_(func_index), args_{ args... }
@@ -194,6 +224,78 @@ void CallVoid<Args...>::gen_ir(ir::IRBuilder &builder) const
     auto ret_type = context->get_type<void>();
 
     std::vector<ir::BasicValue> arg_vals;
+
+    std::apply(
+        [&](const auto &...arg)
+    {
+        (call_detail::prepare_arg<
+            typename detail::DeValueType<rm_cvref_t<decltype(arg)>>::Type>(
+                builder, arg, arg_vals), ...);
+    }, args_);
+
+    builder.append_statment(newRC<ir::Statement>(ir::Call{
+        ir::CallOp{
+            func->get_name(), std::move(arg_vals), ret_type
+        }
+    }));
+}
+
+template<typename Ret, typename ... Args>
+CallClass<Ret, Args...>::CallClass(
+    int func_index, const Pointer<Ret> &ret_ptr, const Value<Args> &... args)
+        : func_index_(func_index), ret_ptr_(ret_ptr), args_{ args... }
+{
+    
+}
+
+template<typename Ret, typename ... Args>
+void CallClass<Ret, Args...>::gen_ir(ir::IRBuilder &builder) const
+{
+    auto context = get_current_context();
+    auto func = context->get_function_context(func_index_);
+
+    auto ret_type = context->get_type<void>();
+
+    std::vector<ir::BasicValue> arg_vals;
+
+    auto ret_ptr_val = ret_ptr_.get_impl()->gen_ir(builder);
+    arg_vals.push_back(ret_ptr_val);
+
+    std::apply(
+        [&](const auto &...arg)
+    {
+        (call_detail::prepare_arg<
+            typename detail::DeValueType<rm_cvref_t<decltype(arg)>>::Type>(
+                builder, arg, arg_vals), ...);
+    }, args_);
+
+    builder.append_statment(newRC<ir::Statement>(ir::Call{
+        ir::CallOp{
+            func->get_name(), std::move(arg_vals), ret_type
+        }
+    }));
+}
+
+template<typename Ret, typename ... Args>
+CallArray<Ret, Args...>::CallArray(
+    int func_index, const Pointer<Ret> &ret_ptr, const Value<Args> &... args)
+        : func_index_(func_index), ret_ptr_(ret_ptr), args_{ args... }
+{
+    
+}
+
+template<typename Ret, typename ... Args>
+void CallArray<Ret, Args...>::gen_ir(ir::IRBuilder &builder) const
+{
+    auto context = get_current_context();
+    auto func = context->get_function_context(func_index_);
+
+    auto ret_type = context->get_type<void>();
+
+    std::vector<ir::BasicValue> arg_vals;
+
+    auto ret_ptr_val = ret_ptr_.get_impl()->gen_ir(builder);
+    arg_vals.push_back(ret_ptr_val);
 
     std::apply(
         [&](const auto &...arg)

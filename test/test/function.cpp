@@ -94,4 +94,61 @@ TEST_CASE("function")
             REQUIRE(test_float2_sum() == Approx(21));
         }
     }
+
+    SECTION("class-type return value")
+    {
+        Context ctx;
+        CUJ_SCOPED_CONTEXT(&ctx);
+
+        auto my_make_float2 = to_callable<math::Float2>(
+            []($f32 x, $f32 y)
+        {
+            $return(math::make_float2(x, y));
+        });
+
+        auto test_make_float2 = to_callable<float>(
+            [&]($f32 x, $f32 y)
+        {
+            $var(math::Float2, v, my_make_float2(x, y));
+            $return(v->x + v->y);
+        });
+        
+        auto jit = ctx.gen_native_jit();
+        auto test_make_float2_func = jit.get_symbol(test_make_float2);
+
+        REQUIRE(test_make_float2_func);
+        if(test_make_float2_func)
+            REQUIRE(test_make_float2_func(1, 2) == Approx(3.0f));
+    }
+
+    SECTION("array-type return value")
+    {
+        Context ctx;
+        CUJ_SCOPED_CONTEXT(&ctx);
+
+        auto my_make_arr4 = to_callable<int[4]>(
+            []($int x, $int y, $int z, $int w)
+        {
+            $var(int[4], arr);
+            arr[0] = x;
+            arr[1] = y;
+            arr[2] = z;
+            arr[3] = w;
+            $return(arr);
+        });
+
+        auto test_make_arr4 = to_callable<int>(
+            [&]($int x, $int y, $int z, $int w)
+        {
+            $var(int[4], arr, my_make_arr4(x, y, z, w));
+            $return(arr[0] + arr[1] + arr[2] + arr[3]);
+        });
+
+        auto jit = ctx.gen_native_jit();
+        auto test_make_arr4_func = jit.get_symbol(test_make_arr4);
+
+        REQUIRE(test_make_arr4_func);
+        if(test_make_arr4_func)
+            REQUIRE(test_make_arr4_func(1, 2, 3, 4) == 10);
+    }
 }

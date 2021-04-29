@@ -172,6 +172,8 @@ void IRPrinter::print(const ir::Statement &stat)
         MATCH_STAT(If),
         MATCH_STAT(While),
         MATCH_STAT(Return),
+        MATCH_STAT(ReturnClass),
+        MATCH_STAT(ReturnArray),
         MATCH_STAT(Call));
 
 #undef MATCH_STAT
@@ -250,6 +252,16 @@ void IRPrinter::print(const ir::Return &return_s)
     if(return_s.value)
         str_.append(" ", to_string(*return_s.value));
     str_.new_line();
+}
+
+void IRPrinter::print(const ir::ReturnClass &return_class)
+{
+    str_.append("return class ", to_string(return_class.class_ptr));
+}
+
+void IRPrinter::print(const ir::ReturnArray &return_array)
+{
+    str_.append("return array ", to_string(return_array.array_ptr));
 }
 
 void IRPrinter::print(const ir::Call &call)

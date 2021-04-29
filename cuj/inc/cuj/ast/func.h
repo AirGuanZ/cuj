@@ -100,22 +100,25 @@ template<typename T>
 class Function;
 
 template<typename Ret, typename...Args>
-class Function<Ret(Args...)> :
-    FunctionImpl<RawToCUJType<Ret>, RawToCUJType<Args>...>
+class Function<Ret(Args...)> : FunctionImpl<
+    typename detail::DeValueType<RawToCUJType<Ret>>::Type, RawToCUJType<Args>...>
 {
 public:
 
-    using ReturnType = RawToCUJType<Ret>;
+    using ReturnType = typename detail::DeValueType<RawToCUJType<Ret>>::Type;
 
-    using FunctionType = RawToCUJType<Ret>(RawToCUJType<Args>...);
+    using CFunctionType = std::conditional_t<
+        is_cuj_class<ReturnType> || is_array<ReturnType>,
+        void(ReturnType *, RawToCUJType<Args>...),
+        RawToCUJType<ReturnType>(RawToCUJType<Args>...)>;
 
-    using FunctionPointer = FunctionType*;
+    using CFunctionPointer = CFunctionType*;
 
     template<typename...CallArgs>
-    typename detail::FuncRetType<RawToCUJType<Ret>>::Type
+    typename detail::FuncRetType<ReturnType>::Type
         operator()(const CallArgs &...args) const;
 
-    using FunctionImpl<RawToCUJType<Ret>, RawToCUJType<Args>...>::get_name;
+    using FunctionImpl<ReturnType, RawToCUJType<Args>...>::get_name;
 
 private:
 
@@ -123,7 +126,7 @@ private:
 
     static void get_arg_types(std::vector<const ir::Type *> &output);
 
-    using FunctionImpl<RawToCUJType<Ret>, RawToCUJType<Args>...>::FunctionImpl;
+    using FunctionImpl<ReturnType, RawToCUJType<Args>...>::FunctionImpl;
 };
 
 CUJ_NAMESPACE_END(cuj::ast)

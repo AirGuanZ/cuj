@@ -30,8 +30,8 @@ namespace func_trait_detail
 
         using RetType = UsrRet;
 
-        using FuncType = RetType(
-            typename detail::DeValueType<rm_cvref_t<Args>>::Type...);
+        using FuncType =
+            RetType(typename detail::DeValueType<rm_cvref_t<Args>>::Type...);
     };
 
 } // namespace func_trait_detail

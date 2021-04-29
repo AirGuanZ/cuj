@@ -25,6 +25,9 @@ template<typename T>
 class InternalPointerLeftValue;
 
 template<typename T>
+class InternalArrayAllocAddress;
+
+template<typename T>
 class ArithmeticValue;
 
 template<typename T, size_t N>
@@ -229,7 +232,7 @@ class InternalArrayValue
 {
 public:
 
-    RC<InternalPointerValue<T>> data_ptr;
+    RC<InternalArrayAllocAddress<Array<T, N>>> data_ptr;
 };
 
 template<typename T>
