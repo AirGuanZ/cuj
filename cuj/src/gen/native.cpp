@@ -134,6 +134,8 @@ void NativeJIT::generate(const ir::Program &prog)
     ADD_HOST_FUNC("host.math.isnan.f64",     &is_nan_f64);
 
 #undef ADD_HOST_FUNC
+
+    impl_->exec_engine->finalizeObject();
 }
 
 void *NativeJIT::get_symbol_impl(const std::string &name) const

@@ -31,10 +31,10 @@ public:
 
     $float max_elem() const;
 
-    ast::Value<Float4Impl> normalize() const;
+    Value<Float4Impl> normalize() const;
 };
 
-using Float4 = ast::Value<Float4Impl>;
+using Float4 = Value<Float4Impl>;
 
 Float4 make_float4();
 Float4 make_float4($float v);
@@ -59,10 +59,3 @@ $float dot(const Float4 &a, const Float4 &b);
 $float cos(const Float4 &a, const Float4 &b);
 
 CUJ_NAMESPACE_END(cuj::builtin::math)
-
-CUJ_NAMESPACE_BEGIN(cuj::ast)
-
-ClassValue(builtin::math::Float4) ->
-    ClassValue<builtin::math::Float4Impl>;
-
-CUJ_NAMESPACE_END(cuj::ast)

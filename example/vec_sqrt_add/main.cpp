@@ -6,8 +6,8 @@
 
 #include <cuj/cuj.h>
 
-using namespace cuj::builtin;
-using namespace cuj::ast;
+using namespace cuj;
+using namespace builtin;
 
 void check_cuda_error(cudaError_t err)
 {
@@ -21,16 +21,14 @@ std::string generate_ptx()
     CUJ_SCOPED_CONTEXT(&context);
 
     context.begin_function<void(float*,float*,float*,int)>(
-        "vec_add", cuj::ir::Function::Type::Kernel);
+        "vec_add", ir::Function::Type::Kernel);
     
     $arg(float*, A);
     $arg(float*, B);
     $arg(float*, C);
     $arg(int,    N);
-
-    $var(int, i);
-
-    i = cuda::thread_index_x() + cuda::block_index_x() * cuda::block_dim_x();
+    
+    $int i = cuda::thread_index_x() + cuda::block_index_x() * cuda::block_dim_x();
 
     $if(i < N)
     {
@@ -39,18 +37,11 @@ std::string generate_ptx()
 
     context.end_function();
 
-    std::cout << "=========== cujitter ir ===========" << std::endl << std::endl;
-
-    auto ir = context.gen_ir();
-    cuj::gen::IRPrinter printer;
-    printer.print(ir);
-    std::cout << printer.get_string() << std::endl;
-
     std::cout << "=========== llvm ir ===========" << std::endl << std::endl;
 
-    cuj::gen::LLVMIRGenerator llvm_gen;
-    llvm_gen.set_target(cuj::gen::LLVMIRGenerator::Target::PTX);
-    llvm_gen.generate(ir);
+    gen::LLVMIRGenerator llvm_gen;
+    llvm_gen.set_target(gen::LLVMIRGenerator::Target::PTX);
+    llvm_gen.generate(context.gen_ir());
     std::cout << llvm_gen.get_string() << std::endl;
 
     std::cout << "=========== ptx ===========" << std::endl << std::endl;

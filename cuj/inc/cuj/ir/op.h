@@ -88,6 +88,11 @@ struct PointerOffsetOp
     BasicValue  index;
 };
 
+struct EmptyPointerOp
+{
+    const Type *ptr_type;
+};
+
 using Value = Variant<
     BasicValue,
     BinaryOp,
@@ -98,6 +103,7 @@ using Value = Variant<
     ArrayElemAddrOp,
     IntrinsicOp,
     MemberPtrOp,
-    PointerOffsetOp>;
+    PointerOffsetOp,
+    EmptyPointerOp>;
 
 CUJ_NAMESPACE_END(cuj::ir)

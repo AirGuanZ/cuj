@@ -16,7 +16,7 @@ class ClassBase
 protected:
 
     template<typename T, typename...Args>
-    Value<T> new_member(Args &&...args);
+    RC<typename Value<T>::ImplType> new_member(Args &&...args);
 
 public:
 

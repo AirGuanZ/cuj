@@ -113,6 +113,8 @@ private:
 
     llvm::Value *get_value(const ir::PointerOffsetOp &v);
 
+    llvm::Value *get_value(const ir::EmptyPointerOp &v);
+
     llvm::Value *get_value(const ir::BasicTempValue &v);
 
     llvm::Value *get_value(const ir::BasicImmediateValue &v);

@@ -379,7 +379,7 @@ std::string IRPrinter::to_string(const ir::Value &value) const
         [this](const ir::ArrayElemAddrOp &v)
     {
         return "array_elem_ptr<" + get_typename(v.arr_type) + "> "
-             + to_string(v.arr_alloc);
+            + to_string(v.arr_alloc);
     },
         [this](const ir::IntrinsicOp &v)
     {
@@ -401,6 +401,10 @@ std::string IRPrinter::to_string(const ir::Value &value) const
         const auto elem_type = get_typename(v.elem_type);
         const auto offset = to_string(v.index);
         return "pointer offset<" + elem_type + "> " + ptr + " " + offset;
+    },
+        [this](const ir::EmptyPointerOp &)
+    {
+        return std::string("nullptr");
     });
 }
 

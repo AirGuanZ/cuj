@@ -2,14 +2,13 @@
 
 #include <cuj/ast/class.h>
 #include <cuj/ast/context.h>
+#include <cuj/ast/context_scope.h>
 #include <cuj/ast/expr.h>
 #include <cuj/ast/func.h>
 #include <cuj/ast/func_context.h>
 #include <cuj/ast/opr.h>
 #include <cuj/ast/stat.h>
 #include <cuj/ast/stat_builder.h>
-
-#include <cuj/util/macro_overloading.h>
 
 #include <cuj/ast/detail/class.inl>
 #include <cuj/ast/detail/context.inl>
@@ -18,6 +17,31 @@
 #include <cuj/ast/detail/func_context.inl>
 #include <cuj/ast/detail/stat.inl>
 #include <cuj/ast/detail/stat_builder.inl>
+
+CUJ_NAMESPACE_BEGIN(cuj)
+
+using ast::Context;
+using ast::ScopedContext;
+
+using ast::Function;
+using ast::FunctionContext;
+
+using ast::ArithmeticValue;
+using ast::Array;
+using ast::ClassBase;
+using ast::ClassValue;
+using ast::Pointer;
+using ast::Value;
+
+using ast::to_callable;
+
+using ast::get_current_context;
+using ast::get_current_function;
+
+using ast::push_context;
+using ast::pop_context;
+
+CUJ_NAMESPACE_END(cuj)
 
 #define $int    ::cuj::ast::Value<int>
 #define $uint   ::cuj::ast::Value<unsigned>

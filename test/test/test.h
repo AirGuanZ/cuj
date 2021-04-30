@@ -4,5 +4,5 @@
 
 #include <cuj/cuj.h>
 
-using namespace cuj::ast;
-using namespace cuj::builtin;
+using namespace cuj;
+using namespace builtin;

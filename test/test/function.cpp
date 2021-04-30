@@ -9,10 +9,10 @@ TEST_CASE("function")
         Context ctx;
         CUJ_SCOPED_CONTEXT(&ctx);
 
-        auto define_add_ints = [](Var<int *> int_ptr, Var<int> num)
+        auto define_add_ints = [](Value<int *> int_ptr, Value<int> num)
         {
-            $var(int, i, 0);
-            $var(int, result, 0);
+            $int i = 0;
+            $int result = 0;
             $while(i < num)
             {
                 result = result + int_ptr[i];
@@ -79,9 +79,9 @@ TEST_CASE("function")
         auto test_float2_sum_func = to_callable<float>(
             "test_float2_sum", [&]
         {
-            $var(math::Float2, a, 1, 2);
-            $var(math::Float2, b, 3, 4);
-            $var(math::Float2, c, 5, 6);
+            math::Float2 a(1, 2);
+            math::Float2 b(3, 4);
+            math::Float2 c(5, 6);
             $return(float2_sum(a, b, c));
         });
 
@@ -109,7 +109,7 @@ TEST_CASE("function")
         auto test_make_float2 = to_callable<float>(
             [&]($f32 x, $f32 y)
         {
-            $var(math::Float2, v, my_make_float2(x, y));
+            math::Float2 v = my_make_float2(x, y);
             $return(v->x + v->y);
         });
         
@@ -129,7 +129,7 @@ TEST_CASE("function")
         auto my_make_arr4 = to_callable<int[4]>(
             []($int x, $int y, $int z, $int w)
         {
-            $var(int[4], arr);
+            Array<int, 4> arr;
             arr[0] = x;
             arr[1] = y;
             arr[2] = z;
@@ -140,7 +140,7 @@ TEST_CASE("function")
         auto test_make_arr4 = to_callable<int>(
             [&]($int x, $int y, $int z, $int w)
         {
-            $var(int[4], arr, my_make_arr4(x, y, z, w));
+            Array<int, 4> arr = my_make_arr4(x, y, z, w);
             $return(arr[0] + arr[1] + arr[2] + arr[3]);
         });
 

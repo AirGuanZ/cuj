@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cuj/ast/func.h>
 #include <cuj/ast/stat.h>
 
 #include <cuj/ast/detail/call_arg.inl>
@@ -20,8 +19,8 @@ inline void Block::gen_ir(ir::IRBuilder &builder) const
 
 template<typename L, typename R>
 Store<L, R>::Store(
-    RC<InternalPointerValue<L>>    lhs,
-    RC<InternalArithmeticValue<R>> rhs)
+    RC<InternalPointerValue<L>>     lhs,
+    RC<typename Value<R>::ImplType> rhs)
     : lhs_(std::move(lhs)), rhs_(std::move(rhs))
 {
     
@@ -209,7 +208,8 @@ void ReturnArray<T>::gen_ir(ir::IRBuilder &builder) const
 }
 
 template<typename...Args>
-CallVoid<Args...>::CallVoid(int func_index, const Value<Args> &...args)
+CallVoid<Args...>::CallVoid(
+    int func_index, const RC<typename Value<Args>::ImplType> &...args)
     : func_index_(func_index), args_{ args... }
 {
 
@@ -229,7 +229,7 @@ void CallVoid<Args...>::gen_ir(ir::IRBuilder &builder) const
         [&](const auto &...arg)
     {
         (call_detail::prepare_arg<
-            typename detail::DeValueType<rm_cvref_t<decltype(arg)>>::Type>(
+            typename detail::DeValueType<rm_cvref_t<Args>>::Type>(
                 builder, arg, arg_vals), ...);
     }, args_);
 
@@ -242,7 +242,8 @@ void CallVoid<Args...>::gen_ir(ir::IRBuilder &builder) const
 
 template<typename Ret, typename ... Args>
 CallClass<Ret, Args...>::CallClass(
-    int func_index, const Pointer<Ret> &ret_ptr, const Value<Args> &... args)
+    int func_index, const Pointer<Ret> &ret_ptr,
+    const RC<typename Value<Args>::ImplType> &... args)
         : func_index_(func_index), ret_ptr_(ret_ptr), args_{ args... }
 {
     
@@ -265,7 +266,7 @@ void CallClass<Ret, Args...>::gen_ir(ir::IRBuilder &builder) const
         [&](const auto &...arg)
     {
         (call_detail::prepare_arg<
-            typename detail::DeValueType<rm_cvref_t<decltype(arg)>>::Type>(
+            typename detail::DeValueType<rm_cvref_t<Args>>::Type>(
                 builder, arg, arg_vals), ...);
     }, args_);
 
@@ -278,7 +279,8 @@ void CallClass<Ret, Args...>::gen_ir(ir::IRBuilder &builder) const
 
 template<typename Ret, typename ... Args>
 CallArray<Ret, Args...>::CallArray(
-    int func_index, const Pointer<Ret> &ret_ptr, const Value<Args> &... args)
+    int func_index, const Pointer<Ret> &ret_ptr,
+    const RC<typename Value<Args>::ImplType> &... args)
         : func_index_(func_index), ret_ptr_(ret_ptr), args_{ args... }
 {
     
@@ -301,7 +303,7 @@ void CallArray<Ret, Args...>::gen_ir(ir::IRBuilder &builder) const
         [&](const auto &...arg)
     {
         (call_detail::prepare_arg<
-            typename detail::DeValueType<rm_cvref_t<decltype(arg)>>::Type>(
+            typename detail::DeValueType<rm_cvref_t<Args>>::Type>(
                 builder, arg, arg_vals), ...);
     }, args_);
 

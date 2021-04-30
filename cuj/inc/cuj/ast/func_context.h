@@ -29,7 +29,7 @@ class FunctionContext : public Uncopyable
     const ir::Type *ret_type_;
 
     template<typename T, typename...Args>
-    Value<T> alloc_stack_var(bool is_arg, Args &&...args);
+    RC<typename Value<T>::ImplType> alloc_stack_var(bool is_arg, Args &&...args);
 
 public:
 
@@ -58,13 +58,13 @@ public:
     const ir::Type *get_return_type() const;
 
     template<typename T, typename...Args>
-    Value<T> create_stack_var(Args &&...args);
+    RC<typename Value<T>::ImplType> create_stack_var(Args &&...args);
 
     template<typename T>
     RC<InternalStackAllocationValue<T>> alloc_on_stack(const ir::Type *type);
 
     template<typename T>
-    Value<T> create_arg();
+    RC<typename Value<T>::ImplType> create_arg();
 
     void gen_ir(ir::IRBuilder &builder) const;
 };

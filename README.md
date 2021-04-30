@@ -18,5 +18,3 @@ mkdir build
 cd build
 cmake -DLLVM_DIR="your_llvm_dir" ..
 ```
-
-TODO

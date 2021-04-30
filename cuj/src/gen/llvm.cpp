@@ -687,7 +687,8 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::Value &v)
         [this](const ir::ArrayElemAddrOp &v) { return get_value(v); },
         [this](const ir::IntrinsicOp     &v) { return get_value(v); },
         [this](const ir::MemberPtrOp     &v) { return get_value(v); },
-        [this](const ir::PointerOffsetOp &v) { return get_value(v); });
+        [this](const ir::PointerOffsetOp &v) { return get_value(v); },
+        [this](const ir::EmptyPointerOp  &v) { return get_value(v); });
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::BasicValue &v)
@@ -965,6 +966,13 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::PointerOffsetOp &v)
     auto idx = get_value(v.index);
     std::vector<llvm::Value *> indices = { idx };
     return data_->ir_builder->CreateGEP(ptr, indices);
+}
+
+llvm::Value *LLVMIRGenerator::get_value(const ir::EmptyPointerOp &v)
+{
+    auto type = find_llvm_type(v.ptr_type);
+    CUJ_ASSERT(type->isPointerTy());
+    return llvm::ConstantPointerNull::get(static_cast<llvm::PointerType*>(type));
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::BasicTempValue &v)

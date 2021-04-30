@@ -42,6 +42,10 @@ class Pointer;
 template<typename C>
 class ClassBase;
 
+struct NullPtr { };
+
+inline constexpr NullPtr null_ptr = { };
+
 namespace detail
 {
     template<typename T, typename = void>
@@ -298,6 +302,14 @@ public:
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };
 
+template<typename T>
+class InternalEmptyPointer : public InternalPointerValue<T>
+{
+public:
+
+    ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
+};
+
 template<typename From, typename To>
 class InternalCastArithmeticValue : public InternalArithmeticValue<To>
 {
@@ -313,10 +325,11 @@ class InternalArithmeticFunctionCall : public InternalArithmeticValue<R>
 {
 public:
 
-    int                        func_index;
-    std::tuple<Value<Args>...> args;
+    int                                               func_index;
+    std::tuple<RC<typename Value<Args>::ImplType>...> args;
 
-    InternalArithmeticFunctionCall(int index, const Value<Args> &...args);
+    InternalArithmeticFunctionCall(
+        int index, const RC<typename Value<Args>::ImplType> &...args);
 
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };
@@ -329,10 +342,11 @@ public:
 
     static_assert(is_pointer<R>);
 
-    int                        func_index;
-    std::tuple<Value<Args>...> args;
+    int                                               func_index;
+    std::tuple<RC<typename Value<Args>::ImplType>...> args;
 
-    InternalPointerFunctionCall(int index, const Value<Args> &...args);
+    InternalPointerFunctionCall(
+        int index, const RC<typename Value<Args>::ImplType> &...args);
 
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };
@@ -365,18 +379,20 @@ class ArithmeticValue
 {
     RC<InternalArithmeticValue<T>> impl_;
 
+    void init_as_stack_var();
+
 public:
 
     using ArithmeticType = T;
 
-    explicit ArithmeticValue(UninitializeFlag) { }
+    using ImplType = InternalArithmeticValue<T>;
 
-    explicit ArithmeticValue(RC<InternalArithmeticValue<T>> impl);
+    ArithmeticValue();
 
-    template<typename I, typename = std::enable_if_t<std::is_arithmetic_v<I>>>
-    ArithmeticValue(I val);
-    
-    ArithmeticValue(const ArithmeticValue &rhs);
+    template<typename U>
+    ArithmeticValue(const U &other);
+
+    ArithmeticValue(const ArithmeticValue &other);
 
     template<typename U>
     ArithmeticValue &operator=(const U &rhs);
@@ -395,11 +411,17 @@ class ClassValue
 {
     RC<InternalClassLeftValue<T>> impl_;
 
-public:
-    
-    explicit ClassValue(UninitializeFlag) { }
+    template<typename...Args>
+    void init_as_stack_var(const Args &...args);
 
-    explicit ClassValue(RC<InternalClassLeftValue<T>> impl);
+public:
+
+    using ImplType = InternalClassLeftValue<T>;
+
+    ClassValue();
+
+    template<typename U, typename...Args>
+    ClassValue(const U &other, const Args &...args);
 
     ClassValue(const ClassValue &rhs);
     
@@ -419,17 +441,22 @@ class Array
 {
     RC<InternalArrayValue<T, N>> impl_;
 
+    void init_as_stack_var();
+
 public:
+
+    using ImplType = InternalArrayValue<T, N>;
 
     using ElementType = T;
 
     static constexpr size_t ElementCount = N;
 
-    explicit Array(UninitializeFlag) { }
+    Array();
 
-    explicit Array(RC<InternalArrayValue<T, N>> impl);
+    template<typename U>
+    Array(const U &other);
 
-    Array(const Array &rhs);
+    Array(const Array &other);
 
     Array &operator=(const Array &rhs);
 
@@ -438,6 +465,8 @@ public:
     RC<InternalArrayValue<T, N>> get_impl() const;
 
     void set_impl(RC<InternalArrayValue<T, N>> impl);
+
+    constexpr size_t size() const;
 
     template<typename I, typename = std::enable_if_t<std::is_integral_v<I>>>
     Pointer<T> get_element_ptr(const ArithmeticValue<I> &index) const;
@@ -460,19 +489,26 @@ class Pointer
 
     RC<InternalPointerValue<T>> impl_;
 
+    void init_as_stack_var();
+
 public:
+
+    using ImplType = InternalPointerValue<T>;
 
     struct CUJPointerTag { };
 
     using PointedType = T;
 
-    explicit Pointer(UninitializeFlag) { }
+    Pointer();
 
-    explicit Pointer(RC<InternalPointerValue<T>> impl);
+    template<typename U>
+    Pointer(const U &other);
 
     Pointer(const Pointer &other);
 
     Pointer &operator=(const Pointer &rhs);
+
+    Pointer &operator=(const NullPtr &);
 
     Value<T> deref() const;
 

@@ -7,17 +7,17 @@
 CUJ_NAMESPACE_BEGIN(cuj::ast)
 
 template<typename C>
-template<typename _T, typename...Args>
-Value<_T> ClassBase<C>::new_member(Args &&...args)
+template<typename T_, typename...Args>
+RC<typename Value<T_>::ImplType> ClassBase<C>::new_member(Args &&...args)
 {
-    using T = typename detail::DeValueType<_T>::Type;
+    using T = typename detail::DeValueType<T_>::Type;
 
     if(type_recorder_)
     {
         CUJ_ASSERT(!ref_pointer_);
         auto context = get_current_context();
         type_recorder_->add_member(context->get_type<T>());
-        return Value<T>(UNINIT);
+        return nullptr;
     }
 
     CUJ_ASSERT(ref_pointer_);
@@ -25,8 +25,8 @@ Value<_T> ClassBase<C>::new_member(Args &&...args)
     auto address = create_member_pointer_offset<C, T>(
         ref_pointer_, member_count_++);
 
-    static_assert(!is_array<T>   || sizeof...(args) == 0);
-    static_assert(!is_pointer<T> || sizeof...(args) <= 1);
+    static_assert(!is_array<T>             || sizeof...(args) == 0);
+    static_assert(!is_pointer<T>           || sizeof...(args) <= 1);
     static_assert(!std::is_arithmetic_v<T> || sizeof...(args) <= 1);
 
     if constexpr(is_array<T>)
@@ -37,7 +37,8 @@ Value<_T> ClassBase<C>::new_member(Args &&...args)
         auto impl = newRC<InternalArrayValue<
             typename T::ElementType, T::ElementCount>>();
         impl->data_ptr->value = cast_addr;
-        return Value<T>(std::move(impl));
+
+        return impl;
     }
     else if constexpr(is_pointer<T>)
     {
@@ -47,22 +48,26 @@ Value<_T> ClassBase<C>::new_member(Args &&...args)
         auto impl = newRC<InternalPointerValue<typename T::PointedType>>();
         impl->value = std::move(impl_value);
 
-        auto ret = Value<T>(std::move(impl));
         if constexpr(sizeof...(args) == 1)
-            ret = (std::forward<Args>(args), ...);
+        {
+            Value<T> val(impl);
+            val = (std::forward<Args>(args), ...);
+        }
 
-        return ret;
+        return impl;
     }
     else if constexpr(std::is_arithmetic_v<T>)
     {
         auto impl = newRC<InternalArithmeticLeftValue<T>>();
         impl->address = std::move(address);
 
-        auto ret = Value<T>(std::move(impl));
         if constexpr(sizeof...(args) == 1)
-            ret = (std::forward<Args>(args), ...);
+        {
+            Value<T> val(impl);
+            val = (std::forward<Args>(args), ...);
+        }
 
-        return std::move(ret);
+        return impl;
     }
     else if constexpr(is_intrinsic<T>)
     {
@@ -73,7 +78,7 @@ Value<_T> ClassBase<C>::new_member(Args &&...args)
         auto impl = newRC<InternalClassLeftValue<T>>();
         impl->address = address;
         impl->obj     = newBox<T>(std::move(address), std::forward<Args>(args)...);
-        return Value<T>(std::move(impl));
+        return impl;
     }
 }
 

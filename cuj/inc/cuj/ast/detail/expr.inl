@@ -109,7 +109,7 @@ ir::BasicValue InternalPointerValueOffset<T, I>::gen_ir(ir::IRBuilder &builder) 
     auto type = get_current_context()->get_type<T>();
     auto offset = ir::PointerOffsetOp{ type, addr, idx };
 
-    auto ptr_type = get_current_context()->get_type<size_t>();
+    auto ptr_type = get_current_context()->get_type<Pointer<T>>();
     auto ret = builder.gen_temp_value(ptr_type);
 
     builder.append_assign(ret, offset);
@@ -125,7 +125,7 @@ ir::BasicValue InternalMemberPointerValueOffset<C, M>::gen_ir(
     auto type = get_current_context()->get_type<C>();
     auto mem_ptr = ir::MemberPtrOp{ addr, type, member_index };
 
-    auto ptr_type = get_current_context()->get_type<size_t>();
+    auto ptr_type = get_current_context()->get_type<Pointer<M>>();
     auto ret = builder.gen_temp_value(ptr_type);
 
     builder.append_assign(ret, mem_ptr);
@@ -157,6 +157,19 @@ ir::BasicValue InternalStackAllocationValue<T>::gen_ir(ir::IRBuilder &builder) c
     return ir::AllocAddress{ alloc_index };
 }
 
+template<typename T>
+ir::BasicValue InternalEmptyPointer<T>::gen_ir(ir::IRBuilder &builder) const
+{
+    auto context = get_current_context();
+
+    auto type = context->get_type<Pointer<T>>();
+    auto op = ir::EmptyPointerOp{ type };
+    auto ret = builder.gen_temp_value(type);
+
+    builder.append_assign(ret, op);
+    return ret;
+}
+
 template<typename From, typename To>
 ir::BasicValue InternalCastArithmeticValue<From, To>::gen_ir(ir::IRBuilder &builder) const
 {
@@ -166,7 +179,7 @@ ir::BasicValue InternalCastArithmeticValue<From, To>::gen_ir(ir::IRBuilder &buil
 
 template<typename R, typename...Args>
 InternalArithmeticFunctionCall<R, Args...>::InternalArithmeticFunctionCall(
-    int index, const Value<Args> &...args)
+    int index, const RC<typename Value<Args>::ImplType> &...args)
     : func_index(index), args{ args... }
 {
     
@@ -186,7 +199,7 @@ ir::BasicValue InternalArithmeticFunctionCall<R, Args...>::gen_ir(
         [&](auto ...arg)
     {
         (call_detail::prepare_arg<
-            typename detail::DeValueType<rm_cvref_t<decltype(arg)>>::Type>(
+            typename detail::DeValueType<rm_cvref_t<Args>>::Type>(
                 builder, arg, arg_vals), ...);
     }, args);
     
@@ -199,7 +212,7 @@ ir::BasicValue InternalArithmeticFunctionCall<R, Args...>::gen_ir(
 
 template<typename R, typename ... Args>
 InternalPointerFunctionCall<R, Args...>::InternalPointerFunctionCall(
-    int index, const Value<Args> &... args)
+    int index, const RC<typename Value<Args>::ImplType> &... args)
     : func_index(index), args{ args... }
 {
     
@@ -221,7 +234,7 @@ ir::BasicValue InternalPointerFunctionCall<R, Args...>::gen_ir(
         [&](const auto &...arg)
     {
         (call_detail::prepare_arg<
-            typename detail::DeValueType<rm_cvref_t<decltype(arg)>>::Type>(
+            typename detail::DeValueType<rm_cvref_t<Args>>::Type>(
                 builder, arg, arg_vals), ...);
     }, args);
 
@@ -262,8 +275,8 @@ ir::BasicValue InternalBinaryOperator<T, L, R>::gen_ir(ir::IRBuilder &builder) c
 
     auto binary_op = ir::BinaryOp{ type, lhs_val, rhs_val };
 
-    auto type = get_current_context()->get_type<T>();
-    auto ret = builder.gen_temp_value(type);
+    auto ret_type = get_current_context()->get_type<T>();
+    auto ret = builder.gen_temp_value(ret_type);
 
     builder.append_assign(ret, binary_op);
     return ret;
@@ -285,32 +298,47 @@ ir::BasicValue InternalUnaryOperator<T, I>::gen_ir(ir::IRBuilder &builder) const
 }
 
 template<typename T>
-ArithmeticValue<T>::ArithmeticValue(RC<InternalArithmeticValue<T>> impl)
-    : impl_(std::move(impl))
+void ArithmeticValue<T>::init_as_stack_var()
 {
-    
+    CUJ_ASSERT(!impl_);
+    impl_ = get_current_function()->create_stack_var<T>();
 }
 
 template<typename T>
-template<typename I, typename>
-ArithmeticValue<T>::ArithmeticValue(I val)
+ArithmeticValue<T>::ArithmeticValue()
 {
-    auto literial = create_literial(val).get_impl();
-    if constexpr(std::is_same_v<T, I>)
-        impl_ = std::move(literial);
+    init_as_stack_var();
+}
+
+template<typename T>
+template<typename U>
+ArithmeticValue<T>::ArithmeticValue(const U &other)
+{
+    using RU = rm_cvref_t<U>;
+
+    if constexpr(std::is_same_v<RU, UninitializeFlag>)
+    {
+        return;
+    }
+    else if constexpr(std::is_convertible_v<RU, RC<InternalArithmeticValue<T>>>)
+    {
+        impl_ = other;
+        return;
+    }
     else
     {
-        auto cast = newRC<InternalCastArithmeticValue<I, T>>();
-        cast->from = std::move(literial);
-        impl_ = std::move(cast);
+        this->init_as_stack_var();
+        *this = other;
+        return;
     }
 }
 
 template<typename T>
-ArithmeticValue<T>::ArithmeticValue(const ArithmeticValue &rhs)
-    : impl_(rhs.impl_)
+ArithmeticValue<T>::ArithmeticValue(const ArithmeticValue &other)
 {
-
+    this->init_as_stack_var();
+    *this = other;
+    return;
 }
 
 template<typename T>
@@ -371,17 +399,51 @@ void ArithmeticValue<T>::set_impl(RC<InternalArithmeticValue<T>> impl)
 }
 
 template<typename T>
-ClassValue<T>::ClassValue(RC<InternalClassLeftValue<T>> impl)
-    : impl_(std::move(impl))
+template<typename...Args>
+void ClassValue<T>::init_as_stack_var(const Args &...args)
 {
-    
+    CUJ_ASSERT(!impl_);
+    impl_ = get_current_function()->create_stack_var<T>(args...);
+}
+
+template<typename T>
+ClassValue<T>::ClassValue()
+{
+    init_as_stack_var();
+}
+
+template<typename T>
+template<typename U, typename...Args>
+ClassValue<T>::ClassValue(const U &other, const Args &...args)
+{
+    using RU = rm_cvref_t<U>;
+
+    static_assert(!std::is_same_v<RU, UninitializeFlag> ||
+                  sizeof...(args) == 0);
+    static_assert(!std::is_convertible_v<RU, RC<InternalClassLeftValue<T>>> ||
+                  sizeof...(args) == 0);
+
+    if constexpr(std::is_same_v<RU, UninitializeFlag>)
+    {
+        return;
+    }
+    else if constexpr(std::is_convertible_v<RU, RC<InternalClassLeftValue<T>>>)
+    {
+        impl_ = other;
+        return;
+    }
+    else
+    {
+        this->init_as_stack_var(other, args...);
+        return;
+    }
 }
 
 template<typename T>
 ClassValue<T>::ClassValue(const ClassValue &rhs)
-    : impl_(rhs.impl_)
 {
-
+    this->init_as_stack_var();
+    *this = rhs;
 }
 
 template<typename T>
@@ -416,17 +478,46 @@ T *ClassValue<T>::operator->() const
 }
 
 template<typename T, size_t N>
-Array<T, N>::Array(RC<InternalArrayValue<T, N>> impl)
-    : impl_(std::move(impl))
+void Array<T, N>::init_as_stack_var()
 {
-
+    CUJ_ASSERT(!impl_);
+    impl_ = get_current_function()->create_stack_var<Array<T, N>>();
 }
 
 template<typename T, size_t N>
-Array<T, N>::Array(const Array &rhs)
-    : impl_(rhs.impl_)
+Array<T, N>::Array()
 {
+    init_as_stack_var();
+}
 
+template<typename T, size_t N>
+template<typename U>
+Array<T, N>::Array(const U &other)
+{
+    using RU = rm_cvref_t<U>;
+
+    if constexpr(std::is_same_v<RU, UninitializeFlag>)
+    {
+        return;
+    }
+    else if constexpr(std::is_convertible_v<RU, RC<InternalArrayValue<T, N>>>)
+    {
+        impl_ = other;
+        return;
+    }
+    else
+    {
+        this->init_as_stack_var();
+        *this = other;
+        return;
+    }
+}
+
+template<typename T, size_t N>
+Array<T, N>::Array(const Array &other)
+{
+    this->init_as_stack_var();
+    *this = other;
 }
 
 template<typename T, size_t N>
@@ -457,6 +548,12 @@ void Array<T, N>::set_impl(RC<InternalArrayValue<T, N>> impl)
 }
 
 template<typename T, size_t N>
+constexpr size_t Array<T, N>::size() const
+{
+    return N;
+}
+
+template<typename T, size_t N>
 template<typename I, typename>
 Pointer<T> Array<T, N>::get_element_ptr(const ArithmeticValue<I> &index) const
 {
@@ -478,28 +575,70 @@ Value<T> Array<T, N>::operator[](I index) const
 }
 
 template<typename T>
-Pointer<T>::Pointer(RC<InternalPointerValue<T>> impl)
-    : impl_(std::move(impl))
+void Pointer<T>::init_as_stack_var()
 {
-
+    CUJ_ASSERT(!impl_);
+    impl_ = get_current_function()->create_stack_var<Pointer<T>>();
 }
 
 template<typename T>
-Pointer<T>::Pointer(const Pointer &rhs)
-    : impl_(rhs.impl_)
+Pointer<T>::Pointer()
 {
+    init_as_stack_var();
+}
 
+template<typename T>
+template<typename U>
+Pointer<T>::Pointer(const U &other)
+{
+    using RU = rm_cvref_t<U>;
+
+    if constexpr(std::is_same_v<RU, UninitializeFlag>)
+    {
+        return;
+    }
+    else if constexpr(std::is_same_v<RU, std::nullptr_t>)
+    {
+        this->init_as_stack_var();
+        *this = other;
+        return;
+    }
+    else if constexpr(std::is_convertible_v<RU, RC<InternalPointerValue<T>>>)
+    {
+        impl_ = other;
+        return;
+    }
+    else
+    {
+        this->init_as_stack_var();
+        *this = other;
+        return;
+    }
+}
+
+template<typename T>
+Pointer<T>::Pointer(const Pointer &other)
+{
+    init_as_stack_var();
+    *this = other;
 }
 
 template<typename T>
 Pointer<T> &Pointer<T>::operator=(const Pointer &rhs)
 {
     auto lhs_addr = impl_->get_address();
-    auto rhs_val  = rhs.impl_->value;
+    auto rhs_val  = rhs.impl_;
 
-    auto store = newRC<Store<size_t, size_t>>(std::move(lhs_addr), std::move(rhs_val));
+    auto store = newRC<Store<Pointer<T>, Pointer<T>>>(std::move(lhs_addr), std::move(rhs_val));
     get_current_function()->append_statement(std::move(store));
 
+    return *this;
+}
+
+template<typename T>
+Pointer<T> &Pointer<T>::operator=(const NullPtr &)
+{
+    *this = Pointer<T>(newRC<InternalEmptyPointer<T>>());
     return *this;
 }
 

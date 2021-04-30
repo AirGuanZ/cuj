@@ -4,7 +4,7 @@
 
 CUJ_NAMESPACE_BEGIN(cuj::builtin::math)
 
-class Float2Impl : public ast::ClassBase<Float2Impl>
+class Float2Impl : public ClassBase<Float2Impl>
 {
 public:
 
@@ -19,7 +19,7 @@ public:
 
     Float2Impl(ClassAddress addr, $float _x, $float _y);
 
-    Float2Impl(ClassAddress addr, const ast::Value<Float2Impl> &other);
+    Float2Impl(ClassAddress addr, const Value<Float2Impl> &other);
 
     $float length_square() const;
 
@@ -29,10 +29,10 @@ public:
 
     $float max_elem() const;
 
-    ast::Value<Float2Impl> normalize() const;
+    Value<Float2Impl> normalize() const;
 };
 
-using Float2 = ast::Value<Float2Impl>;
+using Float2 = Value<Float2Impl>;
 
 Float2 make_float2();
 Float2 make_float2($float v);
@@ -57,10 +57,3 @@ $float dot(const Float2 &a, const Float2 &b);
 $float cos(const Float2 &a, const Float2 &b);
 
 CUJ_NAMESPACE_END(cuj::builtin::math)
-
-CUJ_NAMESPACE_BEGIN(cuj::ast)
-
-ClassValue(builtin::math::Float2) ->
-ClassValue<builtin::math::Float2Impl>;
-
-CUJ_NAMESPACE_END(cuj::ast)

@@ -30,10 +30,10 @@ public:
 
     $float max_elem() const;
 
-    ast::Value<Float3Impl> normalize() const;
+    Value<Float3Impl> normalize() const;
 };
 
-using Float3 = ast::Value<Float3Impl>;
+using Float3 = Value<Float3Impl>;
 
 Float3 make_float3();
 Float3 make_float3($float v);
@@ -60,10 +60,3 @@ $float cos(const Float3 &a, const Float3 &b);
 Float3 cross(const Float3 &lhs, const Float3 &rhs);
 
 CUJ_NAMESPACE_END(cuj::builtin::math)
-
-CUJ_NAMESPACE_BEGIN(cuj::ast)
-
-ClassValue(builtin::math::Float3) ->
-    ClassValue<builtin::math::Float3Impl>;
-
-CUJ_NAMESPACE_END(cuj::ast)

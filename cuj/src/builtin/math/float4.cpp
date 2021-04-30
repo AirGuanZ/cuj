@@ -53,7 +53,7 @@ $float Float4Impl::max_elem() const
 
 Float4 Float4Impl::normalize() const
 {
-    $var(float, inv_len , 1.0f / length());
+    $float inv_len = 1.0f / length();
     return make_float4(x * inv_len, y * inv_len, z * inv_len, w * inv_len);
 }
 

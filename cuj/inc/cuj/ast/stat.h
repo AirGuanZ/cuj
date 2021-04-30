@@ -33,14 +33,14 @@ public:
 template<typename L, typename R>
 class Store : public Statement
 {
-    RC<InternalPointerValue<L>>    lhs_;
-    RC<InternalArithmeticValue<R>> rhs_;
+    RC<InternalPointerValue<L>>     lhs_;
+    RC<typename Value<R>::ImplType> rhs_;
 
 public:
 
     Store(
-        RC<InternalPointerValue<L>>    lhs,
-        RC<InternalArithmeticValue<R>> rhs);
+        RC<InternalPointerValue<L>>     lhs,
+        RC<typename Value<R>::ImplType> rhs);
 
     void gen_ir(ir::IRBuilder &builder) const override;
 };
@@ -143,12 +143,13 @@ public:
 template<typename...Args>
 class CallVoid : public Statement
 {
-    int                        func_index_;
-    std::tuple<Value<Args>...> args_;
+    int                                               func_index_;
+    std::tuple<RC<typename Value<Args>::ImplType>...> args_;
     
 public:
 
-    explicit CallVoid(int func_index, const Value<Args> &...args);
+    explicit CallVoid(
+        int func_index, const RC<typename Value<Args>::ImplType> &...args);
 
     void gen_ir(ir::IRBuilder &builder) const override;
 };
@@ -158,14 +159,15 @@ class CallClass : public Statement
 {
     static_assert(is_cuj_class<Ret>);
 
-    int                        func_index_;
-    Pointer<Ret>               ret_ptr_;
-    std::tuple<Value<Args>...> args_;
+    int                                               func_index_;
+    Pointer<Ret>                                      ret_ptr_;
+    std::tuple<RC<typename Value<Args>::ImplType>...> args_;
 
 public:
 
     CallClass(
-        int func_index, const Pointer<Ret> &ret_ptr, const Value<Args> &...args);
+        int func_index, const Pointer<Ret> &ret_ptr,
+        const RC<typename Value<Args>::ImplType> &...args);
 
     void gen_ir(ir::IRBuilder &builder) const override;
 };
@@ -175,14 +177,15 @@ class CallArray : public Statement
 {
     static_assert(is_array<Ret>);
 
-    int                        func_index_;
-    Pointer<Ret>               ret_ptr_;
-    std::tuple<Value<Args>...> args_;
+    int                                               func_index_;
+    Pointer<Ret>                                      ret_ptr_;
+    std::tuple<RC<typename Value<Args>::ImplType>...> args_;
 
 public:
 
     CallArray(
-        int func_index, const Pointer<Ret> &ret_ptr, const Value<Args> &...args);
+        int func_index, const Pointer<Ret> &ret_ptr,
+        const RC<typename Value<Args>::ImplType> &...args);
 
     void gen_ir(ir::IRBuilder &builder) const override;
 };

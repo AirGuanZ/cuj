@@ -10,12 +10,13 @@ namespace detail
 {
 
     template<typename From, typename To>
-    Value<To> convert_func_arg_type(const Value<From> &from)
+    RC<typename Value<To>::ImplType> convert_func_arg_type(
+        const Value<From> &from)
     {
         if constexpr(std::is_same_v<From, To>)
-            return from;
+            return from.get_impl();
         else if constexpr(std::is_arithmetic_v<To> && std::is_arithmetic_v<From>)
-            return cast<To, From>(from);
+            return cast<To, From>(from).get_impl();
         else
             throw CUJException("invalid function arg type conversion");
     }
@@ -27,9 +28,10 @@ namespace detail
         return newRC<ResultType>(
             index, convert_func_arg_type<
                         typename DeValueType<
-                            std::tuple_element_t<Is, FromArgs>>::Type,
+                            rm_cvref_t<std::remove_pointer_t<
+                                std::tuple_element_t<Is, FromArgs>>>>::Type,
                         std::tuple_element_t<Is, ToArgs>>(
-                                std::get<Is>(from_args))...);
+                                *std::get<Is>(from_args))...);
     }
 
     template<typename ResultType, typename RetClass,
@@ -42,9 +44,10 @@ namespace detail
             index, ret_ptr,
             convert_func_arg_type<
                 typename DeValueType<
-                    std::tuple_element_t<Is, FromArgs>>::Type,
+                    rm_cvref_t<std::remove_pointer_t<
+                        std::tuple_element_t<Is, FromArgs>>>>::Type,
                 std::tuple_element_t<Is, ToArgs>>(
-                    std::get<Is>(from_args))...);
+                    *std::get<Is>(from_args))...);
     }
 
 } // namespace detail
@@ -57,7 +60,7 @@ typename detail::FuncRetType<Ret>::Type
     auto context = get_current_context();
     auto func = context->get_current_function();
 
-    std::tuple<CallArgs...> args_tuple{ args... };
+    auto args_tuple = std::make_tuple(&args...);
 
     using ToTuple = std::tuple<Args...>;
 
@@ -79,7 +82,7 @@ typename detail::FuncRetType<Ret>::Type
         auto call = detail::create_call_obj<InternalCallType, ToTuple>(
             index_, args_tuple, std::make_index_sequence<sizeof...(Args)>());
         
-        auto var = func->create_stack_var<Ret>();
+        Value<Ret> var = func->create_stack_var<Ret>();
         var = Value<Ret>(std::move(call));
 
         return var;
@@ -88,7 +91,7 @@ typename detail::FuncRetType<Ret>::Type
     {
         using CallStatType = CallClass<Ret, Args...>;
 
-        auto var = func->create_stack_var<Ret>();
+        Value<Ret> var = func->create_stack_var<Ret>();
         auto call = detail::create_call_class_obj<CallStatType, Ret, ToTuple>(
             index_, var.address(), args_tuple,
             std::make_index_sequence<sizeof...(Args)>());
@@ -101,7 +104,7 @@ typename detail::FuncRetType<Ret>::Type
     {
         using CallStatType = CallArray<Ret, Args...>;
 
-        auto var = func->create_stack_var<Ret>();
+        Value<Ret> var = func->create_stack_var<Ret>();
         auto call = detail::create_call_class_obj<CallStatType, Ret, ToTuple>(
             index_, var.address(), args_tuple,
             std::make_index_sequence<sizeof...(Args)>());
@@ -117,7 +120,7 @@ typename detail::FuncRetType<Ret>::Type
         auto call = detail::create_call_obj<InternalCallType, ToTuple>(
             index_, args_tuple, std::make_index_sequence<sizeof...(Args)>());
 
-        auto var = func->create_stack_var<Ret>();
+        Value<Ret> var = func->create_stack_var<Ret>();
         var = Value<Ret>(std::move(call));
 
         return var;

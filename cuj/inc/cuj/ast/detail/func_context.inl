@@ -5,7 +5,8 @@
 CUJ_NAMESPACE_BEGIN(cuj::ast)
 
 template<typename T, typename...Args>
-Value<T> FunctionContext::alloc_stack_var(bool is_arg, Args &&...args)
+RC<typename Value<T>::ImplType> FunctionContext::alloc_stack_var(
+    bool is_arg, Args &&...args)
 {
     auto alloc_type = get_current_context()->get_type<T>();
 
@@ -19,9 +20,9 @@ Value<T> FunctionContext::alloc_stack_var(bool is_arg, Args &&...args)
         arg_indices_.push_back(address->alloc_index);
     }
 
-    static_assert(!is_array<T>   || sizeof...(args) <= 1);
-    static_assert(!is_pointer<T> || sizeof...(args) <= 1);
-    static_assert(!std::is_arithmetic_v<T> || sizeof...(args) <= 1);
+    static_assert(!is_array<T>             || sizeof...(args) == 0);
+    static_assert(!is_pointer<T>           || sizeof...(args) == 0);
+    static_assert(!std::is_arithmetic_v<T> || sizeof...(args) == 0);
 
     if constexpr(is_array<T>)
     {
@@ -32,33 +33,21 @@ Value<T> FunctionContext::alloc_stack_var(bool is_arg, Args &&...args)
             typename T::ElementType, T::ElementCount>>();
         impl->data_ptr = cast_addr;
 
-        auto ret = Value<T>(std::move(impl));
-        if constexpr(sizeof...(args) == 1)
-            ret = (std::forward<Args>(args), ...);
-
-        return ret;
+        return impl;
     }
     else if constexpr(is_pointer<T>)
     {
         auto impl = newRC<InternalPointerLeftValue<typename T::PointedType>>();
         impl->address = std::move(address);
-        
-        auto ret = Value<T>(std::move(impl));
-        if constexpr(sizeof...(args) == 1)
-            ret = (std::forward<Args>(args), ...);
 
-        return ret;
+        return impl;
     }
     else if constexpr(std::is_arithmetic_v<T>)
     {
         auto impl = newRC<InternalArithmeticLeftValue<T>>();
         impl->address = std::move(address);
 
-        auto ret = Value<T>(std::move(impl));
-        if constexpr(sizeof...(args) == 1)
-            ret = (std::forward<Args>(args), ...);
-
-        return std::move(ret);
+        return impl;
     }
     else if constexpr(is_intrinsic<T>)
     {
@@ -78,7 +67,7 @@ Value<T> FunctionContext::alloc_stack_var(bool is_arg, Args &&...args)
             impl->obj = newBox<T>(
                 std::move(address), std::forward<Args>(args)...);
         }
-        return Value<T>(std::move(impl));
+        return impl;
     }
 }
 
@@ -144,7 +133,7 @@ inline const ir::Type *FunctionContext::get_return_type() const
 }
 
 template<typename T, typename...Args>
-Value<T> FunctionContext::create_stack_var(Args &&...args)
+RC<typename Value<T>::ImplType> FunctionContext::create_stack_var(Args &&...args)
 {
     return alloc_stack_var<typename detail::DeValueType<T>::Type>(
         false, std::forward<Args>(args)...);
@@ -164,7 +153,7 @@ RC<InternalStackAllocationValue<T>> FunctionContext::alloc_on_stack(
 }
 
 template<typename T>
-Value<T> FunctionContext::create_arg()
+RC<typename Value<T>::ImplType> FunctionContext::create_arg()
 {
     return alloc_stack_var<T>(true);
 }

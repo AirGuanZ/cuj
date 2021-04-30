@@ -50,7 +50,7 @@ $float Float2Impl::max_elem() const
 
 Float2 Float2Impl::normalize() const
 {
-    $var(float, inv_len, 1.0f / length());
+    $float inv_len = 1.0f / length();
     return make_float2(x * inv_len, y * inv_len);
 }
 
