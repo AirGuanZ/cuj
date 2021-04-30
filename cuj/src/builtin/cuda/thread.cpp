@@ -9,7 +9,7 @@ namespace
 
     const char *get_intrinsic_name(IntrinsicValueType type)
     {
-#define INTRINSIC_CASE(NAME)  case IntrinsicValueType::NAME: return "cuda." #NAME
+#define INTRINSIC_CASE(NAME) case IntrinsicValueType::NAME: return "cuda." #NAME
 
         switch(type)
         {
@@ -29,11 +29,11 @@ namespace
 #undef INTRINSIC_CASE
     }
 
-    ast::Value<int> intrinsic_int_value(IntrinsicValueType type)
+    Value<int> intrinsic_int_value(IntrinsicValueType type)
     {
         auto impl = newRC<detail::InternalIntrinsicIntValue>();
         impl->type = type;
-        return ast::Value<int>(std::move(impl));
+        return Value<int>(std::move(impl));
     }
 
 } // namespace anonymous
@@ -43,59 +43,59 @@ ir::BasicValue detail::InternalIntrinsicIntValue::gen_ir(
 {
     ir::IntrinsicOp op = { get_intrinsic_name(type), {} };
 
-    auto int_type = ast::get_current_context()->get_type<int>();
+    auto int_type = get_current_context()->get_type<int>();
     auto ret = builder.gen_temp_value(int_type);
 
     builder.append_assign(ret, op);
     return ret;
 }
 
-ast::Value<int> thread_index_x()
+Value<int> thread_index_x()
 {
     return intrinsic_int_value(IntrinsicValueType::thread_index_x);
 }
 
-ast::Value<int> thread_index_y()
+Value<int> thread_index_y()
 {
     return intrinsic_int_value(IntrinsicValueType::thread_index_y);
 }
 
-ast::Value<int> thread_index_z()
+Value<int> thread_index_z()
 {
     return intrinsic_int_value(IntrinsicValueType::thread_index_z);
 }
 
-ast::Value<int> block_index_x()
+Value<int> block_index_x()
 {
     return intrinsic_int_value(IntrinsicValueType::block_index_x);
 }
 
-ast::Value<int> block_index_y()
+Value<int> block_index_y()
 {
     return intrinsic_int_value(IntrinsicValueType::block_index_y);
 }
 
-ast::Value<int> block_index_z()
+Value<int> block_index_z()
 {
     return intrinsic_int_value(IntrinsicValueType::block_index_z);
 }
 
-ast::Value<int> block_dim_x()
+Value<int> block_dim_x()
 {
     return intrinsic_int_value(IntrinsicValueType::block_dim_x);
 }
 
-ast::Value<int> block_dim_y()
+Value<int> block_dim_y()
 {
     return intrinsic_int_value(IntrinsicValueType::block_dim_y);
 }
 
-ast::Value<int> block_dim_z()
+Value<int> block_dim_z()
 {
     return intrinsic_int_value(IntrinsicValueType::block_dim_z);
 }
 
-ast::Value<Dim3> thread_index()
+Value<Dim3> thread_index()
 {
     $var(Dim3, ret);
     ret->x = thread_index_x();
@@ -104,7 +104,7 @@ ast::Value<Dim3> thread_index()
     return ret;
 }
 
-ast::Value<Dim3> block_index()
+Value<Dim3> block_index()
 {
     $var(Dim3, ret);
     ret->x = block_index_x();
@@ -113,7 +113,7 @@ ast::Value<Dim3> block_index()
     return ret;
 }
 
-ast::Value<Dim3> block_dim()
+Value<Dim3> block_dim()
 {
     $var(Dim3, ret);
     ret->x = block_dim_x();

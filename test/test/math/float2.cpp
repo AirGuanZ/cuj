@@ -14,8 +14,7 @@ TEST_CASE("builtin.math.float2")
 {
     SECTION("make_float2")
     {
-        Context ctx;
-        CUJ_SCOPED_CONTEXT(&ctx);
+        ScopedContext ctx;
 
         auto test_make_float2_0 = to_callable<Float2>(
             []()

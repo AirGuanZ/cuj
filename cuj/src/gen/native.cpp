@@ -54,7 +54,7 @@ namespace
 
 } // namespace anonymous
 
-void NativeJIT::generate(const ir::Program &prog)
+void NativeJIT::generate(const ir::Program &prog, OptLevel opt)
 {
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
@@ -68,6 +68,22 @@ void NativeJIT::generate(const ir::Program &prog)
     std::string err_str;
     llvm::EngineBuilder engine_builder(impl_->llvm_gen.get_module_ownership());
     engine_builder.setErrorStr(&err_str);
+
+    switch(opt)
+    {
+    case OptLevel::O0:
+        engine_builder.setOptLevel(llvm::CodeGenOpt::None);
+        break;
+    case OptLevel::O1:
+        engine_builder.setOptLevel(llvm::CodeGenOpt::Less);
+        break;
+    case OptLevel::O2:
+        engine_builder.setOptLevel(llvm::CodeGenOpt::Default);
+        break;
+    case OptLevel::O3:
+        engine_builder.setOptLevel(llvm::CodeGenOpt::Aggressive);
+        break;
+    }
 
     auto exec_engine = engine_builder.create();
     if(!exec_engine)

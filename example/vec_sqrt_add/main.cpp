@@ -17,9 +17,8 @@ void check_cuda_error(cudaError_t err)
 
 std::string generate_ptx()
 {
-    Context context;
-    CUJ_SCOPED_CONTEXT(&context);
-
+    ScopedContext context;
+    
     context.begin_function<void(float*,float*,float*,int)>(
         "vec_add", ir::Function::Type::Kernel);
     
@@ -36,14 +35,7 @@ std::string generate_ptx()
     };
 
     context.end_function();
-
-    std::cout << "=========== llvm ir ===========" << std::endl << std::endl;
-
-    gen::LLVMIRGenerator llvm_gen;
-    llvm_gen.set_target(gen::LLVMIRGenerator::Target::PTX);
-    llvm_gen.generate(context.gen_ir());
-    std::cout << llvm_gen.get_string() << std::endl;
-
+    
     std::cout << "=========== ptx ===========" << std::endl << std::endl;
 
     auto ptx = context.gen_ptx();

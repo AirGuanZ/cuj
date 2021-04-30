@@ -31,12 +31,12 @@ RC<typename Value<T_>::ImplType> ClassBase<C>::new_member(Args &&...args)
 
     if constexpr(is_array<T>)
     {
-        auto cast_addr = newRC<InternalArrayAllocAddress<T>>();
-        cast_addr->arr_alloc = address;
+        auto alloc_addr = newRC<InternalArrayAllocAddress<T>>();
+        alloc_addr->arr_alloc = address;
         
         auto impl = newRC<InternalArrayValue<
             typename T::ElementType, T::ElementCount>>();
-        impl->data_ptr->value = cast_addr;
+        impl->data_ptr = alloc_addr;
 
         return impl;
     }

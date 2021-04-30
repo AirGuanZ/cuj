@@ -16,9 +16,10 @@ public:
 
     explicit Float3Impl(ClassAddress addr);
 
-    Float3Impl(ClassAddress addr, $float v);
+    Float3Impl(ClassAddress addr, const $float &v);
 
-    Float3Impl(ClassAddress addr, $float _x, $float _y, $float _z);
+    Float3Impl(
+        ClassAddress addr, const $float &_x, const $float &_y, const $float &_z);
 
     Float3Impl(ClassAddress addr, const ast::Value<Float3Impl> &other);
 
@@ -36,23 +37,23 @@ public:
 using Float3 = Value<Float3Impl>;
 
 Float3 make_float3();
-Float3 make_float3($float v);
-Float3 make_float3($float x, $float y, $float z);
+Float3 make_float3(const $float &v);
+Float3 make_float3(const $float &x, const $float &y, const $float &z);
 
 Float3 operator+(const Float3 &lhs, const Float3 &rhs);
 Float3 operator-(const Float3 &lhs, const Float3 &rhs);
 Float3 operator*(const Float3 &lhs, const Float3 &rhs);
 Float3 operator/(const Float3 &lhs, const Float3 &rhs);
 
-Float3 operator+(const Float3 &lhs, $float rhs);
-Float3 operator-(const Float3 &lhs, $float rhs);
-Float3 operator*(const Float3 &lhs, $float rhs);
-Float3 operator/(const Float3 &lhs, $float rhs);
+Float3 operator+(const Float3 &lhs, const $float &rhs);
+Float3 operator-(const Float3 &lhs, const $float &rhs);
+Float3 operator*(const Float3 &lhs, const $float &rhs);
+Float3 operator/(const Float3 &lhs, const $float &rhs);
 
-Float3 operator+($float lhs, const Float3 &rhs);
-Float3 operator-($float lhs, const Float3 &rhs);
-Float3 operator*($float lhs, const Float3 &rhs);
-Float3 operator/($float lhs, const Float3 &rhs);
+Float3 operator+(const $float &lhs, const Float3 &rhs);
+Float3 operator-(const $float &lhs, const Float3 &rhs);
+Float3 operator*(const $float &lhs, const Float3 &rhs);
+Float3 operator/(const $float &lhs, const Float3 &rhs);
 
 $float dot(const Float3 &a, const Float3 &b);
 $float cos(const Float3 &a, const Float3 &b);

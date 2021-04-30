@@ -9,8 +9,7 @@ constexpr double f64_nan = std::numeric_limits<double>::quiet_NaN();
 
 TEST_CASE("builtin.math.basic")
 {
-    Context ctx;
-    CUJ_SCOPED_CONTEXT(&ctx);
+    ScopedContext ctx;
     
     auto abs32 = to_callable<float>(
         []($f32 x) { $return(math::abs(x)); });

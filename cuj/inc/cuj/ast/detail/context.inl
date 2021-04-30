@@ -195,10 +195,11 @@ inline std::string Context::gen_ir_string() const
     return printer.get_string();
 }
 
-inline gen::NativeJIT Context::gen_native_jit() const
+inline gen::NativeJIT Context::gen_native_jit(
+    gen::NativeJIT::OptLevel opt) const
 {
     gen::NativeJIT jit;
-    jit.generate(gen_ir());
+    jit.generate(gen_ir(), opt);
     return jit;
 }
 

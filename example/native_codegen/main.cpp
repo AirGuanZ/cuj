@@ -6,8 +6,7 @@ using namespace cuj;
 
 void run()
 {
-    Context context;
-    CUJ_SCOPED_CONTEXT(&context);
+    ScopedContext context;
 
     unsigned int n = 0;
     std::cout << "Enter n: ";
@@ -28,6 +27,10 @@ void run()
         $return(result);
     });
 
+    gen::LLVMIRGenerator llvm_gen;
+    llvm_gen.generate(context.gen_ir());
+    std::cout << std::endl << llvm_gen.get_string() << std::endl;
+
     auto codegen_result = context.gen_native_jit();
     auto pow_n_func = codegen_result.get_symbol(pow_n);
 
@@ -38,7 +41,6 @@ void run()
 
 int main()
 {
-    run();
     try
     {
         run();

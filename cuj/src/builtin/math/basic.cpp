@@ -89,14 +89,14 @@ const char *intrinsic_basic_math_function_name(
 }
 
 #define CUJ_MATH_FUNC_1_ARG(NAME, RET, ARG)                                     \
-    ast::Value<RET> NAME(ast::Value<ARG> x)                                     \
+    Value<RET> NAME(const Value<ARG> &x)                                        \
     {                                                                           \
         return create<RET, ARG>(                                                \
             IntrinsicBasicMathFunctionType::NAME, x.get_impl());                \
     }
 
 #define CUJ_MATH_FUNC_2_ARG(NAME, RET, ARG, ARG2)                               \
-    ast::Value<RET> NAME(ast::Value<ARG> x, ast::Value<ARG> y)                  \
+    Value<RET> NAME(const Value<ARG> &x, const Value<ARG> &y)                   \
     {                                                                           \
         static_assert(std::is_same_v<ARG, ARG2>);                               \
         return create<RET, ARG>(                                                \

@@ -286,7 +286,7 @@ template<typename T, typename I>
 ir::BasicValue InternalUnaryOperator<T, I>::gen_ir(ir::IRBuilder &builder) const
 {
     auto input_val = input->gen_ir(builder);
-    input_val = detail::gen_arithmetic_cast<I, T>(input_val);
+    input_val = detail::gen_arithmetic_cast<I, T>(input_val, builder);
 
     auto unary_op = ir::UnaryOp{ type, input_val };
 
@@ -653,9 +653,13 @@ Value<T> Pointer<T>::deref() const
 
     if constexpr(is_array<T>)
     {
+        auto arr_addr = newRC<InternalArrayAllocAddress<T>>();
+        arr_addr->arr_alloc = impl_;
+
         auto impl = newRC<InternalArrayValue<
             typename T::ElementType, T::ElementCount>>();
-        impl->data_ptr = impl_;
+        impl->data_ptr = arr_addr;
+
         return T(std::move(impl));
     }
     else if constexpr(is_pointer<T>)

@@ -6,8 +6,7 @@ TEST_CASE("function")
 {
     SECTION("define function")
     {
-        Context ctx;
-        CUJ_SCOPED_CONTEXT(&ctx);
+        ScopedContext ctx;
 
         auto define_add_ints = [](Value<int *> int_ptr, Value<int> num)
         {
@@ -67,8 +66,7 @@ TEST_CASE("function")
 
     SECTION("class-type argument")
     {
-        Context ctx;
-        CUJ_SCOPED_CONTEXT(&ctx);
+        ScopedContext ctx;
         
         auto float2_sum = to_callable<float>(
             [](math::Float2 a, math::Float2 b, math::Float2 c)
@@ -97,8 +95,7 @@ TEST_CASE("function")
 
     SECTION("class-type return value")
     {
-        Context ctx;
-        CUJ_SCOPED_CONTEXT(&ctx);
+        ScopedContext ctx;
 
         auto my_make_float2 = to_callable<math::Float2>(
             []($f32 x, $f32 y)
@@ -123,8 +120,7 @@ TEST_CASE("function")
 
     SECTION("array-type return value")
     {
-        Context ctx;
-        CUJ_SCOPED_CONTEXT(&ctx);
+        ScopedContext ctx;
 
         auto my_make_arr4 = to_callable<int[4]>(
             []($int x, $int y, $int z, $int w)

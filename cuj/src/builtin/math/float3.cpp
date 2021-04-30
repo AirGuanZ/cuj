@@ -9,13 +9,14 @@ Float3Impl::Float3Impl(ClassAddress addr)
     
 }
 
-Float3Impl::Float3Impl(ClassAddress addr, $float v)
+Float3Impl::Float3Impl(ClassAddress addr, const $float &v)
     : Float3Impl(std::move(addr), v, v, v)
 {
     
 }
 
-Float3Impl::Float3Impl(ClassAddress addr, $float _x, $float _y, $float _z)
+Float3Impl::Float3Impl(
+    ClassAddress addr, const $float &_x, const $float &_y, const $float &_z)
     : ClassBase(std::move(addr))
 {
     x = _x;
@@ -23,7 +24,7 @@ Float3Impl::Float3Impl(ClassAddress addr, $float _x, $float _y, $float _z)
     z = _z;
 }
 
-Float3Impl::Float3Impl(ClassAddress addr, const ast::Value<Float3Impl> &other)
+Float3Impl::Float3Impl(ClassAddress addr, const Value<Float3Impl> &other)
     : Float3Impl(std::move(addr), other->x, other->y, other->z)
 {
     
@@ -60,12 +61,12 @@ Float3 make_float3()
     return make_float3(0, 0, 0);
 }
 
-Float3 make_float3($float v)
+Float3 make_float3(const $float &v)
 {
     return make_float3(v, v, v);
 }
 
-Float3 make_float3($float x, $float y, $float z)
+Float3 make_float3(const $float &x, const $float &y, const $float &z)
 {
     $var(Float3, ret, x, y, z);
     return ret;
@@ -91,42 +92,42 @@ Float3 operator/(const Float3 &lhs, const Float3 &rhs)
     return make_float3(lhs->x / rhs->x, lhs->y / rhs->y, lhs->z / rhs->z);
 }
 
-Float3 operator+(const Float3 &lhs, $float rhs)
+Float3 operator+(const Float3 &lhs, const $float &rhs)
 {
     return make_float3(lhs->x + rhs, lhs->y + rhs, lhs->z + rhs);
 }
 
-Float3 operator-(const Float3 &lhs, $float rhs)
+Float3 operator-(const Float3 &lhs, const $float &rhs)
 {
     return make_float3(lhs->x - rhs, lhs->y - rhs, lhs->z - rhs);
 }
 
-Float3 operator*(const Float3 &lhs, $float rhs)
+Float3 operator*(const Float3 &lhs, const $float &rhs)
 {
     return make_float3(lhs->x * rhs, lhs->y * rhs, lhs->z * rhs);
 }
 
-Float3 operator/(const Float3 &lhs, $float rhs)
+Float3 operator/(const Float3 &lhs, const $float &rhs)
 {
     return make_float3(lhs->x / rhs, lhs->y / rhs, lhs->z / rhs);
 }
 
-Float3 operator+($float lhs, const Float3 &rhs)
+Float3 operator+(const $float &lhs, const Float3 &rhs)
 {
     return make_float3(lhs + rhs->x, lhs + rhs->y, lhs + rhs->z);
 }
 
-Float3 operator-($float lhs, const Float3 &rhs)
+Float3 operator-(const $float &lhs, const Float3 &rhs)
 {
     return make_float3(lhs - rhs->x, lhs - rhs->y, lhs - rhs->z);
 }
 
-Float3 operator*($float lhs, const Float3 &rhs)
+Float3 operator*(const $float &lhs, const Float3 &rhs)
 {
     return make_float3(lhs * rhs->x, lhs * rhs->y, lhs * rhs->z);
 }
 
-Float3 operator/($float lhs, const Float3 &rhs)
+Float3 operator/(const $float &lhs, const Float3 &rhs)
 {
     return make_float3(lhs / rhs->x, lhs / rhs->y, lhs / rhs->z);
 }

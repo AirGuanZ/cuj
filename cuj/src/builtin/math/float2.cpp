@@ -9,13 +9,13 @@ Float2Impl::Float2Impl(ClassAddress addr)
 
 }
 
-Float2Impl::Float2Impl(ClassAddress addr, $float v)
+Float2Impl::Float2Impl(ClassAddress addr, const $float &v)
     : Float2Impl(std::move(addr), v, v)
 {
 
 }
 
-Float2Impl::Float2Impl(ClassAddress addr, $float _x, $float _y)
+Float2Impl::Float2Impl(ClassAddress addr, const $float &_x, const $float &_y)
     : ClassBase<Float2Impl>(std::move(addr))
 {
     x = _x;
@@ -54,13 +54,13 @@ Float2 Float2Impl::normalize() const
     return make_float2(x * inv_len, y * inv_len);
 }
 
-Float2 make_float2($float x, $float y)
+Float2 make_float2(const $float &x, const $float &y)
 {
     $var(Float2, ret, x, y);
     return ret;
 }
 
-Float2 make_float2($float v)
+Float2 make_float2(const $float &v)
 {
     return make_float2(v, v);
 }
@@ -90,42 +90,42 @@ Float2 operator/(const Float2 &lhs, const Float2 &rhs)
     return make_float2(lhs->x / rhs->x, lhs->y / rhs->y);
 }
 
-Float2 operator+(const Float2 &lhs, $float rhs)
+Float2 operator+(const Float2 &lhs, const $float &rhs)
 {
     return make_float2(lhs->x + rhs, lhs->y + rhs);
 }
 
-Float2 operator-(const Float2 &lhs, $float rhs)
+Float2 operator-(const Float2 &lhs, const $float &rhs)
 {
     return make_float2(lhs->x - rhs, lhs->y - rhs);
 }
 
-Float2 operator*(const Float2 &lhs, $float rhs)
+Float2 operator*(const Float2 &lhs, const $float &rhs)
 {
     return make_float2(lhs->x * rhs, lhs->y * rhs);
 }
 
-Float2 operator/(const Float2 &lhs, $float rhs)
+Float2 operator/(const Float2 &lhs, const $float &rhs)
 {
     return make_float2(lhs->x / rhs, lhs->y / rhs);
 }
 
-Float2 operator+($float lhs, const Float2 &rhs)
+Float2 operator+(const $float &lhs, const Float2 &rhs)
 {
     return make_float2(lhs + rhs->x, lhs + rhs->y);
 }
 
-Float2 operator-($float lhs, const Float2 &rhs)
+Float2 operator-(const $float &lhs, const Float2 &rhs)
 {
     return make_float2(lhs - rhs->x, lhs - rhs->y);
 }
 
-Float2 operator*($float lhs, const Float2 &rhs)
+Float2 operator*(const $float &lhs, const Float2 &rhs)
 {
     return make_float2(lhs * rhs->x, lhs * rhs->y);
 }
 
-Float2 operator/($float lhs, const Float2 &rhs)
+Float2 operator/(const $float &lhs, const Float2 &rhs)
 {
     return make_float2(lhs / rhs->x, lhs / rhs->y);
 }

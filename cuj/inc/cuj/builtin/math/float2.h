@@ -15,9 +15,9 @@ public:
 
     explicit Float2Impl(ClassAddress addr);
 
-    Float2Impl(ClassAddress addr, $float v);
+    Float2Impl(ClassAddress addr, const $float &v);
 
-    Float2Impl(ClassAddress addr, $float _x, $float _y);
+    Float2Impl(ClassAddress addr, const $float &_x, const $float &_y);
 
     Float2Impl(ClassAddress addr, const Value<Float2Impl> &other);
 
@@ -35,23 +35,23 @@ public:
 using Float2 = Value<Float2Impl>;
 
 Float2 make_float2();
-Float2 make_float2($float v);
-Float2 make_float2($float x, $float y);
+Float2 make_float2(const $float &v);
+Float2 make_float2(const $float &x, const $float &y);
 
 Float2 operator+(const Float2 &lhs, const Float2 &rhs);
 Float2 operator-(const Float2 &lhs, const Float2 &rhs);
 Float2 operator*(const Float2 &lhs, const Float2 &rhs);
 Float2 operator/(const Float2 &lhs, const Float2 &rhs);
 
-Float2 operator+(const Float2 &lhs, $float rhs);
-Float2 operator-(const Float2 &lhs, $float rhs);
-Float2 operator*(const Float2 &lhs, $float rhs);
-Float2 operator/(const Float2 &lhs, $float rhs);
+Float2 operator+(const Float2 &lhs, const $float &rhs);
+Float2 operator-(const Float2 &lhs, const $float &rhs);
+Float2 operator*(const Float2 &lhs, const $float &rhs);
+Float2 operator/(const Float2 &lhs, const $float &rhs);
 
-Float2 operator+($float lhs, const Float2 &rhs);
-Float2 operator-($float lhs, const Float2 &rhs);
-Float2 operator*($float lhs, const Float2 &rhs);
-Float2 operator/($float lhs, const Float2 &rhs);
+Float2 operator+(const $float &lhs, const Float2 &rhs);
+Float2 operator-(const $float &lhs, const Float2 &rhs);
+Float2 operator*(const $float &lhs, const Float2 &rhs);
+Float2 operator/(const $float &lhs, const Float2 &rhs);
 
 $float dot(const Float2 &a, const Float2 &b);
 $float cos(const Float2 &a, const Float2 &b);

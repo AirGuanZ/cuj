@@ -9,14 +9,18 @@ Float4Impl::Float4Impl(ClassAddress addr)
     
 }
 
-Float4Impl::Float4Impl(ClassAddress addr, $float v)
+Float4Impl::Float4Impl(ClassAddress addr, const $float &v)
     : Float4Impl(std::move(addr), v, v, v, v)
 {
     
 }
 
 Float4Impl::Float4Impl(
-    ClassAddress addr, $float _x, $float _y, $float _z, $float _w)
+    ClassAddress addr,
+    const $float &_x,
+    const $float &_y,
+    const $float &_z,
+    const $float &_w)
     : ClassBase(std::move(addr))
 {
     x = _x;
@@ -25,7 +29,7 @@ Float4Impl::Float4Impl(
     w = _w;
 }
 
-Float4Impl::Float4Impl(ClassAddress addr, const ast::Value<Float4Impl> &other)
+Float4Impl::Float4Impl(ClassAddress addr, const Value<Float4Impl> &other)
     : Float4Impl(std::move(addr), other->x, other->y, other->z, other->w)
 {
     
@@ -62,12 +66,13 @@ Float4 make_float4()
     return make_float4(0, 0, 0, 0);
 }
 
-Float4 make_float4($float v)
+Float4 make_float4(const $float &v)
 {
     return make_float4(v, v, v, v);
 }
 
-Float4 make_float4($float x, $float y, $float z, $float w)
+Float4 make_float4(
+    const $float &x, const $float &y, const $float &z, const $float &w)
 {
     $var(Float4, ret, x, y, z, w);
     return ret;
@@ -97,42 +102,42 @@ Float4 operator/(const Float4 &lhs, const Float4 &rhs)
         lhs->x / rhs->x, lhs->y / rhs->y, lhs->z / rhs->z, lhs->w / rhs->w);
 }
 
-Float4 operator+(const Float4 &lhs, $float rhs)
+Float4 operator+(const Float4 &lhs, const $float &rhs)
 {
     return make_float4(lhs->x + rhs, lhs->y + rhs, lhs->z + rhs, lhs->w + rhs);
 }
 
-Float4 operator-(const Float4 &lhs, $float rhs)
+Float4 operator-(const Float4 &lhs, const $float &rhs)
 {
     return make_float4(lhs->x - rhs, lhs->y - rhs, lhs->z - rhs, lhs->w - rhs);
 }
 
-Float4 operator*(const Float4 &lhs, $float rhs)
+Float4 operator*(const Float4 &lhs, const $float &rhs)
 {
     return make_float4(lhs->x * rhs, lhs->y * rhs, lhs->z * rhs, lhs->w * rhs);
 }
 
-Float4 operator/(const Float4 &lhs, $float rhs)
+Float4 operator/(const Float4 &lhs, const $float &rhs)
 {
     return make_float4(lhs->x / rhs, lhs->y / rhs, lhs->z / rhs, lhs->w / rhs);
 }
 
-Float4 operator+($float lhs, const Float4 &rhs)
+Float4 operator+(const $float &lhs, const Float4 &rhs)
 {
     return make_float4(lhs + rhs->x, lhs + rhs->y, lhs + rhs->z, lhs + rhs->w);
 }
 
-Float4 operator-($float lhs, const Float4 &rhs)
+Float4 operator-(const $float &lhs, const Float4 &rhs)
 {
     return make_float4(lhs - rhs->x, lhs - rhs->y, lhs - rhs->z, lhs - rhs->w);
 }
 
-Float4 operator*($float lhs, const Float4 &rhs)
+Float4 operator*(const $float &lhs, const Float4 &rhs)
 {
     return make_float4(lhs * rhs->x, lhs * rhs->y, lhs * rhs->z, lhs * rhs->w);
 }
 
-Float4 operator/($float lhs, const Float4 &rhs)
+Float4 operator/(const $float &lhs, const Float4 &rhs)
 {
     return make_float4(lhs / rhs->x, lhs / rhs->y, lhs / rhs->z, lhs / rhs->w);
 }

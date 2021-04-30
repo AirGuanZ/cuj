@@ -10,6 +10,15 @@ class NativeJIT : public Uncopyable
 {
 public:
 
+    enum class OptLevel
+    {
+        O0,
+        O1,
+        O2,
+        O3,
+        Default = O2,
+    };
+
     NativeJIT() = default;
 
     NativeJIT(NativeJIT &&rhs) noexcept;
@@ -18,7 +27,7 @@ public:
 
     ~NativeJIT();
 
-    void generate(const ir::Program &prog);
+    void generate(const ir::Program &prog, OptLevel opt = OptLevel::Default);
 
     template<typename FuncType>
     FuncType *get_symbol(const std::string &name) const;

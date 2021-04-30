@@ -17,11 +17,16 @@ public:
 
     explicit Float4Impl(ClassAddress addr);
 
-    Float4Impl(ClassAddress addr, $float v);
+    Float4Impl(ClassAddress addr, const $float &v);
 
-    Float4Impl(ClassAddress addr, $float _x, $float _y, $float _z, $float w);
+    Float4Impl(
+        ClassAddress addr,
+        const $float &_x,
+        const $float &_y,
+        const $float &_z,
+        const $float &_w);
 
-    Float4Impl(ClassAddress addr, const ast::Value<Float4Impl> &other);
+    Float4Impl(ClassAddress addr, const Value<Float4Impl> &other);
 
     $float length_square() const;
 
@@ -37,23 +42,24 @@ public:
 using Float4 = Value<Float4Impl>;
 
 Float4 make_float4();
-Float4 make_float4($float v);
-Float4 make_float4($float x, $float y, $float z, $float w);
+Float4 make_float4(const $float &v);
+Float4 make_float4(
+    const $float &x, const $float &y, const $float &z, const $float &w);
 
 Float4 operator+(const Float4 &lhs, const Float4 &rhs);
 Float4 operator-(const Float4 &lhs, const Float4 &rhs);
 Float4 operator*(const Float4 &lhs, const Float4 &rhs);
 Float4 operator/(const Float4 &lhs, const Float4 &rhs);
 
-Float4 operator+(const Float4 &lhs, $float rhs);
-Float4 operator-(const Float4 &lhs, $float rhs);
-Float4 operator*(const Float4 &lhs, $float rhs);
-Float4 operator/(const Float4 &lhs, $float rhs);
+Float4 operator+(const Float4 &lhs, const $float &rhs);
+Float4 operator-(const Float4 &lhs, const $float &rhs);
+Float4 operator*(const Float4 &lhs, const $float &rhs);
+Float4 operator/(const Float4 &lhs, const $float &rhs);
 
-Float4 operator+($float lhs, const Float4 &rhs);
-Float4 operator-($float lhs, const Float4 &rhs);
-Float4 operator*($float lhs, const Float4 &rhs);
-Float4 operator/($float lhs, const Float4 &rhs);
+Float4 operator+(const $float &lhs, const Float4 &rhs);
+Float4 operator-(const $float &lhs, const Float4 &rhs);
+Float4 operator*(const $float &lhs, const Float4 &rhs);
+Float4 operator/(const $float &lhs, const Float4 &rhs);
 
 $float dot(const Float4 &a, const Float4 &b);
 $float cos(const Float4 &a, const Float4 &b);

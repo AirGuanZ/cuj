@@ -64,7 +64,8 @@ public:
 
     std::string gen_ir_string() const;
     
-    gen::NativeJIT gen_native_jit() const;
+    gen::NativeJIT gen_native_jit(
+        gen::NativeJIT::OptLevel opt = gen::NativeJIT::OptLevel::Default) const;
     
 #if CUJ_ENABLE_CUDA
     
