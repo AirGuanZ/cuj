@@ -21,7 +21,7 @@ public:
     Float3Impl(
         ClassAddress addr, const $float &_x, const $float &_y, const $float &_z);
 
-    Float3Impl(ClassAddress addr, const ast::Value<Float3Impl> &other);
+    Float3Impl(ClassAddress addr, const Value<Float3Impl> &other);
 
     $float length_square() const;
 

@@ -129,6 +129,8 @@ private:
         llvm::Value *from, ir::BuiltinType from_type, ir::BuiltinType to_type);
 
     ir::BuiltinType get_arithmetic_type(const ir::BasicValue &v);
+
+    llvm::Value *i1_to_bool(llvm::Value *val);
     
     Target target_ = Target::Host;
     

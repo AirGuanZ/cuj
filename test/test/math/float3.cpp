@@ -2,12 +2,12 @@
 
 #include <test/test.h>
 
-using math::Float2;
-using math::make_float2;
+using math::Float3;
+using math::make_float3;
 
-struct Float2Data
+struct Float3Data
 {
-    float x, y;
+    float x, y, z;
 };
 
 #define ADD_TEST_EXPR(EXPR)                                                     \
@@ -19,11 +19,12 @@ struct Float2Data
             $return(math::abs(a - b) < 0.001f);                                 \
         });                                                                     \
         auto approx_eq = to_callable<bool>(                                     \
-            [](const Float2 &a, const Float2 &b)                                \
+            [](const Float3 &a, const Float3 &b)                                \
         {                                                                       \
             $return(                                                            \
                 math::abs(a->x - b->x) < 0.001f &&                              \
-                math::abs(a->y - b->y) < 0.001f);                               \
+                math::abs(a->y - b->y) < 0.001f &&                              \
+                math::abs(a->z - b->z) < 0.001f);                               \
         });                                                                     \
         auto test = to_callable<bool>(                                          \
             [&]                                                                 \
@@ -39,109 +40,112 @@ struct Float2Data
         }                                                                       \
     } while(false)
 
-TEST_CASE("builtin.math.float2")
+TEST_CASE("builtin.math.float3")
 {
     SECTION("create")
     {
         ScopedContext ctx;
 
-        auto test_make_float2_0 = to_callable<Float2>(
+        auto test_make_float3_0 = to_callable<Float3>(
             []()
         {
-            $return(make_float2());
+            $return(make_float3());
         });
 
-        auto test_make_float2_1 = to_callable<Float2>(
+        auto test_make_float3_1 = to_callable<Float3>(
             []($f32 v)
         {
-            $return(make_float2(v));
+            $return(make_float3(v));
         });
 
-        auto test_make_float2_2 = to_callable<Float2>(
-            []($f32 x, $f32 y)
+        auto test_make_float3_2 = to_callable<Float3>(
+            []($f32 x, $f32 y, $f32 z)
         {
-            $return(make_float2(x, y));
+            $return(make_float3(x, y, z));
         });
 
         auto jit = ctx.gen_native_jit();
 
-        Float2Data float2_data = { 1, 2 };
-        jit.get_symbol(test_make_float2_0)(&float2_data);
-        REQUIRE(float2_data.x == Approx(0));
-        REQUIRE(float2_data.y == Approx(0));
+        Float3Data float3_data = { 1, 2, 3 };
+        jit.get_symbol(test_make_float3_0)(&float3_data);
+        REQUIRE(float3_data.x == Approx(0));
+        REQUIRE(float3_data.y == Approx(0));
+        REQUIRE(float3_data.z == Approx(0));
 
-        float2_data = { 1, 2 };
-        jit.get_symbol(test_make_float2_1)(&float2_data, 3);
-        REQUIRE(float2_data.x == Approx(3));
-        REQUIRE(float2_data.y == Approx(3));
+        float3_data = { 1, 2, 3 };
+        jit.get_symbol(test_make_float3_1)(&float3_data, 3);
+        REQUIRE(float3_data.x == Approx(3));
+        REQUIRE(float3_data.y == Approx(3));
+        REQUIRE(float3_data.z == Approx(3));
 
-        float2_data = { 1, 2 };
-        jit.get_symbol(test_make_float2_2)(&float2_data, 3, 4);
-        REQUIRE(float2_data.x == Approx(3));
-        REQUIRE(float2_data.y == Approx(4));
+        float3_data = { 1, 2, 3 };
+        jit.get_symbol(test_make_float3_2)(&float3_data, 3, 4, 5);
+        REQUIRE(float3_data.x == Approx(3));
+        REQUIRE(float3_data.y == Approx(4));
+        REQUIRE(float3_data.z == Approx(5));
     }
 
     SECTION("function")
     {
         ADD_TEST_EXPR(
-            approx_eq_f(make_float2(1, 2)->length_square(), 5));
+            approx_eq_f(make_float3(1, 2, 3)->length_square(), 14));
 
         ADD_TEST_EXPR(
-            approx_eq_f(make_float2(1, 2)->length(), std::sqrt(5.0f)));
+            approx_eq_f(make_float3(1, 2, 3)->length(), std::sqrt(14.0f)));
 
         ADD_TEST_EXPR(
-            approx_eq_f(make_float2(1, 2)->min_elem(), 1));
+            approx_eq_f(make_float3(1, 2, 3)->min_elem(), 1));
 
         ADD_TEST_EXPR(
-            approx_eq_f(make_float2(1, 2)->max_elem(), 2));
+            approx_eq_f(make_float3(1, 2, 3)->max_elem(), 3));
 
         ADD_TEST_EXPR(
-            approx_eq(make_float2(2, 2)->normalize(), make_float2(1 / std::sqrt(2.0f))));
+            approx_eq(make_float3(2, 2, 2)->normalize(), make_float3(1 / std::sqrt(3.0f))));
     }
 
     SECTION("operator")
     {
         ADD_TEST_EXPR(approx_eq(
-            make_float2(1, 2) + make_float2(3, 4), make_float2(4, 6)));
+            make_float3(1, 2, 3) + make_float3(3, 4, 5), make_float3(4, 6, 8)));
 
         ADD_TEST_EXPR(approx_eq(
-            make_float2(1, 2) - make_float2(3, 4), make_float2(-2, -2)));
+            make_float3(1, 2, 3) - make_float3(3, 4, 5), make_float3(-2)));
 
         ADD_TEST_EXPR(approx_eq(
-            make_float2(1, 2) * make_float2(3, 4), make_float2(3, 8)));
+            make_float3(1, 2, 3) * make_float3(3, 4, 5), make_float3(3, 8, 15)));
 
         ADD_TEST_EXPR(approx_eq(
-            make_float2(1, 2) / make_float2(3, 4), make_float2(1.0f / 3, 0.5f)));
+            make_float3(1, 2, 3) / make_float3(3, 4, 5), make_float3(1.0f / 3, 0.5f, 3.0f / 5)));
 
         ADD_TEST_EXPR(approx_eq(
-            make_float2(1, 2) + 3.0f, make_float2(4, 5)));
+            make_float3(1, 2, 3) + 3.0f, make_float3(4, 5, 6)));
 
         ADD_TEST_EXPR(approx_eq(
-            make_float2(1, 2) - 3.0f, make_float2(-2, -1)));
+            make_float3(1, 2, 3) - 3.0f, make_float3(-2, -1, 0)));
 
         ADD_TEST_EXPR(approx_eq(
-            make_float2(1, 2) * 3, make_float2(3, 6)));
+            make_float3(1, 2, 3) * 3, make_float3(3, 6, 9)));
 
         ADD_TEST_EXPR(approx_eq(
-            make_float2(1, 2) / 3, make_float2(1.0f / 3, 2.0f / 3)));
+            make_float3(1, 2, 3) / 3, make_float3(1.0f / 3, 2.0f / 3, 1)));
 
         ADD_TEST_EXPR(approx_eq(
-            3 + make_float2(1, 2), make_float2(4, 5)));
+            3 + make_float3(1, 2, 3), make_float3(4, 5, 6)));
 
         ADD_TEST_EXPR(approx_eq(
-            3 - make_float2(1, 2), make_float2(2, 1)));
+            3 - make_float3(1, 2, 3), make_float3(2, 1, 0)));
 
         ADD_TEST_EXPR(approx_eq(
-            3 * make_float2(1, 2), make_float2(3, 6)));
+            3 * make_float3(1, 2, 3), make_float3(3, 6, 9)));
 
         ADD_TEST_EXPR(approx_eq(
-            3 / make_float2(1, 2), make_float2(3, 1.5f)));
+            3 / make_float3(1, 2, 3), make_float3(3, 1.5f, 1)));
 
         ADD_TEST_EXPR(
-            approx_eq_f(dot(make_float2(1, 2), make_float2(3, 4)), 11));
+            approx_eq_f(dot(make_float3(1, 2, 3), make_float3(3, 4, 6)), 29));
 
         ADD_TEST_EXPR(
-            approx_eq_f(cos(make_float2(0, 2), make_float2(0, -3)), -1));
+            approx_eq_f(cos(make_float3(0, 0, 2), make_float3(0, 0, -3)), -1));
     }
 }
 

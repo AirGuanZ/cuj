@@ -440,6 +440,13 @@ ClassValue<T>::ClassValue(const U &other, const Args &...args)
 }
 
 template<typename T>
+ClassValue<T>::ClassValue(RC<InternalClassLeftValue<T>> impl)
+    : impl_(std::move(impl))
+{
+    
+}
+
+template<typename T>
 ClassValue<T>::ClassValue(const ClassValue &rhs)
 {
     this->init_as_stack_var();

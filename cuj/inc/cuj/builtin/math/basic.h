@@ -53,27 +53,27 @@ namespace detail
 
 } // namespace detail
 
-$float abs       (const $float &x);
-$float mod       (const $float &x, const $float &y);
-$float remainder (const $float &x, const $float &y);
-$float exp       (const $float &x);
-$float exp2      (const $float &x);
-$float log       (const $float &x);
-$float log2      (const $float &x);
-$float log10     (const $float &x);
-$float pow       (const $float &x, const $float &y);
-$float sqrt      (const $float &x);
-$float sin       (const $float &x);
-$float cos       (const $float &x);
-$float tan       (const $float &x);
-$float asin      (const $float &x);
-$float acos      (const $float &x);
-$float atan      (const $float &x);
-$float atan2     (const $float &y, const $float &x);
-$float ceil      (const $float &x);
-$float floor     (const $float &x);
-$float trunc     (const $float &x);
-$float round     (const $float &x);
+$float abs      (const $float &x);
+$float mod      (const $float &x, const $float &y);
+$float remainder(const $float &x, const $float &y);
+$float exp      (const $float &x);
+$float exp2     (const $float &x);
+$float log      (const $float &x);
+$float log2     (const $float &x);
+$float log10    (const $float &x);
+$float pow      (const $float &x, const $float &y);
+$float sqrt     (const $float &x);
+$float sin      (const $float &x);
+$float cos      (const $float &x);
+$float tan      (const $float &x);
+$float asin     (const $float &x);
+$float acos     (const $float &x);
+$float atan     (const $float &x);
+$float atan2    (const $float &y, const $float &x);
+$float ceil     (const $float &x);
+$float floor    (const $float &x);
+$float trunc    (const $float &x);
+$float round    (const $float &x);
 $int   isfinite (const $float &x);
 $int   isinf    (const $float &x);
 $int   isnan    (const $float &x);

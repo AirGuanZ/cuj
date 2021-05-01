@@ -2,8 +2,6 @@
 
 #include <functional>
 
-#include <cuj/ast/func.h>
-
 CUJ_NAMESPACE_BEGIN(cuj::ast)
 
 namespace func_trait_detail

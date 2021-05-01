@@ -421,7 +421,9 @@ public:
     ClassValue();
 
     template<typename U, typename...Args>
-    ClassValue(const U &other, const Args &...args);
+    explicit ClassValue(const U &other, const Args &...args);
+
+    ClassValue(RC<InternalClassLeftValue<T>> impl);
 
     ClassValue(const ClassValue &rhs);
     

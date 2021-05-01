@@ -91,7 +91,7 @@ typename detail::FuncRetType<Ret>::Type
     {
         using CallStatType = CallClass<Ret, Args...>;
 
-        Value<Ret> var = func->create_stack_var<Ret>();
+        Value<Ret> var(func->create_stack_var<Ret>());
         auto call = detail::create_call_class_obj<CallStatType, Ret, ToTuple>(
             index_, var.address(), args_tuple,
             std::make_index_sequence<sizeof...(Args)>());

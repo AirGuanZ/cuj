@@ -577,7 +577,8 @@ void LLVMIRGenerator::generate(const ir::Block &block)
 
 void LLVMIRGenerator::generate(const ir::If &if_s)
 {
-    auto cond = get_value(if_s.cond);
+    auto cond = data_->ir_builder->CreateZExtOrTrunc(
+        get_value(if_s.cond), data_->ir_builder->getInt1Ty());
 
     auto then_block  = llvm::BasicBlock::Create(*data_->context, "then");
     auto merge_block = llvm::BasicBlock::Create(*data_->context, "merge");
@@ -618,7 +619,8 @@ void LLVMIRGenerator::generate(const ir::While &while_s)
     data_->ir_builder->SetInsertPoint(cond_block);
     generate(*while_s.calculate_cond);
 
-    auto cond = get_value(while_s.cond);
+    auto cond = data_->ir_builder->CreateZExtOrTrunc(
+        get_value(while_s.cond), data_->ir_builder->getInt1Ty());
     data_->ir_builder->CreateCondBr(cond, body_block, merge_block);
 
     data_->continue_dests.push(cond_block);
@@ -747,12 +749,12 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::BinaryOp &v)
     case ir::BinaryOp::Type::And:
     {
         CUJ_ASSERT(operand_type == ir::BuiltinType::Bool);
-        return data_->ir_builder->CreateAnd(lhs, rhs);
+        return i1_to_bool(data_->ir_builder->CreateAnd(lhs, rhs));
     }
     case ir::BinaryOp::Type::Or:
     {
         CUJ_ASSERT(operand_type == ir::BuiltinType::Bool);
-        return data_->ir_builder->CreateOr(lhs, rhs);
+        return i1_to_bool(data_->ir_builder->CreateOr(lhs, rhs));
     }
     case ir::BinaryOp::Type::XOr:
     {
@@ -762,54 +764,54 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::BinaryOp &v)
     case ir::BinaryOp::Type::Equal:
     {
         if(is_integral)
-            return data_->ir_builder->CreateICmpEQ(lhs, rhs);
-        return data_->ir_builder->CreateFCmpOEQ(lhs, rhs);
+            return i1_to_bool(data_->ir_builder->CreateICmpEQ(lhs, rhs));
+        return i1_to_bool(data_->ir_builder->CreateFCmpOEQ(lhs, rhs));
     }
     case ir::BinaryOp::Type::NotEqual:
     {
         if(is_integral)
-            return data_->ir_builder->CreateICmpNE(lhs, rhs);
-        return data_->ir_builder->CreateFCmpONE(lhs, rhs);
+            return i1_to_bool(data_->ir_builder->CreateICmpNE(lhs, rhs));
+        return i1_to_bool(data_->ir_builder->CreateFCmpONE(lhs, rhs));
     }
     case ir::BinaryOp::Type::Less:
     {
         if(is_integral)
         {
             if(is_signed)
-                return data_->ir_builder->CreateICmpSLT(lhs, rhs);
-            return data_->ir_builder->CreateICmpULT(lhs, rhs);
+                return i1_to_bool(data_->ir_builder->CreateICmpSLT(lhs, rhs));
+            return i1_to_bool(data_->ir_builder->CreateICmpULT(lhs, rhs));
         }
-        return data_->ir_builder->CreateFCmpOLT(lhs, rhs);
+        return i1_to_bool(data_->ir_builder->CreateFCmpOLT(lhs, rhs));
     }
     case ir::BinaryOp::Type::LessEqual:
     {
         if(is_integral)
         {
             if(is_signed)
-                return data_->ir_builder->CreateICmpSLE(lhs, rhs);
-            return data_->ir_builder->CreateICmpULE(lhs, rhs);
+                return i1_to_bool(data_->ir_builder->CreateICmpSLE(lhs, rhs));
+            return i1_to_bool(data_->ir_builder->CreateICmpULE(lhs, rhs));
         }
-        return data_->ir_builder->CreateFCmpOLE(lhs, rhs);
+        return i1_to_bool(data_->ir_builder->CreateFCmpOLE(lhs, rhs));
     }
     case ir::BinaryOp::Type::Greater:
     {
         if(is_integral)
         {
             if(is_signed)
-                return data_->ir_builder->CreateICmpSGT(lhs, rhs);
-            return data_->ir_builder->CreateICmpUGT(lhs, rhs);
+                return i1_to_bool(data_->ir_builder->CreateICmpSGT(lhs, rhs));
+            return i1_to_bool(data_->ir_builder->CreateICmpUGT(lhs, rhs));
         }
-        return data_->ir_builder->CreateFCmpOGT(lhs, rhs);
+        return i1_to_bool(data_->ir_builder->CreateFCmpOGT(lhs, rhs));
     }
     case ir::BinaryOp::Type::GreaterEqual:
     {
         if(is_integral)
         {
             if(is_signed)
-                return data_->ir_builder->CreateICmpSGE(lhs, rhs);
-            return data_->ir_builder->CreateICmpUGE(lhs, rhs);
+                return i1_to_bool(data_->ir_builder->CreateICmpSGE(lhs, rhs));
+            return i1_to_bool(data_->ir_builder->CreateICmpUGE(lhs, rhs));
         }
-        return data_->ir_builder->CreateFCmpOGE(lhs, rhs);
+        return i1_to_bool(data_->ir_builder->CreateFCmpOGE(lhs, rhs));
     }
     }
 
@@ -1152,6 +1154,11 @@ ir::BuiltinType LLVMIRGenerator::get_arithmetic_type(const ir::BasicValue &v)
     {
         unreachable();
     });
+}
+
+llvm::Value *LLVMIRGenerator::i1_to_bool(llvm::Value *val)
+{
+    return data_->ir_builder->CreateZExt(val, data_->ir_builder->getInt8Ty());
 }
 
 CUJ_NAMESPACE_END(cuj::gen)
