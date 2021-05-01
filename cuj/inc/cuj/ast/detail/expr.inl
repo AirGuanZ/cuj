@@ -17,12 +17,31 @@ namespace detail
     ir::BasicValue gen_arithmetic_cast(
         ir::BasicValue input, ir::IRBuilder &builder)
     {
+        static_assert(std::is_arithmetic_v<From>);
+        static_assert(std::is_arithmetic_v<To>);
+
         if constexpr(std::is_same_v<From, To>)
             return input;
 
         auto to_type = get_current_context()->get_type<To>();
         auto cast_op = ir::CastOp{ ir::to_builtin_type_value<To>, input };
 
+        auto ret = builder.gen_temp_value(to_type);
+        builder.append_assign(ret, cast_op);
+
+        return ret;
+    }
+
+    template<typename From>
+    ir::BasicValue gen_pointer_to_uint(
+        ir::BasicValue input, ir::IRBuilder &builder)
+    {
+        static_assert(is_pointer<From>);
+
+        auto ptr_type = get_current_context()->get_type<From>();
+        auto to_type = get_current_context()->get_type<size_t>();
+
+        auto cast_op = ir::PointerToUIntOp{ ptr_type, input };
         auto ret = builder.gen_temp_value(to_type);
         builder.append_assign(ret, cast_op);
 
@@ -248,6 +267,10 @@ ir::BasicValue InternalPointerFunctionCall<R, Args...>::gen_ir(
 template<typename T, typename L, typename R>
 ir::BasicValue InternalBinaryOperator<T, L, R>::gen_ir(ir::IRBuilder &builder) const
 {
+    static_assert(std::is_arithmetic_v<L> || is_pointer<L>);
+    static_assert(std::is_arithmetic_v<R> || is_pointer<R>);
+    static_assert(std::is_arithmetic_v<L> == std::is_arithmetic_v<R>);
+
     auto lhs_val = lhs->gen_ir(builder);
     auto rhs_val = rhs->gen_ir(builder);
 
@@ -256,21 +279,60 @@ ir::BasicValue InternalBinaryOperator<T, L, R>::gen_ir(ir::IRBuilder &builder) c
        type == ir::BinaryOp::Type::Mul ||
        type == ir::BinaryOp::Type::Div)
     {
-        lhs_val = detail::gen_arithmetic_cast<L, T>(lhs_val, builder);
-        rhs_val = detail::gen_arithmetic_cast<R, T>(rhs_val, builder);
+        CUJ_ASSERT(std::is_arithmetic_v<L> && std::is_arithmetic_v<R>);
+
+        // arithmetic operators are available only to arithmetic types
+        if constexpr(std::is_arithmetic_v<L> && std::is_arithmetic_v<R>)
+        {
+            lhs_val = detail::gen_arithmetic_cast<L, T>(lhs_val, builder);
+            rhs_val = detail::gen_arithmetic_cast<R, T>(rhs_val, builder);
+        }
+        else
+            unreachable();
     }
     else if(type == ir::BinaryOp::Type::And ||
-            type == ir::BinaryOp::Type::Or ||
+            type == ir::BinaryOp::Type::Or  ||
             type == ir::BinaryOp::Type::XOr)
     {
-        lhs_val = detail::gen_arithmetic_cast<L, bool>(lhs_val, builder);
-        rhs_val = detail::gen_arithmetic_cast<R, bool>(rhs_val, builder);
+        if constexpr(std::is_arithmetic_v<L>)
+            lhs_val = detail::gen_arithmetic_cast<L, bool>(lhs_val, builder);
+        else
+        {
+            lhs_val = detail::gen_pointer_to_uint<L>(lhs_val, builder);
+            lhs_val = detail::gen_arithmetic_cast<size_t, bool>(lhs_val, builder);
+        }
+
+        if constexpr(std::is_arithmetic_v<R>)
+            rhs_val = detail::gen_arithmetic_cast<R, bool>(rhs_val, builder);
+        else
+        {
+            rhs_val = detail::gen_pointer_to_uint<L>(rhs_val, builder);
+            rhs_val = detail::gen_arithmetic_cast<size_t, bool>(rhs_val, builder);
+        }
     }
     else if constexpr(!std::is_same_v<L, bool> || !std::is_same_v<R, bool>)
     {
-        using AT = decltype(std::declval<L>() + std::declval<R>());
-        lhs_val = detail::gen_arithmetic_cast<L, AT>(lhs_val, builder);
-        rhs_val = detail::gen_arithmetic_cast<R, AT>(rhs_val, builder);
+        CUJ_ASSERT(
+            type == ir::BinaryOp::Type::Equal     ||
+            type == ir::BinaryOp::Type::NotEqual  ||
+            type == ir::BinaryOp::Type::Less      ||
+            type == ir::BinaryOp::Type::LessEqual ||
+            type == ir::BinaryOp::Type::Greater   ||
+            type == ir::BinaryOp::Type::GreaterEqual);
+
+        if constexpr(std::is_arithmetic_v<L>)
+        {
+            CUJ_ASSERT(std::is_arithmetic_v<R>);
+            using AT = decltype(std::declval<L>() + std::declval<R>());
+            lhs_val = detail::gen_arithmetic_cast<L, AT>(lhs_val, builder);
+            rhs_val = detail::gen_arithmetic_cast<R, AT>(rhs_val, builder);
+        }
+        else
+        {
+            CUJ_ASSERT(is_pointer<L> && is_pointer<R>);
+            lhs_val = detail::gen_pointer_to_uint<L>(lhs_val, builder);
+            rhs_val = detail::gen_pointer_to_uint<L>(rhs_val, builder);
+        }
     }
 
     auto binary_op = ir::BinaryOp{ type, lhs_val, rhs_val };
@@ -643,7 +705,7 @@ Pointer<T> &Pointer<T>::operator=(const Pointer &rhs)
 }
 
 template<typename T>
-Pointer<T> &Pointer<T>::operator=(const NullPtr &)
+Pointer<T> &Pointer<T>::operator=(const std::nullptr_t &)
 {
     *this = Pointer<T>(newRC<InternalEmptyPointer<T>>());
     return *this;
@@ -745,9 +807,9 @@ std::enable_if_t<std::is_arithmetic_v<T>, ArithmeticValue<T>>
 
 template<typename T, typename L, typename R>
 RC<InternalArithmeticValue<T>> create_binary_operator(
-    ir::BinaryOp::Type             type,
-    RC<InternalArithmeticValue<L>> lhs,
-    RC<InternalArithmeticValue<R>> rhs)
+    ir::BinaryOp::Type              type,
+    RC<typename Value<L>::ImplType> lhs,
+    RC<typename Value<R>::ImplType> rhs)
 {
     auto ret = newRC<InternalBinaryOperator<T, L, R>>();
     ret->type = type;

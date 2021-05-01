@@ -93,6 +93,12 @@ struct EmptyPointerOp
     const Type *ptr_type;
 };
 
+struct PointerToUIntOp
+{
+    const Type *ptr_type;
+    BasicValue  ptr_val;
+};
+
 using Value = Variant<
     BasicValue,
     BinaryOp,
@@ -104,6 +110,7 @@ using Value = Variant<
     IntrinsicOp,
     MemberPtrOp,
     PointerOffsetOp,
-    EmptyPointerOp>;
+    EmptyPointerOp,
+    PointerToUIntOp>;
 
 CUJ_NAMESPACE_END(cuj::ir)

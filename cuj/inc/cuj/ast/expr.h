@@ -42,10 +42,6 @@ class Pointer;
 template<typename C>
 class ClassBase;
 
-struct NullPtr { };
-
-inline constexpr NullPtr null_ptr = { };
-
 namespace detail
 {
     template<typename T, typename = void>
@@ -356,9 +352,12 @@ class InternalBinaryOperator : public InternalArithmeticValue<T>
 {
 public:
 
-    ir::BinaryOp::Type             type;
-    RC<InternalArithmeticValue<L>> lhs;
-    RC<InternalArithmeticValue<R>> rhs;
+    static_assert(std::is_arithmetic_v<L> || is_pointer<L>);
+    static_assert(std::is_arithmetic_v<R> || is_pointer<R>);
+
+    ir::BinaryOp::Type              type;
+    RC<typename Value<L>::ImplType> lhs;
+    RC<typename Value<R>::ImplType> rhs;
 
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };
@@ -510,7 +509,7 @@ public:
 
     Pointer &operator=(const Pointer &rhs);
 
-    Pointer &operator=(const NullPtr &);
+    Pointer &operator=(const std::nullptr_t &);
 
     Value<T> deref() const;
 
@@ -536,9 +535,9 @@ std::enable_if_t<std::is_arithmetic_v<T>, ArithmeticValue<T>>
 
 template<typename T, typename L, typename R>
 RC<InternalArithmeticValue<T>> create_binary_operator(
-    ir::BinaryOp::Type             type,
-    RC<InternalArithmeticValue<L>> lhs,
-    RC<InternalArithmeticValue<R>> rhs);
+    ir::BinaryOp::Type              type,
+    RC<typename Value<L>::ImplType> lhs,
+    RC<typename Value<R>::ImplType> rhs);
 
 template<typename T, typename I>
 RC<InternalArithmeticValue<T>> create_unary_operator(

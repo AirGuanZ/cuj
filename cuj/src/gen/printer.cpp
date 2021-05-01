@@ -405,6 +405,10 @@ std::string IRPrinter::to_string(const ir::Value &value) const
         [this](const ir::EmptyPointerOp &)
     {
         return std::string("nullptr");
+    },
+        [this](const ir::PointerToUIntOp &v)
+    {
+        return "pointer to uint " + to_string(v.ptr_val);
     });
 }
 
