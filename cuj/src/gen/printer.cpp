@@ -409,6 +409,10 @@ std::string IRPrinter::to_string(const ir::Value &value) const
         [this](const ir::PointerToUIntOp &v)
     {
         return "pointer to uint " + to_string(v.ptr_val);
+    },
+        [this](const ir::PointerDiffOp &v)
+    {
+        return "pointer diff " + to_string(v.lhs) + " " + to_string(v.rhs);
     });
 }
 

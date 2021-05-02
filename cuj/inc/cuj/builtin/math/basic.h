@@ -107,7 +107,7 @@ template<typename T>
 ArithmeticValue<T> min(
     const ArithmeticValue<T> &lhs, const ArithmeticValue<T> &rhs)
 {
-    $var(T, ret);
+    ArithmeticValue<T> ret;
     $if(lhs < rhs)
     {
         ret = lhs;
@@ -123,7 +123,7 @@ template<typename T>
 ArithmeticValue<T> max(
     const ArithmeticValue<T> &lhs, const ArithmeticValue<T> &rhs)
 {
-    $var(T, ret);
+    ArithmeticValue<T> ret;
     $if(lhs > rhs)
     {
         ret = lhs;

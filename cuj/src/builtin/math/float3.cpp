@@ -68,7 +68,7 @@ Float3 make_float3(const $float &v)
 
 Float3 make_float3(const $float &x, const $float &y, const $float &z)
 {
-    $var(Float3, ret, x, y, z);
+    Float3 ret(x, y, z);
     return ret;
 }
 

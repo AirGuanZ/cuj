@@ -117,6 +117,8 @@ private:
 
     llvm::Value *get_value(const ir::PointerToUIntOp &v);
 
+    llvm::Value *get_value(const ir::PointerDiffOp &v);
+
     llvm::Value *get_value(const ir::BasicTempValue &v);
 
     llvm::Value *get_value(const ir::BasicImmediateValue &v);

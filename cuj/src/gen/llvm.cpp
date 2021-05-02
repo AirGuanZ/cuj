@@ -691,7 +691,8 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::Value &v)
         [this](const ir::MemberPtrOp     &v) { return get_value(v); },
         [this](const ir::PointerOffsetOp &v) { return get_value(v); },
         [this](const ir::EmptyPointerOp  &v) { return get_value(v); },
-        [this](const ir::PointerToUIntOp &v) { return get_value(v); });
+        [this](const ir::PointerToUIntOp &v) { return get_value(v); },
+        [this](const ir::PointerDiffOp   &v) { return get_value(v); });
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::BasicValue &v)
@@ -956,9 +957,9 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::MemberPtrOp &v)
     
     std::vector<llvm::Value *> indices(2);
     indices[0] = llvm::ConstantInt::get(
-        *data_->context, llvm::APInt(32, 0, true));
+        *data_->context, llvm::APInt(32, 0));
     indices[1] = llvm::ConstantInt::get(
-        *data_->context, llvm::APInt(32, v.member_index, true));
+        *data_->context, llvm::APInt(32, v.member_index));
 
     return data_->ir_builder->CreateGEP(struct_type, struct_ptr, indices);
 }
@@ -987,6 +988,13 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::PointerToUIntOp &v)
     else
         to_type = data_->ir_builder->getInt64Ty();
     return data_->ir_builder->CreatePtrToInt(ptr, to_type);
+}
+
+llvm::Value *LLVMIRGenerator::get_value(const ir::PointerDiffOp &v)
+{
+    auto lhs = get_value(v.lhs);
+    auto rhs = get_value(v.rhs);
+    return data_->ir_builder->CreatePtrDiff(lhs, rhs);
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::BasicTempValue &v)

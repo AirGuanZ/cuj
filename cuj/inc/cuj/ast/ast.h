@@ -60,11 +60,6 @@ CUJ_NAMESPACE_END(cuj)
 #define $f32    ::cuj::ast::Value<float>
 #define $f64    ::cuj::ast::Value<double>
 
-#define $var(TYPE, NAME, ...)                                                   \
-    ::cuj::ast::Value<::cuj::ast::RawToCUJType<TYPE>> NAME =                    \
-        ::cuj::ast::get_current_function()                                      \
-            ->create_stack_var<::cuj::ast::RawToCUJType<TYPE>>(__VA_ARGS__)
-
 #define $arg(TYPE, NAME)                                                        \
     ::cuj::ast::Value<::cuj::ast::RawToCUJType<TYPE>> NAME =                    \
         ::cuj::ast::get_current_function()                                      \

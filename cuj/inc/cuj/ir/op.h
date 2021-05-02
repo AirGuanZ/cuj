@@ -99,6 +99,13 @@ struct PointerToUIntOp
     BasicValue  ptr_val;
 };
 
+struct PointerDiffOp // type: i64
+{
+    const Type *ptr_type;
+    BasicValue  lhs;
+    BasicValue  rhs;
+};
+
 using Value = Variant<
     BasicValue,
     BinaryOp,
@@ -111,6 +118,7 @@ using Value = Variant<
     MemberPtrOp,
     PointerOffsetOp,
     EmptyPointerOp,
-    PointerToUIntOp>;
+    PointerToUIntOp,
+    PointerDiffOp>;
 
 CUJ_NAMESPACE_END(cuj::ir)

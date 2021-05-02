@@ -97,7 +97,7 @@ Value<int> block_dim_z()
 
 Value<Dim3> thread_index()
 {
-    $var(Dim3, ret);
+    Value<Dim3> ret;
     ret->x = thread_index_x();
     ret->y = thread_index_y();
     ret->z = thread_index_z();
@@ -106,7 +106,7 @@ Value<Dim3> thread_index()
 
 Value<Dim3> block_index()
 {
-    $var(Dim3, ret);
+    Value<Dim3> ret;
     ret->x = block_index_x();
     ret->y = block_index_y();
     ret->z = block_index_z();
@@ -115,7 +115,7 @@ Value<Dim3> block_index()
 
 Value<Dim3> block_dim()
 {
-    $var(Dim3, ret);
+    Value<Dim3> ret;
     ret->x = block_dim_x();
     ret->y = block_dim_y();
     ret->z = block_dim_z();

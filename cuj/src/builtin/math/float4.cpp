@@ -74,7 +74,7 @@ Float4 make_float4(const $float &v)
 Float4 make_float4(
     const $float &x, const $float &y, const $float &z, const $float &w)
 {
-    $var(Float4, ret, x, y, z, w);
+    Float4 ret(x, y, z, w);
     return ret;
 }
 

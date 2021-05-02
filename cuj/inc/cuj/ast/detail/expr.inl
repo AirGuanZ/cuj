@@ -152,6 +152,22 @@ ir::BasicValue InternalMemberPointerValueOffset<C, M>::gen_ir(
 }
 
 template<typename T>
+ir::BasicValue InternalPointerDiff<T>::gen_ir(ir::IRBuilder &builder) const
+{
+    auto lhs_val = lhs->gen_ir(builder);
+    auto rhs_val = rhs->gen_ir(builder);
+
+    auto ptr_type = get_current_context()->get_type<Pointer<T>>();
+    auto ret_type = get_current_context()->get_type<int64_t>();
+
+    auto ret = builder.gen_temp_value(ret_type);
+    auto op = ir::PointerDiffOp{ ptr_type, lhs_val, rhs_val };
+    builder.append_assign(ret, op);
+
+    return ret;
+}
+
+template<typename T>
 ir::BasicValue InternalArithmeticLoad<T>::gen_ir(ir::IRBuilder &builder) const
 {
     auto ptr = pointer->gen_ir(builder);
@@ -733,10 +749,8 @@ Value<T> Pointer<T>::deref() const
     }
     else if constexpr(is_pointer<T>)
     {
-        auto value = newRC<InternalArithmeticLeftValue<size_t>>();
-        value->address = impl_;
-        auto impl = newRC<InternalPointerValue<typename T::PointedType>>();
-        impl->value = std::move(value);
+        auto impl = newRC<InternalPointerLeftValue<typename T::PointedType>>();
+        impl->address = impl_;
         return T(std::move(impl));
     }
     else if constexpr(std::is_arithmetic_v<T>)
@@ -758,9 +772,10 @@ Value<T> Pointer<T>::deref() const
 template<typename T>
 Pointer<Pointer<T>> Pointer<T>::address() const
 {
-    auto impl = newRC<InternalPointerValue<Pointer<T>>>();
-    impl->value = impl_->value->address();
-    return Pointer<Pointer<T>>(std::move(impl));
+    auto left = std::dynamic_pointer_cast<InternalPointerLeftValue<T>>(impl_);
+    if(!left)
+        throw CUJException("getting address of a non-left pointer value");
+    return Pointer<Pointer<T>>(left->address);
 }
 
 template<typename T>

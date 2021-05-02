@@ -56,7 +56,7 @@ Float2 Float2Impl::normalize() const
 
 Float2 make_float2(const $float &x, const $float &y)
 {
-    $var(Float2, ret, x, y);
+    Float2 ret(x, y);
     return ret;
 }
 

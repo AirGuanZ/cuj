@@ -141,9 +141,6 @@ template<typename T>
 using Value = decltype(detail::CUJValueTypeAux<RawToCUJType<T>>());
 
 template<typename T>
-using Var = decltype(detail::CUJValueTypeAux<RawToCUJType<T>>());
-
-template<typename T>
 constexpr bool is_pointer = detail::IsPointerValue<T>::value;
 
 template<typename T>
@@ -264,6 +261,17 @@ public:
 
     RC<InternalPointerValue<C>> class_pointer;
     int                         member_index;
+
+    ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
+};
+
+template<typename T>
+class InternalPointerDiff : public InternalArithmeticValue<int64_t>
+{
+public:
+
+    RC<InternalPointerValue<T>> lhs;
+    RC<InternalPointerValue<T>> rhs;
 
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };
