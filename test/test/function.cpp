@@ -69,7 +69,7 @@ TEST_CASE("function")
         ScopedContext ctx;
         
         auto float2_sum = to_callable<float>(
-            [](math::Float2 a, math::Float2 b, math::Float2 c)
+            [](math::Vec2f a, math::Vec2f b, math::Vec2f c)
         {
             $return(a->x + a->y + b->x + b->y + c->x + c->y);
         });
@@ -77,9 +77,9 @@ TEST_CASE("function")
         auto test_float2_sum_func = to_callable<float>(
             "test_float2_sum", [&]
         {
-            math::Float2 a(1, 2);
-            math::Float2 b(3, 4);
-            math::Float2 c(5, 6);
+            math::Vec2f a(1, 2);
+            math::Vec2f b(3, 4);
+            math::Vec2f c(5, 6);
             $return(float2_sum(a, b, c));
         });
 
@@ -97,25 +97,25 @@ TEST_CASE("function")
     {
         ScopedContext ctx;
 
-        auto my_make_float2 = to_callable<math::Float2>(
+        auto my_make_vec2f = to_callable<math::Vec2f>(
             []($f32 x, $f32 y)
         {
-            $return(math::make_float2(x, y));
+            $return(math::make_vec2f(x, y));
         });
 
-        auto test_make_float2 = to_callable<float>(
+        auto test_make_vec2f = to_callable<float>(
             [&]($f32 x, $f32 y)
         {
-            math::Float2 v = my_make_float2(x, y);
+            math::Vec2f v = my_make_vec2f(x, y);
             $return(v->x + v->y);
         });
         
         auto jit = ctx.gen_native_jit();
-        auto test_make_float2_func = jit.get_symbol(test_make_float2);
+        auto test_make_vec2f_func = jit.get_symbol(test_make_vec2f);
 
-        REQUIRE(test_make_float2_func);
-        if(test_make_float2_func)
-            REQUIRE(test_make_float2_func(1, 2) == Approx(3.0f));
+        REQUIRE(test_make_vec2f_func);
+        if(test_make_vec2f_func)
+            REQUIRE(test_make_vec2f_func(1, 2) == Approx(3.0f));
     }
 
     SECTION("array-type return value")

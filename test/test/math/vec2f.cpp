@@ -2,10 +2,10 @@
 
 #include <test/test.h>
 
-using math::Float2;
-using math::make_float2;
+using math::Vec2f;
+using math::make_vec2f;
 
-struct Float2Data
+struct Vec2Data
 {
     float x, y;
 };
@@ -19,7 +19,7 @@ struct Float2Data
             $return(math::abs(a - b) < 0.001f);                                 \
         });                                                                     \
         auto approx_eq = to_callable<bool>(                                     \
-            [](const Float2 &a, const Float2 &b)                                \
+            [](const Vec2f &a, const Vec2f &b)                                  \
         {                                                                       \
             $return(                                                            \
                 math::abs(a->x - b->x) < 0.001f &&                              \
@@ -39,109 +39,109 @@ struct Float2Data
         }                                                                       \
     } while(false)
 
-TEST_CASE("builtin.math.float2")
+TEST_CASE("builtin.math.vec2f")
 {
     SECTION("create")
     {
         ScopedContext ctx;
 
-        auto test_make_float2_0 = to_callable<Float2>(
+        auto test_make_vec2f_0 = to_callable<Vec2f>(
             []()
         {
-            $return(make_float2());
+            $return(make_vec2f());
         });
 
-        auto test_make_float2_1 = to_callable<Float2>(
+        auto test_make_vec2f_1 = to_callable<Vec2f>(
             []($f32 v)
         {
-            $return(make_float2(v));
+            $return(make_vec2f(v));
         });
 
-        auto test_make_float2_2 = to_callable<Float2>(
+        auto test_make_vec2f_2 = to_callable<Vec2f>(
             []($f32 x, $f32 y)
         {
-            $return(make_float2(x, y));
+            $return(make_vec2f(x, y));
         });
 
         auto jit = ctx.gen_native_jit();
 
-        Float2Data float2_data = { 1, 2 };
-        jit.get_symbol(test_make_float2_0)(&float2_data);
-        REQUIRE(float2_data.x == Approx(0));
-        REQUIRE(float2_data.y == Approx(0));
+        Vec2Data vec2f_data = { 1, 2 };
+        jit.get_symbol(test_make_vec2f_0)(&vec2f_data);
+        REQUIRE(vec2f_data.x == Approx(0));
+        REQUIRE(vec2f_data.y == Approx(0));
 
-        float2_data = { 1, 2 };
-        jit.get_symbol(test_make_float2_1)(&float2_data, 3);
-        REQUIRE(float2_data.x == Approx(3));
-        REQUIRE(float2_data.y == Approx(3));
+        vec2f_data = { 1, 2 };
+        jit.get_symbol(test_make_vec2f_1)(&vec2f_data, 3);
+        REQUIRE(vec2f_data.x == Approx(3));
+        REQUIRE(vec2f_data.y == Approx(3));
 
-        float2_data = { 1, 2 };
-        jit.get_symbol(test_make_float2_2)(&float2_data, 3, 4);
-        REQUIRE(float2_data.x == Approx(3));
-        REQUIRE(float2_data.y == Approx(4));
+        vec2f_data = { 1, 2 };
+        jit.get_symbol(test_make_vec2f_2)(&vec2f_data, 3, 4);
+        REQUIRE(vec2f_data.x == Approx(3));
+        REQUIRE(vec2f_data.y == Approx(4));
     }
 
     SECTION("function")
     {
         ADD_TEST_EXPR(
-            approx_eq_f(make_float2(1, 2)->length_square(), 5));
+            approx_eq_f(make_vec2f(1, 2)->length_square(), 5));
 
         ADD_TEST_EXPR(
-            approx_eq_f(make_float2(1, 2)->length(), std::sqrt(5.0f)));
+            approx_eq_f(make_vec2f(1, 2)->length(), std::sqrt(5.0f)));
 
         ADD_TEST_EXPR(
-            approx_eq_f(make_float2(1, 2)->min_elem(), 1));
+            approx_eq_f(make_vec2f(1, 2)->min_elem(), 1));
 
         ADD_TEST_EXPR(
-            approx_eq_f(make_float2(1, 2)->max_elem(), 2));
+            approx_eq_f(make_vec2f(1, 2)->max_elem(), 2));
 
         ADD_TEST_EXPR(
-            approx_eq(make_float2(2, 2)->normalize(), make_float2(1 / std::sqrt(2.0f))));
+            approx_eq(make_vec2f(2, 2)->normalize(), make_vec2f(1 / std::sqrt(2.0f))));
     }
 
     SECTION("operator")
     {
         ADD_TEST_EXPR(approx_eq(
-            make_float2(1, 2) + make_float2(3, 4), make_float2(4, 6)));
+            make_vec2f(1, 2) + make_vec2f(3, 4), make_vec2f(4, 6)));
 
         ADD_TEST_EXPR(approx_eq(
-            make_float2(1, 2) - make_float2(3, 4), make_float2(-2, -2)));
+            make_vec2f(1, 2) - make_vec2f(3, 4), make_vec2f(-2, -2)));
 
         ADD_TEST_EXPR(approx_eq(
-            make_float2(1, 2) * make_float2(3, 4), make_float2(3, 8)));
+            make_vec2f(1, 2) * make_vec2f(3, 4), make_vec2f(3, 8)));
 
         ADD_TEST_EXPR(approx_eq(
-            make_float2(1, 2) / make_float2(3, 4), make_float2(1.0f / 3, 0.5f)));
+            make_vec2f(1, 2) / make_vec2f(3, 4), make_vec2f(1.0f / 3, 0.5f)));
 
         ADD_TEST_EXPR(approx_eq(
-            make_float2(1, 2) + 3.0f, make_float2(4, 5)));
+            make_vec2f(1, 2) + 3.0f, make_vec2f(4, 5)));
 
         ADD_TEST_EXPR(approx_eq(
-            make_float2(1, 2) - 3.0f, make_float2(-2, -1)));
+            make_vec2f(1, 2) - 3.0f, make_vec2f(-2, -1)));
 
         ADD_TEST_EXPR(approx_eq(
-            make_float2(1, 2) * 3, make_float2(3, 6)));
+            make_vec2f(1, 2) * 3, make_vec2f(3, 6)));
 
         ADD_TEST_EXPR(approx_eq(
-            make_float2(1, 2) / 3, make_float2(1.0f / 3, 2.0f / 3)));
+            make_vec2f(1, 2) / 3, make_vec2f(1.0f / 3, 2.0f / 3)));
 
         ADD_TEST_EXPR(approx_eq(
-            3 + make_float2(1, 2), make_float2(4, 5)));
+            3 + make_vec2f(1, 2), make_vec2f(4, 5)));
 
         ADD_TEST_EXPR(approx_eq(
-            3 - make_float2(1, 2), make_float2(2, 1)));
+            3 - make_vec2f(1, 2), make_vec2f(2, 1)));
 
         ADD_TEST_EXPR(approx_eq(
-            3 * make_float2(1, 2), make_float2(3, 6)));
+            3 * make_vec2f(1, 2), make_vec2f(3, 6)));
 
         ADD_TEST_EXPR(approx_eq(
-            3 / make_float2(1, 2), make_float2(3, 1.5f)));
+            3 / make_vec2f(1, 2), make_vec2f(3, 1.5f)));
 
         ADD_TEST_EXPR(
-            approx_eq_f(dot(make_float2(1, 2), make_float2(3, 4)), 11));
+            approx_eq_f(dot(make_vec2f(1, 2), make_vec2f(3, 4)), 11));
 
         ADD_TEST_EXPR(
-            approx_eq_f(cos(make_float2(0, 2), make_float2(0, -3)), -1));
+            approx_eq_f(cos(make_vec2f(0, 2), make_vec2f(0, -3)), -1));
     }
 }
 

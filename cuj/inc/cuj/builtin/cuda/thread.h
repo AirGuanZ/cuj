@@ -2,7 +2,7 @@
 
 #if CUJ_ENABLE_CUDA
 
-#include <cuj/ast/ast.h>
+#include <cuj/builtin/math/math.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::builtin::cuda)
 
@@ -33,32 +33,23 @@ namespace detail
 
 } // namespace detail
 
-class Dim3 : public ast::ClassBase<Dim3>
-{
-public:
+using Dim3 = math::Vec3i;
 
-    $mem(int, x);
-    $mem(int, y);
-    $mem(int, z);
+Value<int> thread_index_x();
+Value<int> thread_index_y();
+Value<int> thread_index_z();
 
-    using ClassBase::ClassBase;
-};
+Value<int> block_index_x();
+Value<int> block_index_y();
+Value<int> block_index_z();
 
-ast::Value<int> thread_index_x();
-ast::Value<int> thread_index_y();
-ast::Value<int> thread_index_z();
+Value<int> block_dim_x();
+Value<int> block_dim_y();
+Value<int> block_dim_z();
 
-ast::Value<int> block_index_x();
-ast::Value<int> block_index_y();
-ast::Value<int> block_index_z();
-
-ast::Value<int> block_dim_x();
-ast::Value<int> block_dim_y();
-ast::Value<int> block_dim_z();
-
-ast::Value<Dim3> thread_index();
-ast::Value<Dim3> block_index();
-ast::Value<Dim3> block_dim();
+Dim3 thread_index();
+Dim3 block_index();
+Dim3 block_dim();
 
 CUJ_NAMESPACE_END(cuj::builtin::cuda)
 

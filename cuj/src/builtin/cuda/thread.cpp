@@ -95,31 +95,19 @@ Value<int> block_dim_z()
     return intrinsic_int_value(IntrinsicValueType::block_dim_z);
 }
 
-Value<Dim3> thread_index()
+Dim3 thread_index()
 {
-    Value<Dim3> ret;
-    ret->x = thread_index_x();
-    ret->y = thread_index_y();
-    ret->z = thread_index_z();
-    return ret;
+    return Dim3(thread_index_x(), thread_index_y(), thread_index_z());
 }
 
-Value<Dim3> block_index()
+Dim3 block_index()
 {
-    Value<Dim3> ret;
-    ret->x = block_index_x();
-    ret->y = block_index_y();
-    ret->z = block_index_z();
-    return ret;
+    return Dim3(block_index_x(), block_index_y(), block_index_z());
 }
 
-Value<Dim3> block_dim()
+Dim3 block_dim()
 {
-    Value<Dim3> ret;
-    ret->x = block_dim_x();
-    ret->y = block_dim_y();
-    ret->z = block_dim_z();
-    return ret;
+    return Dim3(block_dim_x(), block_dim_y(), block_dim_z());
 }
 
 CUJ_NAMESPACE_END(cuj::builtin::cuda)

@@ -113,6 +113,8 @@ TEST_CASE("array")
         class Struct0 : public ClassBase<Struct0>
         {
         public:
+
+            CUJ_DEFINE_CLASS(Struct0)
         
             using ClassBase::ClassBase;
         

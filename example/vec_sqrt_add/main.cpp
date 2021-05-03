@@ -53,7 +53,7 @@ void test_ptx(const std::string &ptx)
     cuCtxCreate(&context, 0, cuDevice);
     CUJ_SCOPE_GUARD({ cuCtxDestroy(context); });
 
-    cuj::CUDAModule cuda_module;
+    CUDAModule cuda_module;
     cuda_module.load_ptx_from_memory(ptx.data(), ptx.size());
 
     constexpr int N = 10;

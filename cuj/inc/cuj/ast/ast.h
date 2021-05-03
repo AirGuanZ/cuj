@@ -60,6 +60,11 @@ CUJ_NAMESPACE_END(cuj)
 #define $f32    ::cuj::ast::Value<float>
 #define $f64    ::cuj::ast::Value<double>
 
+#define CUJ_DEFINE_CLASS(NAME)                                                  \
+    using CUJClassBase = ::cuj::ast::ClassBase<NAME>;                           \
+    using ClassAddress = typename CUJClassBase::ClassAddress;                   \
+    using CUJClassFlag = typename CUJClassBase::CUJClassFlag;
+
 #define $arg(TYPE, NAME)                                                        \
     ::cuj::ast::Value<::cuj::ast::RawToCUJType<TYPE>> NAME =                    \
         ::cuj::ast::get_current_function()                                      \
@@ -67,7 +72,8 @@ CUJ_NAMESPACE_END(cuj)
 
 #define $mem(TYPE, NAME, ...)                                                   \
     ::cuj::ast::Value<::cuj::ast::RawToCUJType<TYPE>> NAME =                    \
-        new_member<::cuj::ast::RawToCUJType<TYPE>>(__VA_ARGS__)
+        this->CUJClassBase::                                                    \
+            template new_member<::cuj::ast::RawToCUJType<TYPE>>(__VA_ARGS__)
 
 #define $if(COND)   ::cuj::ast::IfBuilder()+(COND)+[&]
 #define $elif(COND) +(COND)+[&]

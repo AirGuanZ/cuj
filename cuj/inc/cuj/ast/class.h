@@ -12,12 +12,7 @@ class ClassBase
     RC<InternalPointerValue<C>> ref_pointer_;
 
     int member_count_ = 0;
-
-protected:
-
-    template<typename T, typename...Args>
-    RC<typename Value<T>::ImplType> new_member(Args &&...args);
-
+    
 public:
 
     struct CUJClassFlag { };
@@ -33,6 +28,9 @@ public:
     ClassBase(const ClassBase &) = delete;
 
     ClassBase &operator=(const ClassBase &other);
+
+    template<typename T, typename...Args>
+    RC<typename Value<T>::ImplType> new_member(Args &&...args);
 };
 
 CUJ_NAMESPACE_END(cuj::ast)
