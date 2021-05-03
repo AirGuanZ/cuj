@@ -9,11 +9,11 @@ TEST_CASE("pointer")
         auto test = to_callable<bool>(
             []
         {
-            $int a = 0, b = 0;
+            i32 a = 0, b = 0;
             Pointer<int> pa = a.address(), pb = b.address(), pa2 = a.address();
             Pointer<int> nil = nullptr;
             
-            $bool ret = true;
+            boolean ret = true;
             ret = ret && (pa != pb);
             ret = ret && (pa == pa2);
             ret = ret && ((pa < pb) ^ (pa > pb));
@@ -44,12 +44,12 @@ TEST_CASE("pointer")
             []
         {
             Array<int, 4> arr;
-            $bool ret = true;
+            boolean ret = true;
 
             ret = ret && (1 + arr[0].address() == arr[1].address());
             ret = ret && (arr[3].address() - 3 == arr[0].address());
 
-            $u64 diff = arr[2].address() - arr[0].address();
+            u64 diff = arr[2].address() - arr[0].address();
             ret = ret && (arr[2].address() - diff == arr[0].address());
 
             $return(ret);
@@ -70,7 +70,7 @@ TEST_CASE("pointer")
         auto test = to_callable<bool>(
             []
         {
-            $int a, b, c;
+            i32 a, b, c;
 
             Value<int *[4]> ptr_arr;
             
@@ -84,7 +84,7 @@ TEST_CASE("pointer")
             ptr_arr[2].deref() = 3;
             ptr_arr[3].deref() = 4;
 
-            $bool ret = true;
+            boolean ret = true;
             ret = ret && (a == 2);
             ret = ret && (b == 3);
             ret = ret && (ptr_arr[0] && c == 4);

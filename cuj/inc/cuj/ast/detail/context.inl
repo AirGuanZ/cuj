@@ -155,6 +155,14 @@ Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
 }
 
 template<typename FuncType>
+Function<FuncType> Context::begin_function(ir::Function::Type type)
+{
+    const std::string name =
+        "_cuj_auto_named_func_" + std::to_string(funcs_.size());
+    return begin_function<FuncType>(std::move(name), type);
+}
+
+template<typename FuncType>
 Function<FuncType> Context::begin_function(
     std::string name, ir::Function::Type type)
 {

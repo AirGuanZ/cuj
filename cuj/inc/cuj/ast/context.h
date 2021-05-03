@@ -53,6 +53,10 @@ public:
 
     template<typename FuncType>
     Function<FuncType> begin_function(
+        ir::Function::Type type = ir::Function::Type::Default);
+
+    template<typename FuncType>
+    Function<FuncType> begin_function(
         std::string        name,
         ir::Function::Type type = ir::Function::Type::Default);
 
@@ -114,6 +118,20 @@ auto to_callable(std::string name, Callable &&callable)
 {
     return get_current_context()
         ->add_function<Ret>(std::move(name), std::forward<Callable>(callable));
+}
+
+template<typename Ret, typename Callable>
+auto to_callable(ir::Function::Type type, Callable &&callable)
+{
+    return get_current_context()
+        ->add_function<Ret>(type, std::forward<Callable>(callable));
+}
+
+template<typename Ret, typename Callable>
+auto to_callable(std::string name, ir::Function::Type type, Callable &&callable)
+{
+    return get_current_context()->add_function<Ret>(
+        std::move(name), type, std::forward<Callable>(callable));
 }
 
 #define CUJ_SCOPED_CONTEXT(CTX_PTR)                                             \

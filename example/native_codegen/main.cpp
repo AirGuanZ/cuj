@@ -13,10 +13,10 @@ void run()
     std::cin >> n;
 
     auto pow_n = context.add_function<int64_t>(
-        [n]($int x) mutable
+        [n](i32 x) mutable
     {
-        $i64 result = 1;
-        $i64 base = x;
+        i64 result = 1;
+        i64 base = x;
         while(n)
         {
             if(n & 1)

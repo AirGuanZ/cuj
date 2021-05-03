@@ -452,6 +452,9 @@ class Array
 
     void init_as_stack_var();
 
+    template<typename I, typename = std::enable_if_t<std::is_integral_v<I>>>
+    Pointer<T> get_element_ptr(const ArithmeticValue<I> &index) const;
+
 public:
 
     using ImplType = InternalArrayValue<T, N>;
@@ -476,9 +479,6 @@ public:
     void set_impl(RC<InternalArrayValue<T, N>> impl);
 
     constexpr size_t size() const;
-
-    template<typename I, typename = std::enable_if_t<std::is_integral_v<I>>>
-    Pointer<T> get_element_ptr(const ArithmeticValue<I> &index) const;
 
     template<typename I, typename = std::enable_if_t<std::is_integral_v<I>>>
     Value<T> operator[](const ArithmeticValue<I> &index) const;
@@ -520,6 +520,8 @@ public:
     Pointer &operator=(const std::nullptr_t &);
 
     Value<T> deref() const;
+
+    Value<T> operator*() const { return this->deref(); };
 
     Pointer<Pointer<T>> address() const;
 

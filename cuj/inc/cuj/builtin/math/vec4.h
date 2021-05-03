@@ -58,19 +58,19 @@ Vec4<T> make_vec4(
     const Value<T> &x, const Value<T> &y, const Value<T> &z, const Value<T> &w);
 
 inline Vec4f make_vec4f();
-inline Vec4f make_vec4f(const $float &v);
+inline Vec4f make_vec4f(const f32 &v);
 inline Vec4f make_vec4f(
-    const $float &x, const $float &y, const $float &z, const $float &w);
+    const f32 &x, const f32 &y, const f32 &z, const f32 &w);
 
 inline Vec4d make_vec4d();
-inline Vec4d make_vec4d(const $double &v);
+inline Vec4d make_vec4d(const f64 &v);
 inline Vec4d make_vec4d(
-    const $double &x, const $double &y, const $double &z, const $double &w);
+    const f64 &x, const f64 &y, const f64 &z, const f64 &w);
 
 inline Vec4i make_vec4i();
-inline Vec4i make_vec4i(const $int &v);
+inline Vec4i make_vec4i(const i32 &v);
 inline Vec4i make_vec4i(
-    const $int &x, const $int &y, const $int &z, const $int &w);
+    const i32 &x, const i32 &y, const i32 &z, const i32 &w);
 
 template<typename T>
 Vec4<T> operator+(const Vec4<T> &lhs, const Vec4<T> &rhs);

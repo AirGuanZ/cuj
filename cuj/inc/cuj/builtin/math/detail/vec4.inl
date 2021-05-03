@@ -98,13 +98,13 @@ inline Vec4f make_vec4f()
     return make_vec4<float>();
 }
 
-inline Vec4f make_vec4f(const $float &v)
+inline Vec4f make_vec4f(const f32 &v)
 {
     return make_vec4<float>(v);
 }
 
 inline Vec4f make_vec4f(
-    const $float &x, const $float &y, const $float &z, const $float &w)
+    const f32 &x, const f32 &y, const f32 &z, const f32 &w)
 {
     return make_vec4<float>(x, y, z, w);
 }
@@ -114,13 +114,13 @@ inline Vec4d make_vec4d()
     return make_vec4<double>();
 }
 
-inline Vec4d make_vec4d(const $double &v)
+inline Vec4d make_vec4d(const f64 &v)
 {
     return make_vec4<double>(v);
 }
 
 inline Vec4d make_vec4d(
-    const $double &x, const $double &y, const $double &z, const $double &w)
+    const f64 &x, const f64 &y, const f64 &z, const f64 &w)
 {
     return make_vec4<double>(x, y, z, w);
 }
@@ -130,13 +130,13 @@ inline Vec4i make_vec4i()
     return make_vec4<int>();
 }
 
-inline Vec4i make_vec4i(const $int &v)
+inline Vec4i make_vec4i(const i32 &v)
 {
     return make_vec4<int>(v);
 }
 
 inline Vec4i make_vec4i(
-    const $int &x, const $int &y, const $int &z, const $int &w)
+    const i32 &x, const i32 &y, const i32 &z, const i32 &w)
 {
     return make_vec4<int>(x, y, z, w);
 }

@@ -27,7 +27,7 @@ std::string generate_ptx()
     $arg(float*, C);
     $arg(int,    N);
     
-    $int i = cuda::thread_index_x() + cuda::block_index_x() * cuda::block_dim_x();
+    i32 i = cuda::thread_index_x() + cuda::block_index_x() * cuda::block_dim_x();
 
     $if(i < N)
     {

@@ -82,7 +82,7 @@ TEST_CASE("array")
         auto sum_arr = to_callable<int>([&]
         {
             auto arr = make_arr();
-            $int ret = 0;
+            i32 ret = 0;
             for(int i = 0; i < 4; ++i)
             {
                 for(int j = 0; j < 3; ++j)
@@ -144,7 +144,7 @@ TEST_CASE("array")
         auto sum_arr = to_callable<float>([&]
         {
             auto arr = make_arr();
-            $float ret = 0;
+            f32 ret = 0;
             ret = ret + arr[0]->x;
             ret = ret + arr[0]->y[0];
             ret = ret + arr[0]->y[1];

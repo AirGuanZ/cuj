@@ -14,7 +14,7 @@ struct Vec2Data
     do {                                                                        \
         ScopedContext ctx;                                                      \
         auto approx_eq_f = to_callable<bool>(                                   \
-            [](const $float &a, const $float &b)                                \
+            [](const f32 &a, const f32 &b)                                      \
         {                                                                       \
             $return(math::abs(a - b) < 0.001f);                                 \
         });                                                                     \
@@ -52,13 +52,13 @@ TEST_CASE("builtin.math.vec2f")
         });
 
         auto test_make_vec2f_1 = to_callable<Vec2f>(
-            []($f32 v)
+            [](f32 v)
         {
             $return(make_vec2f(v));
         });
 
         auto test_make_vec2f_2 = to_callable<Vec2f>(
-            []($f32 x, $f32 y)
+            [](f32 x, f32 y)
         {
             $return(make_vec2f(x, y));
         });

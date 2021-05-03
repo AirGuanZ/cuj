@@ -10,8 +10,8 @@ TEST_CASE("function")
 
         auto define_add_ints = [](Value<int *> int_ptr, Value<int> num)
         {
-            $int i = 0;
-            $int result = 0;
+            i32 i = 0;
+            i32 result = 0;
             $while(i < num)
             {
                 result = result + int_ptr[i];
@@ -98,13 +98,13 @@ TEST_CASE("function")
         ScopedContext ctx;
 
         auto my_make_vec2f = to_callable<math::Vec2f>(
-            []($f32 x, $f32 y)
+            [](f32 x, f32 y)
         {
             $return(math::make_vec2f(x, y));
         });
 
         auto test_make_vec2f = to_callable<float>(
-            [&]($f32 x, $f32 y)
+            [&](f32 x, f32 y)
         {
             math::Vec2f v = my_make_vec2f(x, y);
             $return(v->x + v->y);
@@ -123,7 +123,7 @@ TEST_CASE("function")
         ScopedContext ctx;
 
         auto my_make_arr4 = to_callable<int[4]>(
-            []($int x, $int y, $int z, $int w)
+            [](i32 x, i32 y, i32 z, i32 w)
         {
             Array<int, 4> arr;
             arr[0] = x;
@@ -134,7 +134,7 @@ TEST_CASE("function")
         });
 
         auto test_make_arr4 = to_callable<int>(
-            [&]($int x, $int y, $int z, $int w)
+            [&](i32 x, i32 y, i32 z, i32 w)
         {
             Array<int, 4> arr = my_make_arr4(x, y, z, w);
             $return(arr[0] + arr[1] + arr[2] + arr[3]);

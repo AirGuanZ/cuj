@@ -50,16 +50,16 @@ template<typename T>
 Vec2<T> make_vec2(const Value<T> &x, const Value<T> &y);
 
 inline Vec2f make_vec2f();
-inline Vec2f make_vec2f(const $float &v);
-inline Vec2f make_vec2f(const $float &x, const $float &y);
+inline Vec2f make_vec2f(const f32 &v);
+inline Vec2f make_vec2f(const f32 &x, const f32 &y);
 
 inline Vec2d make_vec2d();
-inline Vec2d make_vec2d(const $double &v);
-inline Vec2d make_vec2d(const $double &x, const $double &y);
+inline Vec2d make_vec2d(const f64 &v);
+inline Vec2d make_vec2d(const f64 &x, const f64 &y);
 
 inline Vec2i make_vec2i();
-inline Vec2i make_vec2i(const $int &v);
-inline Vec2i make_vec2i(const $int &x, const $int &y);
+inline Vec2i make_vec2i(const i32 &v);
+inline Vec2i make_vec2i(const i32 &x, const i32 &y);
 
 template<typename T>
 Vec2<T> operator+(const Vec2<T> &lhs, const Vec2<T> &rhs);

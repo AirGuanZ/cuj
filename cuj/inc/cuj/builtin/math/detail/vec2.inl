@@ -90,12 +90,12 @@ inline Vec2f make_vec2f()
     return make_vec2<float>();
 }
 
-inline Vec2f make_vec2f(const $float &v)
+inline Vec2f make_vec2f(const f32 &v)
 {
     return make_vec2<float>(v, v);
 }
 
-inline Vec2f make_vec2f(const $float &x, const $float &y)
+inline Vec2f make_vec2f(const f32 &x, const f32 &y)
 {
     return make_vec2<float>(x, y);
 }
@@ -105,12 +105,12 @@ inline Vec2d make_vec2d()
     return make_vec2<double>();
 }
 
-inline Vec2d make_vec2d(const $double &v)
+inline Vec2d make_vec2d(const f64 &v)
 {
     return make_vec2<double>(v);
 }
 
-inline Vec2d make_vec2d(const $double &x, const $double &y)
+inline Vec2d make_vec2d(const f64 &x, const f64 &y)
 {
     return make_vec2<double>(x, y);
 }
@@ -120,12 +120,12 @@ inline Vec2i make_vec2i()
     return make_vec2<int>();
 }
 
-inline Vec2i make_vec2i(const $int &v)
+inline Vec2i make_vec2i(const i32 &v)
 {
     return make_vec2<int>(v);
 }
 
-inline Vec2i make_vec2i(const $int &x, const $int &y)
+inline Vec2i make_vec2i(const i32 &x, const i32 &y)
 {
     return make_vec2<int>(x, y);
 }

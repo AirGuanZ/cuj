@@ -41,24 +41,34 @@ using ast::get_current_function;
 using ast::push_context;
 using ast::pop_context;
 
+using signed_char_t = Value<signed char>;
+using short_t       = Value<short>;
+using int_t         = Value<int>;
+using long_t        = Value<long>;
+using longlong_t    = Value<long long>;
+
+using unsigned_char_t     = Value<unsigned char>;
+using unsigned_short_t    = Value<unsigned short>;
+using unsigned_int_t      = Value<unsigned int>;
+using unsigned_long_t     = Value<unsigned long>;
+using unsigned_longlong_t = Value<unsigned long long>;
+
+using i8  = Value<int8_t>;
+using i16 = Value<int16_t>;
+using i32 = Value<int32_t>;
+using i64 = Value<int64_t>;
+
+using u8  = Value<uint8_t>;
+using u16 = Value<uint16_t>;
+using u32 = Value<uint32_t>;
+using u64 = Value<uint64_t>;
+
+using f32 = Value<float>;
+using f64 = Value<double>;
+
+using boolean = Value<bool>;
+
 CUJ_NAMESPACE_END(cuj)
-
-#define $int    ::cuj::ast::Value<int>
-#define $uint   ::cuj::ast::Value<unsigned>
-#define $float  ::cuj::ast::Value<float>
-#define $double ::cuj::ast::Value<double>
-#define $bool   ::cuj::ast::Value<bool>
-
-#define $i8     ::cuj::ast::Value<int8_t>
-#define $i16    ::cuj::ast::Value<int16_t>
-#define $i32    ::cuj::ast::Value<int32_t>
-#define $i64    ::cuj::ast::Value<int64_t>
-#define $u8     ::cuj::ast::Value<uint8_t>
-#define $u16    ::cuj::ast::Value<uint16_t>
-#define $u32    ::cuj::ast::Value<uint32_t>
-#define $u64    ::cuj::ast::Value<uint64_t>
-#define $f32    ::cuj::ast::Value<float>
-#define $f64    ::cuj::ast::Value<double>
 
 #define CUJ_DEFINE_CLASS(NAME)                                                  \
     using CUJClassBase = ::cuj::ast::ClassBase<NAME>;                           \
@@ -84,6 +94,7 @@ CUJ_NAMESPACE_END(cuj)
 #define $break                                                                  \
     ::cuj::ast::get_current_function()->append_statement(                       \
         ::cuj::newRC<::cuj::ast::Break>())
+
 #define $continue                                                               \
     ::cuj::ast::get_current_function()->append_statement(                       \
         ::cuj::newRC<::cuj::ast::Continue>())

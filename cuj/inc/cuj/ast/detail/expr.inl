@@ -570,6 +570,13 @@ void Array<T, N>::init_as_stack_var()
 }
 
 template<typename T, size_t N>
+template<typename I, typename>
+Pointer<T> Array<T, N>::get_element_ptr(const ArithmeticValue<I> &index) const
+{
+    return Pointer<T>(impl_->data_ptr).offset(index);
+}
+
+template<typename T, size_t N>
 Array<T, N>::Array()
 {
     init_as_stack_var();
@@ -636,13 +643,6 @@ template<typename T, size_t N>
 constexpr size_t Array<T, N>::size() const
 {
     return N;
-}
-
-template<typename T, size_t N>
-template<typename I, typename>
-Pointer<T> Array<T, N>::get_element_ptr(const ArithmeticValue<I> &index) const
-{
-    return Pointer<T>(impl_->data_ptr).offset(index);
 }
 
 template<typename T, size_t N>

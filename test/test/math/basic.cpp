@@ -12,124 +12,124 @@ TEST_CASE("builtin.math.basic")
     ScopedContext ctx;
     
     auto abs32 = to_callable<float>(
-        []($f32 x) { $return(math::abs(x)); });
+        [](f32 x) { $return(math::abs(x)); });
     auto abs64 = to_callable<double>(
-        []($f64 x) { $return(math::abs(x)); });
+        [](f64 x) { $return(math::abs(x)); });
     
     auto mod32 = to_callable<float>(
-        []($f32 x, $f32 y) { $return(math::mod(x, y)); });
+        [](f32 x, f32 y) { $return(math::mod(x, y)); });
     auto mod64 = to_callable<double>(
-        []($f64 x, $f64 y) { $return(math::mod(x, y)); });
+        [](f64 x, f64 y) { $return(math::mod(x, y)); });
     
     auto remainder32 = to_callable<float>(
-        []($f32 x, $f32 y) { $return(math::remainder(x, y)); });
+        [](f32 x, f32 y) { $return(math::remainder(x, y)); });
     auto remainder64 = to_callable<double>(
-        []($f64 x, $f64 y) { $return(math::remainder(x, y)); });
+        [](f64 x, f64 y) { $return(math::remainder(x, y)); });
     
     auto exp32 = to_callable<float>(
-        []($f32 x) { $return(math::exp(x)); });
+        [](f32 x) { $return(math::exp(x)); });
     auto exp64 = to_callable<double>(
-        []($f64 x) { $return(math::exp(x)); });
+        [](f64 x) { $return(math::exp(x)); });
     
     auto exp2_32 = to_callable<float>(
-        []($f32 x) { $return(math::exp2(x)); });
+        [](f32 x) { $return(math::exp2(x)); });
     auto exp2_64 = to_callable<double>(
-        []($f64 x) { $return(math::exp2(x)); });
+        [](f64 x) { $return(math::exp2(x)); });
     
     auto log32 = to_callable<float>(
-        []($f32 x) { $return(math::log(x)); });
+        [](f32 x) { $return(math::log(x)); });
     auto log64 = to_callable<double>(
-        []($f64 x) { $return(math::log(x)); });
+        [](f64 x) { $return(math::log(x)); });
     
     auto log2_32 = to_callable<float>(
-        []($f32 x) { $return(math::log2(x)); });
+        [](f32 x) { $return(math::log2(x)); });
     auto log2_64 = to_callable<double>(
-        []($f64 x) { $return(math::log2(x)); });
+        [](f64 x) { $return(math::log2(x)); });
     
     auto log10_32 = to_callable<float>(
-        []($f32 x) { $return(math::log10(x)); });
+        [](f32 x) { $return(math::log10(x)); });
     auto log10_64 = to_callable<double>(
-        []($f64 x) { $return(math::log10(x)); });
+        [](f64 x) { $return(math::log10(x)); });
     
     auto pow32 = to_callable<float>(
-        []($f32 x, $f32 y) { $return(math::pow(x, y)); });
+        [](f32 x, f32 y) { $return(math::pow(x, y)); });
     auto pow64 = to_callable<double>(
-        []($f64 x, $f64 y) { $return(math::pow(x, y)); });
+        [](f64 x, f64 y) { $return(math::pow(x, y)); });
     
     auto sqrt32 = to_callable<float>(
-        []($f32 x) { $return(math::sqrt(x)); });
+        [](f32 x) { $return(math::sqrt(x)); });
     auto sqrt64 = to_callable<double>(
-        []($f64 x) { $return(math::sqrt(x)); });
+        [](f64 x) { $return(math::sqrt(x)); });
     
     auto sin32 = to_callable<float>(
-        []($f32 x) { $return(math::sin(x)); });
+        [](f32 x) { $return(math::sin(x)); });
     auto sin64 = to_callable<double>(
-        []($f64 x) { $return(math::sin(x)); });
+        [](f64 x) { $return(math::sin(x)); });
     
     auto cos32 = to_callable<float>(
-        []($f32 x) { $return(math::cos(x)); });
+        [](f32 x) { $return(math::cos(x)); });
     auto cos64 = to_callable<double>(
-        []($f64 x) { $return(math::cos(x)); });
+        [](f64 x) { $return(math::cos(x)); });
     
     auto tan32 = to_callable<float>(
-        []($f32 x) { $return(math::tan(x)); });
+        [](f32 x) { $return(math::tan(x)); });
     auto tan64 = to_callable<double>(
-        []($f64 x) { $return(math::tan(x)); });
+        [](f64 x) { $return(math::tan(x)); });
     
     auto asin32 = to_callable<float>(
-        []($f32 x) { $return(math::asin(x)); });
+        [](f32 x) { $return(math::asin(x)); });
     auto asin64 = to_callable<double>(
-        []($f64 x) { $return(math::asin(x)); });
+        [](f64 x) { $return(math::asin(x)); });
     
     auto acos32 = to_callable<float>(
-        []($f32 x) { $return(math::acos(x)); });
+        [](f32 x) { $return(math::acos(x)); });
     auto acos64 = to_callable<double>(
-        []($f64 x) { $return(math::acos(x)); });
+        [](f64 x) { $return(math::acos(x)); });
     
     auto atan32 = to_callable<float>(
-        []($f32 x) { $return(math::atan(x)); });
+        [](f32 x) { $return(math::atan(x)); });
     auto atan64 = to_callable<double>(
-        []($f64 x) { $return(math::atan(x)); });
+        [](f64 x) { $return(math::atan(x)); });
     
     auto atan2_32 = to_callable<float>(
-        []($f32 y, $f32 x) { $return(math::atan2(y, x)); });
+        [](f32 y, f32 x) { $return(math::atan2(y, x)); });
     auto atan2_64 = to_callable<double>(
-        []($f64 y, $f64 x) { $return(math::atan2(y, x)); });
+        [](f64 y, f64 x) { $return(math::atan2(y, x)); });
     
     auto ceil32 = to_callable<float>(
-        []($f32 x) { $return(math::ceil(x)); });
+        [](f32 x) { $return(math::ceil(x)); });
     auto ceil64 = to_callable<double>(
-        []($f64 x) { $return(math::ceil(x)); });
+        [](f64 x) { $return(math::ceil(x)); });
     
     auto floor32 = to_callable<float>(
-        []($f32 x) { $return(math::floor(x)); });
+        [](f32 x) { $return(math::floor(x)); });
     auto floor64 = to_callable<double>(
-        []($f64 x) { $return(math::floor(x)); });
+        [](f64 x) { $return(math::floor(x)); });
     
     auto trunc32 = to_callable<float>(
-        []($f32 x) { $return(math::trunc(x)); });
+        [](f32 x) { $return(math::trunc(x)); });
     auto trunc64 = to_callable<double>(
-        []($f64 x) { $return(math::trunc(x)); });
+        [](f64 x) { $return(math::trunc(x)); });
     
     auto round32 = to_callable<float>(
-        []($f32 x) { $return(math::round(x)); });
+        [](f32 x) { $return(math::round(x)); });
     auto round64 = to_callable<double>(
-        []($f64 x) { $return(math::round(x)); });
+        [](f64 x) { $return(math::round(x)); });
     
     auto isfinite32 = to_callable<int>(
-        []($f32 x) { $return(math::isfinite(x)); });
+        [](f32 x) { $return(math::isfinite(x)); });
     auto isfinite64 = to_callable<int>(
-        []($f64 x) { $return(math::isfinite(x)); });
+        [](f64 x) { $return(math::isfinite(x)); });
     
     auto isinf32 = to_callable<int>(
-        []($f32 x) { $return(math::isinf(x)); });
+        [](f32 x) { $return(math::isinf(x)); });
     auto isinf64 = to_callable<int>(
-        []($f64 x) { $return(math::isinf(x)); });
+        [](f64 x) { $return(math::isinf(x)); });
     
     auto isnan32 = to_callable<int>(
-        []($f32 x) { $return(math::isnan(x)); });
+        [](f32 x) { $return(math::isnan(x)); });
     auto isnan64 = to_callable<int>(
-        []($f64 x) { $return(math::isnan(x)); });
+        [](f64 x) { $return(math::isnan(x)); });
     
     auto jit = ctx.gen_native_jit();
     

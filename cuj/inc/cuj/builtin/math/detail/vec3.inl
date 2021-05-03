@@ -95,12 +95,12 @@ inline Vec3f make_vec3f()
     return make_vec3<float>();
 }
 
-inline Vec3f make_vec3f(const $float &v)
+inline Vec3f make_vec3f(const f32 &v)
 {
     return make_vec3<float>(v, v, v);
 }
 
-inline Vec3f make_vec3f(const $float &x, const $float &y, const $float &z)
+inline Vec3f make_vec3f(const f32 &x, const f32 &y, const f32 &z)
 {
     return make_vec3<float>(x, y, z);
 }
@@ -110,12 +110,12 @@ inline Vec3d make_vec3d()
     return make_vec3<double>();
 }
 
-inline Vec3d make_vec3d(const $double &v)
+inline Vec3d make_vec3d(const f64 &v)
 {
     return make_vec3<double>(v);
 }
 
-inline Vec3d make_vec3d(const $double &x, const $double &y, const $double &z)
+inline Vec3d make_vec3d(const f64 &x, const f64 &y, const f64 &z)
 {
     return make_vec3<double>(x, y, z);
 }
@@ -125,12 +125,12 @@ inline Vec3i make_vec3i()
     return make_vec3<int>();
 }
 
-inline Vec3i make_vec3i(const $int &v)
+inline Vec3i make_vec3i(const i32 &v)
 {
     return make_vec3<int>(v);
 }
 
-inline Vec3i make_vec3i(const $int &x, const $int &y, const $int &z)
+inline Vec3i make_vec3i(const i32 &x, const i32 &y, const i32 &z)
 {
     return make_vec3<int>(x, y, z);
 }

@@ -55,16 +55,16 @@ template<typename T>
 Vec3<T> make_vec3(const Value<T> &x, const Value<T> &y, const Value<T> &z);
 
 inline Vec3f make_vec3f();
-inline Vec3f make_vec3f(const $float &v);
-inline Vec3f make_vec3f(const $float &x, const $float &y, const $float &z);
+inline Vec3f make_vec3f(const f32 &v);
+inline Vec3f make_vec3f(const f32 &x, const f32 &y, const f32 &z);
 
 inline Vec3d make_vec3d();
-inline Vec3d make_vec3d(const $double &v);
-inline Vec3d make_vec3d(const $double &x, const $double &y, const $double &z);
+inline Vec3d make_vec3d(const f64 &v);
+inline Vec3d make_vec3d(const f64 &x, const f64 &y, const f64 &z);
 
 inline Vec3i make_vec3i();
-inline Vec3i make_vec3i(const $int &v);
-inline Vec3i make_vec3i(const $int &x, const $int &y, const $int &z);
+inline Vec3i make_vec3i(const i32 &v);
+inline Vec3i make_vec3i(const i32 &x, const i32 &y, const i32 &z);
 
 template<typename T>
 Vec3<T> operator+(const Vec3<T> &lhs, const Vec3<T> &rhs);
