@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cuj/ast/context.h>
+#include <cuj/ast/opr.h>
 #include <cuj/ast/stat_builder.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::ast)
@@ -52,6 +53,12 @@ IfBuilder &IfBuilder::operator+(const ArithmeticValue<T> &cond)
     return *this;
 }
 
+template<typename T>
+IfBuilder &IfBuilder::operator+(const Pointer<T> &cond)
+{
+    return operator+(cond != nullptr);
+}
+
 inline IfBuilder &IfBuilder::operator+(const std::function<void()> &then_body)
 {
     CUJ_ASSERT(!then_units_.empty() && !then_units_.back().block);
@@ -97,6 +104,13 @@ WhileBuilder::WhileBuilder(const ArithmeticValue<T> &cond)
         cast_impl->from = cond.get_impl();
         cond_ = std::move(cast_impl);
     }
+}
+
+template<typename T>
+WhileBuilder::WhileBuilder(const Pointer<T> &cond)
+    : WhileBuilder(cond != nullptr)
+{
+    
 }
 
 inline WhileBuilder::~WhileBuilder()

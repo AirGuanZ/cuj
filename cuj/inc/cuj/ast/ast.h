@@ -71,7 +71,7 @@ using boolean = Value<bool>;
 CUJ_NAMESPACE_END(cuj)
 
 #define CUJ_DEFINE_CLASS(NAME)                                                  \
-    using CUJClassBase = ::cuj::ast::ClassBase<NAME>;                           \
+    using CUJClassBase = typename ::cuj::ast::ClassBase<NAME>::CUJClassBase;    \
     using ClassAddress = typename CUJClassBase::ClassAddress;                   \
     using CUJClassFlag = typename CUJClassBase::CUJClassFlag;
 

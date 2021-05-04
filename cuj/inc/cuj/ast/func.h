@@ -99,6 +99,23 @@ private:
 template<typename T>
 class Function;
 
+namespace detail
+{
+
+    template<typename T>
+    auto CFunctionArgTypeAux()
+    {
+        if constexpr(is_cuj_class<T> || is_array<T>)
+            return std::declval<void*>();
+        else
+            return std::declval<T>();
+    }
+
+    template<typename T>
+    using CFunctionArgType = rm_cvref_t<decltype(CFunctionArgTypeAux<T>())>;
+
+} // namespace detail
+
 template<typename Ret, typename...Args>
 class Function<Ret(Args...)> : FunctionImpl<
     typename detail::DeValueType<RawToCUJType<Ret>>::Type, RawToCUJType<Args>...>
@@ -109,8 +126,8 @@ public:
 
     using CFunctionType = std::conditional_t<
         is_cuj_class<ReturnType> || is_array<ReturnType>,
-        void(void *, RawToCUJType<Args>...),
-        RawToCUJType<ReturnType>(RawToCUJType<Args>...)>;
+        void(void *, detail::CFunctionArgType<RawToCUJType<Args>>...),
+        RawToCUJType<ReturnType>(detail::CFunctionArgType<RawToCUJType<Args>>...)>;
 
     using CFunctionPointer = CFunctionType*;
 

@@ -17,6 +17,8 @@ public:
 
     struct CUJClassFlag { };
 
+    using CUJClassBase = ClassBase<C>;
+
     using ClassAddress = RC<InternalPointerValue<C>>;
 
     explicit ClassBase(StructTypeRecorder *type_recorder);

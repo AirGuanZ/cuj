@@ -25,6 +25,9 @@ public:
     template<typename T>
     IfBuilder &operator+(const ArithmeticValue<T> &cond);
 
+    template<typename T>
+    IfBuilder &operator+(const Pointer<T> &cond);
+
     IfBuilder &operator+(const std::function<void()> &then_body);
 
     IfBuilder &operator-(const std::function<void()> &else_body);
@@ -39,6 +42,9 @@ public:
 
     template<typename T>
     explicit WhileBuilder(const ArithmeticValue<T> &cond);
+
+    template<typename T>
+    explicit WhileBuilder(const Pointer<T> &cond);
 
     ~WhileBuilder();
 
