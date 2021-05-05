@@ -106,13 +106,14 @@ namespace detail
     auto CFunctionArgTypeAux()
     {
         if constexpr(is_cuj_class<T> || is_array<T>)
-            return std::declval<void*>();
+            return reinterpret_cast<void**>(0);
         else
-            return std::declval<T>();
+            return reinterpret_cast<T*>(0);
     }
 
     template<typename T>
-    using CFunctionArgType = rm_cvref_t<decltype(CFunctionArgTypeAux<T>())>;
+    using CFunctionArgType = rm_cvref_t<std::remove_pointer_t<decltype(
+        CFunctionArgTypeAux<T>())>>;
 
 } // namespace detail
 

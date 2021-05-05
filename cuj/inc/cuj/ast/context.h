@@ -89,8 +89,9 @@ private:
 
     void gen_ir_impl(ir::IRBuilder &builder) const;
 
-    std::map<std::type_index, RC<ir::Type>> types_;
-    int                                     struct_name_index_ = 0;
+    static std::map<std::type_index, RC<ir::Type>> &all_types();
+
+    std::map<std::type_index, RC<ir::Type>> used_types_;
 
     std::vector<Box<FunctionContext>> funcs_;
     std::stack<FunctionContext*>      func_stack_;

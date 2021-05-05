@@ -37,6 +37,10 @@ CUJ_NAMESPACE_BEGIN(cuj::gen)
 namespace
 {
 
+    Box<llvm::LLVMContext> llvm_ctx;
+
+    std::map<const ir::Type*, llvm::Type *> llvm_types;
+
     bool is_builtin_integral(ir::BuiltinType t)
     {
         switch(t)
@@ -141,12 +145,10 @@ llvm::Value *process_host_intrinsic(
 struct LLVMIRGenerator::Data
 {
     // global
-
-    std::unique_ptr<llvm::LLVMContext> context;
+    
     std::unique_ptr<llvm::IRBuilder<>> ir_builder;
     std::unique_ptr<llvm::Module>      top_module;
-
-    std::map<const ir::Type *, llvm::Type *> types;
+    
     std::map<std::string, llvm::Function *>  functions;
 
     std::map<std::string, llvm::Function *> external_functions;
@@ -176,17 +178,19 @@ void LLVMIRGenerator::set_target(Target target)
 
 void LLVMIRGenerator::generate(const ir::Program &prog)
 {
+    if(!llvm_ctx)
+        llvm_ctx = newBox<llvm::LLVMContext>();
+
     CUJ_ASSERT(!data_);
     data_ = new Data;
-
-    data_->context    = newBox<llvm::LLVMContext>();
-    data_->ir_builder = newBox<llvm::IRBuilder<>>(*data_->context);
-    data_->top_module = newBox<llvm::Module>("cuj", *data_->context);
+    
+    data_->ir_builder = newBox<llvm::IRBuilder<>>(*llvm_ctx);
+    data_->top_module = newBox<llvm::Module>("cuj", *llvm_ctx);
 
     if(target_ == Target::PTX)
     {
         data_->top_module->setTargetTriple("nvptx64-nvidia-cuda");
-        link_with_libdevice(data_->context.get(), data_->top_module.get());
+        link_with_libdevice(llvm_ctx.get(), data_->top_module.get());
     }
 
     // IMPROVE: func-level opt pipeline
@@ -244,19 +248,19 @@ std::string LLVMIRGenerator::get_string() const
 
 llvm::Type *LLVMIRGenerator::find_llvm_type(const ir::Type *type)
 {
-    const auto it = data_->types.find(type);
-    if(it != data_->types.end())
+    const auto it = llvm_types.find(type);
+    if(it != llvm_types.end())
         return it->second;
     
     auto result = type->match(
-        [this](      ir::BuiltinType    t) { return create_llvm_type_record(t); },
-        [this](const ir::ArrayType     &t) { return create_llvm_type_record(t); },
-        [this](const ir::IntrinsicType &t) { return create_llvm_type_record(t); },
-        [this](const ir::PointerType   &t) { return create_llvm_type_record(t); },
-        [this](const ir::StructType    &t) { return create_llvm_type_record(t); });
+        [](      ir::BuiltinType    t) { return create_llvm_type_record(t); },
+        [](const ir::ArrayType     &t) { return create_llvm_type_record(t); },
+        [](const ir::IntrinsicType &t) { return create_llvm_type_record(t); },
+        [](const ir::PointerType   &t) { return create_llvm_type_record(t); },
+        [](const ir::StructType    &t) { return create_llvm_type_record(t); });
 
-    CUJ_ASSERT(!data_->types.count(type));
-    data_->types.insert({ type, result });
+    CUJ_ASSERT(!llvm_types.count(type));
+    llvm_types.insert({ type, result });
 
     return result;
 }
@@ -266,24 +270,24 @@ llvm::Type *LLVMIRGenerator::create_llvm_type_record(ir::BuiltinType type)
     switch(type)
     {
     case ir::BuiltinType::Void:
-        return data_->ir_builder->getVoidTy();
+        return llvm::Type::getVoidTy(*llvm_ctx);
     case ir::BuiltinType::U8:
     case ir::BuiltinType::S8:
     case ir::BuiltinType::Bool:
-        return data_->ir_builder->getInt8Ty();
+        return llvm::Type::getInt8Ty(*llvm_ctx);
     case ir::BuiltinType::U16:
     case ir::BuiltinType::S16:
-        return data_->ir_builder->getInt16Ty();
+        return llvm::Type::getInt16Ty(*llvm_ctx);
     case ir::BuiltinType::U32:
     case ir::BuiltinType::S32:
-        return data_->ir_builder->getInt32Ty();
+        return llvm::Type::getInt32Ty(*llvm_ctx);
     case ir::BuiltinType::U64:
     case ir::BuiltinType::S64:
-        return data_->ir_builder->getInt64Ty();
+        return llvm::Type::getInt64Ty(*llvm_ctx);
     case ir::BuiltinType::F32:
-        return data_->ir_builder->getFloatTy();
+        return llvm::Type::getFloatTy(*llvm_ctx);
     case ir::BuiltinType::F64:
-        return data_->ir_builder->getDoubleTy();
+        return llvm::Type::getDoubleTy(*llvm_ctx);
     }
     unreachable();
 }
@@ -309,7 +313,7 @@ llvm::Type *LLVMIRGenerator::create_llvm_type_record(const ir::PointerType &type
 
 llvm::Type *LLVMIRGenerator::create_llvm_type_record(const ir::StructType &type)
 {
-    auto result = llvm::StructType::create(*data_->context, type.name);
+    auto result = llvm::StructType::create(*llvm_ctx, type.name);
     return result;
 }
 
@@ -319,11 +323,14 @@ void LLVMIRGenerator::construct_struct_type_body(const ir::Type *type)
     if(!struct_type)
         return;
 
+    auto llvm_type = reinterpret_cast<llvm::StructType *>(find_llvm_type(type));
+    if(!llvm_type->isOpaque())
+        return;
+
     std::vector<llvm::Type *> mem_types;
     for(auto &mem : struct_type->mem_types)
         mem_types.push_back(find_llvm_type(mem));
-    
-    auto llvm_type = reinterpret_cast<llvm::StructType *>(find_llvm_type(type));
+
     llvm_type->setBody(mem_types);
 }
 
@@ -353,7 +360,7 @@ llvm::Function *LLVMIRGenerator::generate_func(const ir::Function &func)
         data_->func_ret_class_ptr_arg = &*data_->function->arg_begin();
 
     auto entry_block =
-        llvm::BasicBlock::Create(*data_->context, "entry", data_->function);
+        llvm::BasicBlock::Create(*llvm_ctx, "entry", data_->function);
     data_->ir_builder->SetInsertPoint(entry_block);
 
     generate_func_allocs(func);
@@ -460,15 +467,15 @@ void LLVMIRGenerator::mark_func_type(
         if(func.type == ir::Function::Type::Kernel)
         {
             auto constant_1 = llvm::ConstantInt::get(
-                *data_->context, llvm::APInt(32, 1, true));
+                *llvm_ctx, llvm::APInt(32, 1, true));
 
             llvm::Metadata *mds[] = {
                 llvm::ValueAsMetadata::get(llvm_func),
-                llvm::MDString::get(*data_->context, "kernel"),
+                llvm::MDString::get(*llvm_ctx, "kernel"),
                 llvm::ValueAsMetadata::get(constant_1)
             };
 
-            auto md_node = llvm::MDNode::get(*data_->context, mds);
+            auto md_node = llvm::MDNode::get(*llvm_ctx, mds);
 
             llvm_func->getParent()
                      ->getOrInsertNamedMetadata("nvvm.annotations")
@@ -580,11 +587,11 @@ void LLVMIRGenerator::generate(const ir::If &if_s)
     auto cond = data_->ir_builder->CreateZExtOrTrunc(
         get_value(if_s.cond), data_->ir_builder->getInt1Ty());
 
-    auto then_block  = llvm::BasicBlock::Create(*data_->context, "then");
-    auto merge_block = llvm::BasicBlock::Create(*data_->context, "merge");
+    auto then_block  = llvm::BasicBlock::Create(*llvm_ctx, "then");
+    auto merge_block = llvm::BasicBlock::Create(*llvm_ctx, "merge");
 
     auto else_block = if_s.else_block ?
-        llvm::BasicBlock::Create(*data_->context, "else") : nullptr;
+        llvm::BasicBlock::Create(*llvm_ctx, "else") : nullptr;
 
     data_->ir_builder->CreateCondBr(
         cond, then_block, else_block ? else_block : merge_block);
@@ -609,9 +616,9 @@ void LLVMIRGenerator::generate(const ir::If &if_s)
 
 void LLVMIRGenerator::generate(const ir::While &while_s)
 {
-    auto cond_block  = llvm::BasicBlock::Create(*data_->context, "cond");
-    auto body_block  = llvm::BasicBlock::Create(*data_->context, "body");
-    auto merge_block = llvm::BasicBlock::Create(*data_->context, "merge");
+    auto cond_block  = llvm::BasicBlock::Create(*llvm_ctx, "cond");
+    auto body_block  = llvm::BasicBlock::Create(*llvm_ctx, "body");
+    auto merge_block = llvm::BasicBlock::Create(*llvm_ctx, "merge");
 
     data_->ir_builder->CreateBr(cond_block);
 
@@ -649,7 +656,7 @@ void LLVMIRGenerator::generate(const ir::Return &return_s)
         data_->ir_builder->CreateRetVoid();
 
     auto block = llvm::BasicBlock::Create(
-        *data_->context, "after_return", data_->function);
+        *llvm_ctx, "after_return", data_->function);
     data_->ir_builder->SetInsertPoint(block);
 }
 
@@ -885,9 +892,9 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::ArrayElemAddrOp &v)
     
     std::vector<llvm::Value *> indices(2);
     indices[0] = llvm::ConstantInt::get(
-        *data_->context, llvm::APInt(32, 0, false));
+        *llvm_ctx, llvm::APInt(32, 0, false));
     indices[1] = llvm::ConstantInt::get(
-        *data_->context, llvm::APInt(32, 0, false));
+        *llvm_ctx, llvm::APInt(32, 0, false));
 
     return data_->ir_builder->CreateGEP(arr, indices, "array_element");
 }
@@ -931,7 +938,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::IntrinsicOp &v)
     if(target_ == Target::Host)
     {
         auto ret = process_host_intrinsic(
-            data_->context.get(), data_->top_module.get(),
+            llvm_ctx.get(), data_->top_module.get(),
             *data_->ir_builder, v.name, args);
         if(ret)
             return ret;
@@ -957,9 +964,9 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::MemberPtrOp &v)
     
     std::vector<llvm::Value *> indices(2);
     indices[0] = llvm::ConstantInt::get(
-        *data_->context, llvm::APInt(32, 0));
+        *llvm_ctx, llvm::APInt(32, 0));
     indices[1] = llvm::ConstantInt::get(
-        *data_->context, llvm::APInt(32, v.member_index));
+        *llvm_ctx, llvm::APInt(32, v.member_index));
 
     return data_->ir_builder->CreateGEP(struct_type, struct_ptr, indices);
 }
@@ -1006,10 +1013,10 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::BasicTempValue &v)
 llvm::Value *LLVMIRGenerator::get_value(const ir::BasicImmediateValue &v)
 {
 #define CUJ_IMM_INT(NAME, BITS, SIGNED)                                         \
-    [this](NAME v) -> llvm::Value*                                              \
+    [](NAME v) -> llvm::Value*                                                  \
     {                                                                           \
         return llvm::ConstantInt::get(                                          \
-            *data_->context,                                                    \
+            *llvm_ctx,                                                          \
             llvm::APInt(BITS, static_cast<uint64_t>(v), SIGNED));               \
     }
 

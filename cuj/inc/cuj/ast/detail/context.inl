@@ -38,45 +38,57 @@ const ir::Type *Context::get_type()
         is_pointer<T>           ||
         is_cuj_class<T>);
 
+    static int struct_name_index = 0;
+
     const auto type_idx = std::type_index(typeid(T));
-    if(auto it = types_.find(type_idx); it != types_.end())
+    if(auto it = all_types().find(type_idx); it != all_types().end())
+    {
+        if(!used_types_.count(type_idx))
+            used_types_[type_idx] = it->second;
         return it->second.get();
-    
+    }
+
     if constexpr(std::is_same_v<T, void> || std::is_arithmetic_v<T>)
     {
-        auto &type = types_[type_idx];
+        auto &type = all_types()[type_idx];
         type = newRC<ir::Type>(ir::to_builtin_type_value<T>);
+
+        used_types_[type_idx] = type;
         return type.get();
     }
     else if constexpr(is_array<T>)
     {
-        auto &type = types_[type_idx];
+        auto &type = all_types()[type_idx];
         type = newRC<ir::Type>(ir::ArrayType{ 0, nullptr });
 
         auto elem_type = this->get_type<typename T::ElementType>();
         type->as<ir::ArrayType>() = { T::ElementCount, elem_type };
 
+        used_types_[type_idx] = type;
         return type.get();
     }
     else if constexpr(is_pointer<T>)
     {
-        auto &type = types_[type_idx];
+        auto &type = all_types()[type_idx];
         type = newRC<ir::Type>(ir::PointerType{ nullptr });
 
         auto pointed_type = this->get_type<typename T::PointedType>();
         type->as<ir::PointerType>().pointed_type = pointed_type;
-        
+
+        used_types_[type_idx] = type;
         return type.get();
     }
     else if constexpr(is_intrinsic<T>)
     {
-        auto &type = types_[type_idx];
+        auto &type = all_types()[type_idx];
         type = newRC<ir::Type>(T::get_type());
+
+        used_types_[type_idx] = type;
         return type.get();
     }
     else
     {
-        auto &type = types_[type_idx];
+        auto &type = all_types()[type_idx];
         type = newRC<ir::Type>(ir::StructType{});
         auto &s_type = type->as<ir::StructType>();
 
@@ -89,9 +101,10 @@ const ir::Type *Context::get_type()
         }
         else
         {
-            s_type.name = "CUJStruct" + std::to_string(struct_name_index_++);
+            s_type.name = "CUJStruct" + std::to_string(struct_name_index++);
         }
 
+        used_types_[type_idx] = type;
         return type.get();
     }
 }
@@ -248,11 +261,17 @@ inline void Context::gen_ir_impl(ir::IRBuilder &builder) const
 {
     CUJ_ASSERT(func_stack_.empty());
 
-    for(auto &p : types_)
+    for(auto &p : used_types_)
         builder.add_type(p.first, p.second);
 
     for(auto &f : funcs_)
         f->gen_ir(builder);
+}
+
+inline std::map<std::type_index, RC<ir::Type>> &Context::all_types()
+{
+    static std::map<std::type_index, RC<ir::Type>> ret;
+    return ret;
 }
 
 inline FunctionContext *Context::get_current_function()

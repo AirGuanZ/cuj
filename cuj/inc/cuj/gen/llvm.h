@@ -45,13 +45,13 @@ public:
 
 private:
 
-    llvm::Type *find_llvm_type(const ir::Type *type);
+    static llvm::Type *find_llvm_type(const ir::Type *type);
     
-    llvm::Type *create_llvm_type_record(      ir::BuiltinType    type);
-    llvm::Type *create_llvm_type_record(const ir::ArrayType     &type);
-    llvm::Type *create_llvm_type_record(const ir::IntrinsicType &type);
-    llvm::Type *create_llvm_type_record(const ir::PointerType   &type);
-    llvm::Type *create_llvm_type_record(const ir::StructType    &type);
+    static llvm::Type *create_llvm_type_record(      ir::BuiltinType    type);
+    static llvm::Type *create_llvm_type_record(const ir::ArrayType     &type);
+    static llvm::Type *create_llvm_type_record(const ir::IntrinsicType &type);
+    static llvm::Type *create_llvm_type_record(const ir::PointerType   &type);
+    static llvm::Type *create_llvm_type_record(const ir::StructType    &type);
 
     void construct_struct_type_body(const ir::Type *type);
 
