@@ -54,7 +54,7 @@ IfBuilder &IfBuilder::operator+(const ArithmeticValue<T> &cond)
 }
 
 template<typename T>
-IfBuilder &IfBuilder::operator+(const Pointer<T> &cond)
+IfBuilder &IfBuilder::operator+(const PointerImpl<T> &cond)
 {
     return operator+(cond != nullptr);
 }
@@ -107,7 +107,7 @@ WhileBuilder::WhileBuilder(const ArithmeticValue<T> &cond)
 }
 
 template<typename T>
-WhileBuilder::WhileBuilder(const Pointer<T> &cond)
+WhileBuilder::WhileBuilder(const PointerImpl<T> &cond)
     : WhileBuilder(cond != nullptr)
 {
     
@@ -186,11 +186,11 @@ ReturnBuilder::ReturnBuilder(const ArithmeticValue<T> &val)
 }
 
 template<typename T>
-ReturnBuilder::ReturnBuilder(const Pointer<T> &val)
+ReturnBuilder::ReturnBuilder(const PointerImpl<T> &val)
 {
     auto context = get_current_context();
     auto func = context->get_current_function();
-    auto val_type = context->get_type<Pointer<T>>();
+    auto val_type = context->get_type<PointerImpl<T>>();
     if(val_type != func->get_return_type())
         throw CUJException("return.type != function.type");
 
@@ -212,17 +212,17 @@ ReturnBuilder::ReturnBuilder(const ClassValue<T> &val)
 }
 
 template<typename T, size_t N>
-ReturnBuilder::ReturnBuilder(const Array<T, N> &val)
+ReturnBuilder::ReturnBuilder(const ArrayImpl<T, N> &val)
 {
     auto context = get_current_context();
     auto func = context->get_current_function();
 
-    auto val_type = context->get_type<Array<T, N>>();
+    auto val_type = context->get_type<ArrayImpl<T, N>>();
     if(val_type != func->get_return_type())
         throw CUJException("return.type != function.type");
 
     auto ret_ptr = val.address();
-    func->append_statement(newRC<ReturnArray<Array<T, N>>>(ret_ptr.get_impl()));
+    func->append_statement(newRC<ReturnArray<ArrayImpl<T, N>>>(ret_ptr.get_impl()));
 }
 
 template<typename T, typename>

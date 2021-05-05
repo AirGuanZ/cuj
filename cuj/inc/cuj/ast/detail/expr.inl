@@ -80,13 +80,13 @@ RC<InternalPointerValue<T>> InternalClassLeftValue<T>::get_address() const
 }
 
 template<typename T>
-RC<InternalPointerValue<Pointer<T>>> InternalPointerValue<T>::get_address() const
+RC<InternalPointerValue<PointerImpl<T>>> InternalPointerValue<T>::get_address() const
 {
     throw CUJException("getting address of a non-left pointer value");
 }
 
 template<typename T>
-RC<InternalPointerValue<Pointer<T>>> InternalPointerLeftValue<T>::get_address() const
+RC<InternalPointerValue<PointerImpl<T>>> InternalPointerLeftValue<T>::get_address() const
 {
     return address;
 }
@@ -95,7 +95,7 @@ template<typename T>
 ir::BasicValue InternalPointerLeftValue<T>::gen_ir(ir::IRBuilder &builder) const
 {
     auto addr = address->gen_ir(builder);
-    auto type = get_current_context()->get_type<Pointer<T>>();
+    auto type = get_current_context()->get_type<PointerImpl<T>>();
     auto load = ir::LoadOp{ type, addr };
     auto ret = builder.gen_temp_value(type);
     builder.append_assign(ret, load);
@@ -128,7 +128,7 @@ ir::BasicValue InternalPointerValueOffset<T, I>::gen_ir(ir::IRBuilder &builder) 
     auto type = get_current_context()->get_type<T>();
     auto offset = ir::PointerOffsetOp{ type, addr, idx };
 
-    auto ptr_type = get_current_context()->get_type<Pointer<T>>();
+    auto ptr_type = get_current_context()->get_type<PointerImpl<T>>();
     auto ret = builder.gen_temp_value(ptr_type);
 
     builder.append_assign(ret, offset);
@@ -144,7 +144,7 @@ ir::BasicValue InternalMemberPointerValueOffset<C, M>::gen_ir(
     auto type = get_current_context()->get_type<C>();
     auto mem_ptr = ir::MemberPtrOp{ addr, type, member_index };
 
-    auto ptr_type = get_current_context()->get_type<Pointer<M>>();
+    auto ptr_type = get_current_context()->get_type<PointerImpl<M>>();
     auto ret = builder.gen_temp_value(ptr_type);
 
     builder.append_assign(ret, mem_ptr);
@@ -157,7 +157,7 @@ ir::BasicValue InternalPointerDiff<T>::gen_ir(ir::IRBuilder &builder) const
     auto lhs_val = lhs->gen_ir(builder);
     auto rhs_val = rhs->gen_ir(builder);
 
-    auto ptr_type = get_current_context()->get_type<Pointer<T>>();
+    auto ptr_type = get_current_context()->get_type<PointerImpl<T>>();
     auto ret_type = get_current_context()->get_type<int64_t>();
 
     auto ret = builder.gen_temp_value(ret_type);
@@ -197,7 +197,7 @@ ir::BasicValue InternalEmptyPointer<T>::gen_ir(ir::IRBuilder &builder) const
 {
     auto context = get_current_context();
 
-    auto type = context->get_type<Pointer<T>>();
+    auto type = context->get_type<PointerImpl<T>>();
     auto op = ir::EmptyPointerOp{ type };
     auto ret = builder.gen_temp_value(type);
 
@@ -459,9 +459,9 @@ ArithmeticValue<T> &ArithmeticValue<T>::operator=(const ArithmeticValue &rhs)
 }
 
 template<typename T>
-Pointer<T> ArithmeticValue<T>::address() const
+PointerImpl<T> ArithmeticValue<T>::address() const
 {
-    return Pointer<T>(impl_->get_address());
+    return PointerImpl<T>(impl_->get_address());
 }
 
 template<typename T>
@@ -539,9 +539,9 @@ ClassValue<T> &ClassValue<T>::operator=(const ClassValue &rhs)
 }
 
 template<typename T>
-Pointer<T> ClassValue<T>::address() const
+PointerImpl<T> ClassValue<T>::address() const
 {
-    return Pointer<T>(impl_->get_address());
+    return PointerImpl<T>(impl_->get_address());
 }
 
 template<typename T>
@@ -563,28 +563,28 @@ T *ClassValue<T>::operator->() const
 }
 
 template<typename T, size_t N>
-void Array<T, N>::init_as_stack_var()
+void ArrayImpl<T, N>::init_as_stack_var()
 {
     CUJ_ASSERT(!impl_);
-    impl_ = get_current_function()->create_stack_var<Array<T, N>>();
+    impl_ = get_current_function()->create_stack_var<ArrayImpl<T, N>>();
 }
 
 template<typename T, size_t N>
 template<typename I, typename>
-Pointer<T> Array<T, N>::get_element_ptr(const ArithmeticValue<I> &index) const
+PointerImpl<T> ArrayImpl<T, N>::get_element_ptr(const ArithmeticValue<I> &index) const
 {
-    return Pointer<T>(impl_->data_ptr).offset(index);
+    return PointerImpl<T>(impl_->data_ptr).offset(index);
 }
 
 template<typename T, size_t N>
-Array<T, N>::Array()
+ArrayImpl<T, N>::ArrayImpl()
 {
     init_as_stack_var();
 }
 
 template<typename T, size_t N>
 template<typename U>
-Array<T, N>::Array(const U &other)
+ArrayImpl<T, N>::ArrayImpl(const U &other)
 {
     using RU = rm_cvref_t<U>;
 
@@ -606,14 +606,14 @@ Array<T, N>::Array(const U &other)
 }
 
 template<typename T, size_t N>
-Array<T, N>::Array(const Array &other)
+ArrayImpl<T, N>::ArrayImpl(const ArrayImpl &other)
 {
     this->init_as_stack_var();
     *this = other;
 }
 
 template<typename T, size_t N>
-Array<T, N> &Array<T, N>::operator=(const Array &rhs)
+ArrayImpl<T, N> &ArrayImpl<T, N>::operator=(const ArrayImpl &rhs)
 {
     for(size_t i = 0; i < N; ++i)
         this->operator[](i) = rhs[i];
@@ -622,59 +622,59 @@ Array<T, N> &Array<T, N>::operator=(const Array &rhs)
 }
 
 template<typename T, size_t N>
-Pointer<Array<T, N>> Array<T, N>::address() const
+PointerImpl<ArrayImpl<T, N>> ArrayImpl<T, N>::address() const
 {
-    return Pointer<Array<T, N>>(impl_->data_ptr->arr_alloc);
+    return PointerImpl<ArrayImpl<T, N>>(impl_->data_ptr->arr_alloc);
 }
 
 template<typename T, size_t N>
-RC<InternalArrayValue<T, N>> Array<T, N>::get_impl() const
+RC<InternalArrayValue<T, N>> ArrayImpl<T, N>::get_impl() const
 {
     return impl_;
 }
 
 template<typename T, size_t N>
-void Array<T, N>::set_impl(RC<InternalArrayValue<T, N>> impl)
+void ArrayImpl<T, N>::set_impl(RC<InternalArrayValue<T, N>> impl)
 {
     impl_ = std::move(impl);
 }
 
 template<typename T, size_t N>
-constexpr size_t Array<T, N>::size() const
+constexpr size_t ArrayImpl<T, N>::size() const
 {
     return N;
 }
 
 template<typename T, size_t N>
 template<typename I, typename>
-Value<T> Array<T, N>::operator[](const ArithmeticValue<I> &index) const
+Value<T> ArrayImpl<T, N>::operator[](const ArithmeticValue<I> &index) const
 {
     return get_element_ptr(index).deref();
 }
 
 template<typename T, size_t N>
 template<typename I, typename>
-Value<T> Array<T, N>::operator[](I index) const
+Value<T> ArrayImpl<T, N>::operator[](I index) const
 {
     return this->operator[](create_literial<I>(index));
 }
 
 template<typename T>
-void Pointer<T>::init_as_stack_var()
+void PointerImpl<T>::init_as_stack_var()
 {
     CUJ_ASSERT(!impl_);
-    impl_ = get_current_function()->create_stack_var<Pointer<T>>();
+    impl_ = get_current_function()->create_stack_var<PointerImpl<T>>();
 }
 
 template<typename T>
-Pointer<T>::Pointer()
+PointerImpl<T>::PointerImpl()
 {
     init_as_stack_var();
 }
 
 template<typename T>
 template<typename U>
-Pointer<T>::Pointer(const U &other)
+PointerImpl<T>::PointerImpl(const U &other)
 {
     using RU = rm_cvref_t<U>;
 
@@ -702,33 +702,33 @@ Pointer<T>::Pointer(const U &other)
 }
 
 template<typename T>
-Pointer<T>::Pointer(const Pointer &other)
+PointerImpl<T>::PointerImpl(const PointerImpl &other)
 {
     init_as_stack_var();
     *this = other;
 }
 
 template<typename T>
-Pointer<T> &Pointer<T>::operator=(const Pointer &rhs)
+PointerImpl<T> &PointerImpl<T>::operator=(const PointerImpl &rhs)
 {
     auto lhs_addr = impl_->get_address();
     auto rhs_val  = rhs.impl_;
 
-    auto store = newRC<Store<Pointer<T>, Pointer<T>>>(std::move(lhs_addr), std::move(rhs_val));
+    auto store = newRC<Store<PointerImpl<T>, PointerImpl<T>>>(std::move(lhs_addr), std::move(rhs_val));
     get_current_function()->append_statement(std::move(store));
 
     return *this;
 }
 
 template<typename T>
-Pointer<T> &Pointer<T>::operator=(const std::nullptr_t &)
+PointerImpl<T> &PointerImpl<T>::operator=(const std::nullptr_t &)
 {
-    *this = Pointer<T>(newRC<InternalEmptyPointer<T>>());
+    *this = PointerImpl<T>(newRC<InternalEmptyPointer<T>>());
     return *this;
 }
 
 template<typename T>
-Value<T> Pointer<T>::deref() const
+Value<T> PointerImpl<T>::deref() const
 {
     static_assert(
         is_array<T>             ||
@@ -770,43 +770,43 @@ Value<T> Pointer<T>::deref() const
 }
 
 template<typename T>
-Pointer<Pointer<T>> Pointer<T>::address() const
+PointerImpl<PointerImpl<T>> PointerImpl<T>::address() const
 {
     auto left = std::dynamic_pointer_cast<InternalPointerLeftValue<T>>(impl_);
     if(!left)
         throw CUJException("getting address of a non-left pointer value");
-    return Pointer<Pointer<T>>(left->address);
+    return PointerImpl<PointerImpl<T>>(left->address);
 }
 
 template<typename T>
-RC<InternalPointerValue<T>> Pointer<T>::get_impl() const
+RC<InternalPointerValue<T>> PointerImpl<T>::get_impl() const
 {
     return impl_;
 }
 
 template<typename T>
-void Pointer<T>::set_impl(RC<InternalPointerValue<T>> impl)
+void PointerImpl<T>::set_impl(RC<InternalPointerValue<T>> impl)
 {
     impl_ = std::move(impl);
 }
 
 template<typename T>
 template<typename I, typename>
-Pointer<T> Pointer<T>::offset(const ArithmeticValue<I> &index) const
+PointerImpl<T> PointerImpl<T>::offset(const ArithmeticValue<I> &index) const
 {
-    return Pointer<T>(create_pointer_offset(impl_, index.get_impl()));
+    return PointerImpl<T>(create_pointer_offset(impl_, index.get_impl()));
 }
 
 template<typename T>
 template<typename I, typename>
-Value<T> Pointer<T>::operator[](const ArithmeticValue<I> &index) const
+Value<T> PointerImpl<T>::operator[](const ArithmeticValue<I> &index) const
 {
     return this->offset(index).deref();
 }
 
 template<typename T>
 template<typename I, typename>
-Value<T> Pointer<T>::operator[](I index) const
+Value<T> PointerImpl<T>::operator[](I index) const
 {
     return this->operator[](create_literial(index));
 }

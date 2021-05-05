@@ -242,7 +242,7 @@ void CallVoid<Args...>::gen_ir(ir::IRBuilder &builder) const
 
 template<typename Ret, typename ... Args>
 CallClass<Ret, Args...>::CallClass(
-    int func_index, const Pointer<Ret> &ret_ptr,
+    int func_index, const PointerImpl<Ret> &ret_ptr,
     const RC<typename Value<Args>::ImplType> &... args)
         : func_index_(func_index), ret_ptr_(ret_ptr), args_{ args... }
 {
@@ -279,7 +279,7 @@ void CallClass<Ret, Args...>::gen_ir(ir::IRBuilder &builder) const
 
 template<typename Ret, typename ... Args>
 CallArray<Ret, Args...>::CallArray(
-    int func_index, const Pointer<Ret> &ret_ptr,
+    int func_index, const PointerImpl<Ret> &ret_ptr,
     const RC<typename Value<Args>::ImplType> &... args)
         : func_index_(func_index), ret_ptr_(ret_ptr), args_{ args... }
 {

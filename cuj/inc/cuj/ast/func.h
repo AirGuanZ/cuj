@@ -40,9 +40,9 @@ namespace detail
     };
 
     template<typename T, size_t N>
-    struct MakeArgValue<Array<T, N>>
+    struct MakeArgValue<ArrayImpl<T, N>>
     {
-        static auto process(const Array<T, N> &val)
+        static auto process(const ArrayImpl<T, N> &val)
         {
             return val;
         }
@@ -58,9 +58,9 @@ namespace detail
     };
 
     template<typename T>
-    struct MakeArgValue<Pointer<T>>
+    struct MakeArgValue<PointerImpl<T>>
     {
-        static auto process(const Pointer<T> &val)
+        static auto process(const PointerImpl<T> &val)
         {
             return val;
         }

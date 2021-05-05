@@ -48,23 +48,23 @@ CUJ_OVERLOAD_BINARY_ARITHMETIC_OP(GreaterEqual, >=)
 
 // binary pointer
 
-#define CUJ_OVERLOAD_BINARY_POINTER_OP(OP, SYM)                                 \
-    template<typename L, typename R>                                            \
-    Value<bool> operator SYM(const Pointer<L> &lhs, const Pointer<R> &rhs)      \
-    {                                                                           \
-        auto impl = create_binary_operator<bool, Pointer<L>, Pointer<R>>(       \
-            ir::BinaryOp::Type::OP, lhs.get_impl(), rhs.get_impl());            \
-        return Value<bool>(std::move(impl));                                    \
-    }                                                                           \
-    template<typename T>                                                        \
-    Value<bool> operator SYM(const Pointer<T> &ptr, const std::nullptr_t &)     \
-    {                                                                           \
-        return ptr SYM Pointer<T>(nullptr);                                     \
-    }                                                                           \
-    template<typename T>                                                        \
-    Value<bool> operator SYM(const std::nullptr_t &, const Pointer<T> &ptr)     \
-    {                                                                           \
-        return Pointer<T>(nullptr) SYM ptr;                                     \
+#define CUJ_OVERLOAD_BINARY_POINTER_OP(OP, SYM)                                     \
+    template<typename L, typename R>                                                \
+    Value<bool> operator SYM(const PointerImpl<L> &lhs, const PointerImpl<R> &rhs)  \
+    {                                                                               \
+        auto impl = create_binary_operator<bool, PointerImpl<L>, PointerImpl<R>>(   \
+            ir::BinaryOp::Type::OP, lhs.get_impl(), rhs.get_impl());                \
+        return Value<bool>(std::move(impl));                                        \
+    }                                                                               \
+    template<typename T>                                                            \
+    Value<bool> operator SYM(const PointerImpl<T> &ptr, const std::nullptr_t &)     \
+    {                                                                               \
+        return ptr SYM PointerImpl<T>(nullptr);                                     \
+    }                                                                               \
+    template<typename T>                                                            \
+    Value<bool> operator SYM(const std::nullptr_t &, const PointerImpl<T> &ptr)     \
+    {                                                                               \
+        return PointerImpl<T>(nullptr) SYM ptr;                                     \
     }
 
 CUJ_OVERLOAD_BINARY_POINTER_OP(Equal,        ==)
@@ -79,25 +79,25 @@ CUJ_OVERLOAD_BINARY_POINTER_OP(GreaterEqual, >=)
 #define CUJ_OVERLOAD_POINTER_ARITH_BOOL_OP(SYM)                                 \
     template<typename L, typename R>                                            \
     ArithmeticValue<bool> operator SYM(                                         \
-        const Pointer<L> &lhs, const ArithmeticValue<R> &rhs)                   \
+        const PointerImpl<L> &lhs, const ArithmeticValue<R> &rhs)               \
     {                                                                           \
         return (lhs != nullptr) SYM rhs;                                        \
     }                                                                           \
     template<typename L, typename R>                                            \
     ArithmeticValue<bool> operator SYM(                                         \
-        const ArithmeticValue<L> &lhs, const Pointer<R> &rhs)                   \
+        const ArithmeticValue<L> &lhs, const PointerImpl<R> &rhs)               \
     {                                                                           \
         return lhs SYM (rhs != nullptr);                                        \
     }                                                                           \
     template<typename L, typename R,                                            \
              typename = std::enable_if_t<std::is_arithmetic_v<R>>>              \
-    ArithmeticValue<bool> operator SYM(const Pointer<L> &lhs, R rhs)            \
+    ArithmeticValue<bool> operator SYM(const PointerImpl<L> &lhs, R rhs)        \
     {                                                                           \
         return lhs SYM create_literial(rhs);                                    \
     }                                                                           \
     template<typename L, typename R,                                            \
              typename = std::enable_if_t<std::is_arithmetic_v<L>>>              \
-    ArithmeticValue<bool> operator SYM(L lhs, const Pointer<R> &rhs)            \
+    ArithmeticValue<bool> operator SYM(L lhs, const PointerImpl<R> &rhs)        \
     {                                                                           \
         return create_literial(lhs) SYM rhs;                                    \
     }
@@ -110,46 +110,46 @@ CUJ_OVERLOAD_POINTER_ARITH_BOOL_OP(||)
 // pointer +-
 
 template<typename L, typename R>
-Pointer<L> operator+(const Pointer<L> &lhs, const ArithmeticValue<R> &rhs)
+PointerImpl<L> operator+(const PointerImpl<L> &lhs, const ArithmeticValue<R> &rhs)
 {
     return lhs.offset(rhs);
 }
 
 template<typename L, typename R>
-Pointer<R> operator+(const ArithmeticValue<L> &lhs, const Pointer<R> &rhs)
+PointerImpl<R> operator+(const ArithmeticValue<L> &lhs, const PointerImpl<R> &rhs)
 {
     return rhs + lhs;
 }
 
 template<typename L, typename R,
          typename = std::enable_if_t<std::is_arithmetic_v<R>>>
-Pointer<L> operator+(const Pointer<L> &lhs, R rhs)
+PointerImpl<L> operator+(const PointerImpl<L> &lhs, R rhs)
 {
     return lhs.offset(create_literial(rhs));
 }
 
 template<typename L, typename R,
          typename = std::enable_if_t<std::is_arithmetic_v<L>>>
-Pointer<R> operator+(L lhs, const Pointer<R> &rhs)
+PointerImpl<R> operator+(L lhs, const PointerImpl<R> &rhs)
 {
     return rhs + lhs;
 }
 
 template<typename L, typename R>
-Pointer<L> operator-(const Pointer<L> &lhs, const ArithmeticValue<R> &rhs)
+PointerImpl<L> operator-(const PointerImpl<L> &lhs, const ArithmeticValue<R> &rhs)
 {
     return lhs + (create_literial(R(0)) - rhs);
 }
 
 template<typename L, typename R,
          typename = std::enable_if_t<std::is_arithmetic_v<R>>>
-Pointer<L> operator-(const Pointer<L> &lhs, R rhs)
+PointerImpl<L> operator-(const PointerImpl<L> &lhs, R rhs)
 {
     return lhs - create_literial(rhs);
 }
 
 template<typename T>
-ArithmeticValue<int64_t> operator-(const Pointer<T> &lhs, const Pointer<T> &rhs)
+ArithmeticValue<int64_t> operator-(const PointerImpl<T> &lhs, const PointerImpl<T> &rhs)
 {
     auto impl = newRC<InternalPointerDiff<T>>();
     impl->lhs = lhs.get_impl();
@@ -177,7 +177,7 @@ CUJ_OVERLOAD_UNARY_ARITHMETIC_OP(Not, !)
 // unary pointer
 
 template<typename T>
-Value<bool> operator!(const Pointer<T> &ptr)
+Value<bool> operator!(const PointerImpl<T> &ptr)
 {
     return ptr == nullptr;
 }

@@ -37,7 +37,7 @@ namespace detail
     template<typename ResultType, typename RetClass,
              typename ToArgs, typename FromArgs, size_t...Is>
     auto create_call_class_obj(
-        int index, const Pointer<RetClass> &ret_ptr,
+        int index, const PointerImpl<RetClass> &ret_ptr,
         const FromArgs &from_args, std::index_sequence<Is...>)
     {
         return newRC<ResultType>(

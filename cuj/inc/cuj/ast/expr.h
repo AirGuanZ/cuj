@@ -31,13 +31,13 @@ template<typename T>
 class ArithmeticValue;
 
 template<typename T, size_t N>
-class Array;
+class ArrayImpl;
 
 template<typename T>
 class ClassValue;
 
 template<typename T>
-class Pointer;
+class PointerImpl;
 
 template<typename C>
 class ClassBase;
@@ -61,7 +61,7 @@ namespace detail
     struct IsPointerValue
         <T, std::void_t<typename T::CUJPointerTag>> : std::true_type
     {
-        static_assert(std::is_same_v<T, Pointer<typename T::PointedType>>);
+        static_assert(std::is_same_v<T, PointerImpl<typename T::PointedType>>);
     };
 
     template<typename T, typename = void>
@@ -82,7 +82,7 @@ namespace detail
         <T, std::void_t<typename T::ElementType>> : std::true_type
     {
         static_assert(std::is_same_v<
-            T, Array<typename T::ElementType, T::ElementCount>>);
+            T, ArrayImpl<typename T::ElementType, T::ElementCount>>);
     };
 
     template<typename T>
@@ -105,19 +105,31 @@ namespace detail
     template<typename T, size_t N>
     struct RawToCUJType<T[N]>
     {
-        using Type = Array<typename RawToCUJType<T>::Type, N>;
+        using Type = ArrayImpl<typename RawToCUJType<T>::Type, N>;
     };
 
     template<typename T>
     struct RawToCUJType<T *>
     {
-        using Type = Pointer<typename RawToCUJType<T>::Type>;
+        using Type = PointerImpl<typename RawToCUJType<T>::Type>;
     };
     
     template<typename T>
     struct DeValueType
     {
         using Type = T;
+    };
+
+    template<typename T>
+    struct DeValueType<PointerImpl<T>>
+    {
+        using Type = PointerImpl<typename DeValueType<T>::Type>;
+    };
+
+    template<typename T, size_t N>
+    struct DeValueType<ArrayImpl<T, N>>
+    {
+        using Type = ArrayImpl<typename DeValueType<T>::Type, N>;
     };
 
     template<typename T>
@@ -129,7 +141,7 @@ namespace detail
     template<typename T>
     struct DeValueType<ClassValue<T>>
     {
-        using Type = T;
+        using Type = typename DeValueType<T>::Type;
     };
 
 } // namespace detail
@@ -205,7 +217,7 @@ public:
 
     virtual bool is_left() const { return false; }
 
-    virtual RC<InternalPointerValue<Pointer<T>>> get_address() const;
+    virtual RC<InternalPointerValue<PointerImpl<T>>> get_address() const;
 
     virtual ir::BasicValue gen_ir(ir::IRBuilder &builder) const = 0;
 };
@@ -215,11 +227,11 @@ class InternalPointerLeftValue : public InternalPointerValue<T>
 {
 public:
 
-    RC<InternalPointerValue<Pointer<T>>> address;
+    RC<InternalPointerValue<PointerImpl<T>>> address;
 
     bool is_left() const override { return true; }
 
-    RC<InternalPointerValue<Pointer<T>>> get_address() const override;
+    RC<InternalPointerValue<PointerImpl<T>>> get_address() const override;
 
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };
@@ -229,7 +241,7 @@ class InternalArrayValue
 {
 public:
 
-    RC<InternalArrayAllocAddress<Array<T, N>>> data_ptr;
+    RC<InternalArrayAllocAddress<ArrayImpl<T, N>>> data_ptr;
 };
 
 template<typename T>
@@ -406,7 +418,7 @@ public:
 
     ArithmeticValue &operator=(const ArithmeticValue &rhs);
 
-    Pointer<T> address() const;
+    PointerImpl<T> address() const;
 
     RC<InternalArithmeticValue<T>> get_impl() const;
 
@@ -436,7 +448,7 @@ public:
     
     ClassValue &operator=(const ClassValue &rhs);
 
-    Pointer<T> address() const;
+    PointerImpl<T> address() const;
 
     RC<InternalClassLeftValue<T>> get_impl() const;
 
@@ -446,14 +458,14 @@ public:
 };
 
 template<typename T, size_t N>
-class Array
+class ArrayImpl
 {
     RC<InternalArrayValue<T, N>> impl_;
 
     void init_as_stack_var();
 
     template<typename I, typename = std::enable_if_t<std::is_integral_v<I>>>
-    Pointer<T> get_element_ptr(const ArithmeticValue<I> &index) const;
+    PointerImpl<T> get_element_ptr(const ArithmeticValue<I> &index) const;
 
 public:
 
@@ -463,16 +475,16 @@ public:
 
     static constexpr size_t ElementCount = N;
 
-    Array();
+    ArrayImpl();
 
     template<typename U>
-    Array(const U &other);
+    ArrayImpl(const U &other);
 
-    Array(const Array &other);
+    ArrayImpl(const ArrayImpl &other);
 
-    Array &operator=(const Array &rhs);
+    ArrayImpl &operator=(const ArrayImpl &rhs);
 
-    Pointer<Array<T, N>> address() const;
+    PointerImpl<ArrayImpl<T, N>> address() const;
 
     RC<InternalArrayValue<T, N>> get_impl() const;
 
@@ -487,8 +499,11 @@ public:
     Value<T> operator[](I index) const;
 };
 
+template<typename T, size_t N>
+using Array = ArrayImpl<typename detail::DeValueType<T>::Type, N>;
+
 template<typename T>
-class Pointer
+class PointerImpl
 {
     static_assert(
         is_array<T>             ||
@@ -508,29 +523,29 @@ public:
 
     using PointedType = T;
 
-    Pointer();
+    PointerImpl();
 
     template<typename U>
-    Pointer(const U &other);
+    PointerImpl(const U &other);
 
-    Pointer(const Pointer &other);
+    PointerImpl(const PointerImpl &other);
 
-    Pointer &operator=(const Pointer &rhs);
+    PointerImpl &operator=(const PointerImpl &rhs);
 
-    Pointer &operator=(const std::nullptr_t &);
+    PointerImpl &operator=(const std::nullptr_t &);
 
     Value<T> deref() const;
 
     Value<T> operator*() const { return this->deref(); };
 
-    Pointer<Pointer<T>> address() const;
+    PointerImpl<PointerImpl<T>> address() const;
 
     RC<InternalPointerValue<T>> get_impl() const;
 
     void set_impl(RC<InternalPointerValue<T>> impl);
 
     template<typename I, typename = std::enable_if_t<std::is_integral_v<I>>>
-    Pointer<T> offset(const ArithmeticValue<I> &index) const;
+    PointerImpl<T> offset(const ArithmeticValue<I> &index) const;
 
     template<typename I, typename = std::enable_if_t<std::is_integral_v<I>>>
     Value<T> operator[](const ArithmeticValue<I> &index) const;
@@ -538,6 +553,9 @@ public:
     template<typename I, typename = std::enable_if_t<std::is_integral_v<I>>>
     Value<T> operator[](I index) const;
 };
+
+template<typename T>
+using Pointer = PointerImpl<typename detail::DeValueType<T>::Type>;
 
 template<typename T>
 std::enable_if_t<std::is_arithmetic_v<T>, ArithmeticValue<T>>

@@ -12,7 +12,7 @@ void run()
     std::cout << "Enter n: ";
     std::cin >> n;
 
-    auto pow_n = context.add_function<int64_t>(
+    auto pow_n = to_callable<int64_t>(
         [n](i32 x) mutable
     {
         i64 result = 1;

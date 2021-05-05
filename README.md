@@ -6,7 +6,7 @@ Run-time program generator embedded in C++
 
 ## Requirements
 
-* LLVM 11.1.0 and (optional) CUDA 10 (other versions may work but haven't been tested)
+* LLVM 11.1.0 and (optional) CUDA 10.2/11.1 (other versions may work but haven't been tested)
 * A C++17 compiler
 
 ## Usage

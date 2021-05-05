@@ -21,10 +21,10 @@ TEST_CASE("array")
             $return(true);
         });
 
-        auto make_array = to_callable<Array<int, 5>>(
+        auto make_array = to_callable<Array<int32_t, 5>>(
             []
         {
-            Array<int, 5> arr;
+            Array<i32, 5> arr;
             arr[0] = 0;
             arr[1] = 1;
             arr[2] = 2;

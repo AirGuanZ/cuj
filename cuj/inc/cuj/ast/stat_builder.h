@@ -26,7 +26,7 @@ public:
     IfBuilder &operator+(const ArithmeticValue<T> &cond);
 
     template<typename T>
-    IfBuilder &operator+(const Pointer<T> &cond);
+    IfBuilder &operator+(const PointerImpl<T> &cond);
 
     IfBuilder &operator+(const std::function<void()> &then_body);
 
@@ -44,7 +44,7 @@ public:
     explicit WhileBuilder(const ArithmeticValue<T> &cond);
 
     template<typename T>
-    explicit WhileBuilder(const Pointer<T> &cond);
+    explicit WhileBuilder(const PointerImpl<T> &cond);
 
     ~WhileBuilder();
 
@@ -61,13 +61,13 @@ public:
     ReturnBuilder(const ArithmeticValue<T> &val);
 
     template<typename T>
-    ReturnBuilder(const Pointer<T> &val);
+    ReturnBuilder(const PointerImpl<T> &val);
 
     template<typename T>
     ReturnBuilder(const ClassValue<T> &val);
 
     template<typename T, size_t N>
-    ReturnBuilder(const Array<T, N> &val);
+    ReturnBuilder(const ArrayImpl<T, N> &val);
 
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     ReturnBuilder(T val);

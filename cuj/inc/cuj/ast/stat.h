@@ -160,13 +160,13 @@ class CallClass : public Statement
     static_assert(is_cuj_class<Ret>);
 
     int                                               func_index_;
-    Pointer<Ret>                                      ret_ptr_;
+    PointerImpl<Ret>                                      ret_ptr_;
     std::tuple<RC<typename Value<Args>::ImplType>...> args_;
 
 public:
 
     CallClass(
-        int func_index, const Pointer<Ret> &ret_ptr,
+        int func_index, const PointerImpl<Ret> &ret_ptr,
         const RC<typename Value<Args>::ImplType> &...args);
 
     void gen_ir(ir::IRBuilder &builder) const override;
@@ -178,13 +178,13 @@ class CallArray : public Statement
     static_assert(is_array<Ret>);
 
     int                                               func_index_;
-    Pointer<Ret>                                      ret_ptr_;
+    PointerImpl<Ret>                                      ret_ptr_;
     std::tuple<RC<typename Value<Args>::ImplType>...> args_;
 
 public:
 
     CallArray(
-        int func_index, const Pointer<Ret> &ret_ptr,
+        int func_index, const PointerImpl<Ret> &ret_ptr,
         const RC<typename Value<Args>::ImplType> &...args);
 
     void gen_ir(ir::IRBuilder &builder) const override;
