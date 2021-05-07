@@ -21,14 +21,107 @@ cd build
 cmake -DLLVM_DIR="llvm_cmake_config_dir" ..
 ```
 
+To add CUJ into a CMake project, simply use `ADD_SUBDIRECTORY` and link with target `cuj`.
+
 ### A Quick Example
 
-TODO
+[Exponentiation by squaring](https://en.wikipedia.org/wiki/Exponentiation_by_squaring) is a fast algorithm for computing positive integer powers:
+
+```cpp
+int64_t pow(int32_t x, uint32_t n)
+{
+    int64_t result = 1;
+    int64_t base = x;
+    while(n)
+    {
+        if(n & 1)
+            result *= base;
+        base *= base;
+        n >>= 1;
+    }
+    return result;
+}
+```
+
+However, we always have a faster method `pow_n` for computing `pow(x, n)` for a fixed n. For example, the following function is better for computing `pow(x, 5)` than general `pow`:
+
+```cpp
+int64_t pow5(int32_t x)
+{
+    int64_t b1 = x;
+    int64_t b2 = b1 * b1;
+    int64_t b4 = b2 * b2;
+    return b4 * b1;
+}
+```
+
+The program may need to read `n` from a configuration file or user input, then evaluate `pow(x, n)` for millions of different `x`. The problem is: how can we efficiently generate `pow_n` after reading `n`? Here are some solutions:
+
+* generate source code (in C, LLVM IR, etc) for computing `pow_n`, then compile it into executable machine code. When the algorithm becomes more complicated than `pow`, the generator may become harder to code.
+* use existing `partial evaluation` (PE) tools. However, there is no practical PE implementation for C/C++ or can be easily integrated into this context.
+
+Now lets try to implement the generator with CUJ. Firstly create a CUJ context for holding everything about the generated code:
+
+```cpp
+ScopedContext context;
+```
+
+Then we create a CUJ function that computes `pow_n`, where n is read from user input:
+
+```cpp
+uint32_t n = 0;
+std::cout << "Enter n: ";
+std::cin >> n;
+
+auto pow_n = to_callable<int64_t>(
+    [n](i32 x) mutable
+{
+    i64 result = 1;
+    i64 base = x;
+    while(n)
+    {
+        if(n & 1)
+            result = result * base;
+        base = base * base;
+        n >>= 1;
+    }
+    $return(result);
+});
+```
+
+Note that the variable `x` is typed with `i32`, which is a CUJ variable representing a `int32_t` variable. And the `return` statement is replaced with `$return(...)`, which tolds CUJ to generate a return instruction. The `pow_n` algorithm almost have the same form of the above `pow`, except some of its unknown parts are replaced with their corresponding CUJ types, like `int32_t x -> i32 x`. CUJ will trace the execution of the lambda in `to_callable`, and reconstruct the algorithm with a fixed `n`.
+
+Now we can generate exeutable machine code for `pow_n` and query its function pointer:
+
+```cpp
+// pow_n_func is a raw function pointer
+auto codegen_result = context.gen_native_jit();
+auto pow_n_func = codegen_result.get_symbol(pow_n);
+
+// test output
+std::cout << "n = " << n << std::endl;
+for(int i = 0; i <= 9; ++i)
+    std::cout << i << " ^ n = " << pow_n_func(i) << std::endl;
+```
+
+Enter `5`, and we will get:
+
+```
+n = 5
+0 ^ n = 0
+1 ^ n = 1
+2 ^ n = 32
+...
+8 ^ n = 32768
+9 ^ n = 59049
+```
+
+Full source code of this example can be found in `example/native_codegen/main.cpp`.
 
 ### CUJ Context
 
 Any CUJ operation must be done with a context. There is a global context stack
-in CUJ, and the context on the top of the stack will be used by CUJ operations. We can use `push_context` and `pop_context` to manipulate this stack.
+in CUJ, and the context on the top of the stack will be used by current CUJ operations. We can use `push_context` and `pop_context` to manipulate this stack.
 
 ```cpp
 {
@@ -39,7 +132,7 @@ in CUJ, and the context on the top of the stack will be used by CUJ operations. 
 }
 ```
 
-We can also use scoped guard provided by CUJ to avoid forgetting `pop_context`. The following two pieces of codes are equivalent to the above.
+We can also use scoped guard provided by CUJ. The following two pieces of codes are equivalent to the above.
 
 ```cpp
 {
@@ -56,7 +149,7 @@ We can also use scoped guard provided by CUJ to avoid forgetting `pop_context`. 
 }
 ```
 
-### Define CUJ Functions
+### Define Functions
 
 The simplest way to define a CUJ function is calling `to_callable` with a callable object describing how to build the function body. For example:
 
@@ -83,7 +176,7 @@ All variables, operators and statements contained in the defined CUJ function ar
 There are some variants of `to_callable`:
 
 * `to_callable<ReturnType>(Functor)` omits the function name. CUJ will automaticly assign an unique name to it.
-* `to_callable<ReturnType>(Type, Functor)` specifies the function type (see `cuj::ir::FunctionType`). This can be used for defining special function type like `device` function in NVIDIA PTX.
+* `to_callable<ReturnType>(Type, Functor)` specifies the function type (see `cuj::ir::FunctionType`). This can be used for defining special functions like device functions in NVIDIA PTX.
 * `to_callable<ReturnType>(Name, Type, Functor)` specifies both of the name and type.
 
 We can also define a CUJ function by explicitly calling `Context::begin_function` and `Context::end_function`. For example:
@@ -107,7 +200,7 @@ We can also define a CUJ function by explicitly calling `Context::begin_function
 
 These codes define a CUJ function that is exactly the same as the previous one. When using `Context::begin_function`, we must specify the whole function signature, and declare arguments with CUJ macro `$arg`.
 
-### Call CUJ Functions
+### Call Functions
 
 A CUJ function can not be called within another CUJ function. The calling syntax is very similar to C++ —— just use the return value of `to_callable` or `Context::begin_function` as a functor. For example, to call `my_add_float` in another function:
 
@@ -130,7 +223,7 @@ A CUJ function can not be called within another CUJ function. The calling syntax
 }
 ```
 
-### CUJ Variables
+### Variables
 
 Variables in CUJ can be of the following types:
 
