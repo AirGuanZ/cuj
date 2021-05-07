@@ -57,8 +57,8 @@ int64_t pow5(int32_t x)
 
 The program may need to read `n` from a configuration file or user input, then evaluate `pow(x, n)` for millions of different `x`. The problem is: how can we efficiently generate `pow_n` after reading `n`? Here are some solutions:
 
-* generate source code (in C, LLVM IR, etc) for computing `pow_n`, then compile it into executable machine code. When the algorithm becomes more complicated than `pow`, the generator may become harder to code.
-* use existing `partial evaluation` (PE) tools. However, there is no practical PE implementation for C/C++ or can be easily integrated into this context.
+* generate source code (in C, LLVM IR, etc) for computing `pow_n`, then compile it into executable machine code. When the algorithm becomes more complicated than `pow`, the generator itself also becomes hard to code.
+* use existing `partial evaluation` (PE) tools. However, to my knowledge, there is no practical PE implementation for C/C++ or can be easily integrated into this context.
 
 Now lets try to implement the generator with CUJ. Firstly create a CUJ context for holding everything about the generated code:
 

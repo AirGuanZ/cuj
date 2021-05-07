@@ -471,6 +471,12 @@ RC<InternalArithmeticValue<T>> ArithmeticValue<T>::get_impl() const
 }
 
 template<typename T>
+void ArithmeticValue<T>::set_impl(const ArithmeticValue<T> &val)
+{
+    this->set_impl(val.get_impl());
+}
+
+template<typename T>
 void ArithmeticValue<T>::set_impl(RC<InternalArithmeticValue<T>> impl)
 {
     impl_ = std::move(impl);
@@ -548,6 +554,12 @@ template<typename T>
 RC<InternalClassLeftValue<T>> ClassValue<T>::get_impl() const
 {
     return impl_;
+}
+
+template<typename T>
+void ClassValue<T>::set_impl(const ClassValue<T> &val)
+{
+    this->set_impl(val.get_impl());
 }
 
 template<typename T>
@@ -631,6 +643,12 @@ template<typename T, size_t N>
 RC<InternalArrayValue<T, N>> ArrayImpl<T, N>::get_impl() const
 {
     return impl_;
+}
+
+template<typename T, size_t N>
+void ArrayImpl<T, N>::set_impl(const ArrayImpl<T, N> &val)
+{
+    this->set_impl(val.get_impl());
 }
 
 template<typename T, size_t N>
@@ -782,6 +800,12 @@ template<typename T>
 RC<InternalPointerValue<T>> PointerImpl<T>::get_impl() const
 {
     return impl_;
+}
+
+template<typename T>
+void PointerImpl<T>::set_impl(const PointerImpl<T> &val)
+{
+    this->set_impl(val.get_impl());
 }
 
 template<typename T>

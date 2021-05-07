@@ -422,6 +422,8 @@ public:
 
     RC<InternalArithmeticValue<T>> get_impl() const;
 
+    void set_impl(const ArithmeticValue<T> &val);
+
     void set_impl(RC<InternalArithmeticValue<T>> impl);
 };
 
@@ -451,6 +453,8 @@ public:
     PointerImpl<T> address() const;
 
     RC<InternalClassLeftValue<T>> get_impl() const;
+
+    void set_impl(const ClassValue<T> &val);
 
     void set_impl(RC<InternalClassLeftValue<T>> impl);
 
@@ -487,6 +491,8 @@ public:
     PointerImpl<ArrayImpl<T, N>> address() const;
 
     RC<InternalArrayValue<T, N>> get_impl() const;
+
+    void set_impl(const ArrayImpl<T, N> &val);
 
     void set_impl(RC<InternalArrayValue<T, N>> impl);
 
@@ -536,11 +542,13 @@ public:
 
     Value<T> deref() const;
 
-    Value<T> operator*() const { return this->deref(); };
+    Value<T> operator*() const { return this->deref(); }
 
     PointerImpl<PointerImpl<T>> address() const;
 
     RC<InternalPointerValue<T>> get_impl() const;
+
+    void set_impl(const PointerImpl<T> &val);
 
     void set_impl(RC<InternalPointerValue<T>> impl);
 
