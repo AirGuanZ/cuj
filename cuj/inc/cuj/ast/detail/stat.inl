@@ -40,7 +40,7 @@ void Store<L, R>::gen_ir(ir::IRBuilder &builder) const
     else
     {
         auto origin_rhs_val = rhs_->gen_ir(builder);
-        auto cast_op = ir::CastOp{ ir::to_builtin_type_value<L>, origin_rhs_val };
+        auto cast_op = ir::CastBuiltinOp{ ir::to_builtin_type_value<L>, origin_rhs_val };
 
         auto lhs_type = get_current_context()->get_type<L>();
         auto rhs_val = builder.gen_temp_value(lhs_type);

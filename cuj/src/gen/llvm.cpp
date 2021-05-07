@@ -692,7 +692,8 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::Value &v)
         [this](const ir::UnaryOp         &v) { return get_value(v); },
         [this](const ir::LoadOp          &v) { return get_value(v); },
         [this](const ir::CallOp          &v) { return get_value(v); },
-        [this](const ir::CastOp          &v) { return get_value(v); },
+        [this](const ir::CastBuiltinOp   &v) { return get_value(v); },
+        [this](const ir::CastPointerOp   &v) { return get_value(v); },
         [this](const ir::ArrayElemAddrOp &v) { return get_value(v); },
         [this](const ir::IntrinsicOp     &v) { return get_value(v); },
         [this](const ir::MemberPtrOp     &v) { return get_value(v); },
@@ -878,12 +879,19 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::CallOp &v)
     return data_->ir_builder->CreateCall(func, args);
 }
 
-llvm::Value *LLVMIRGenerator::get_value(const ir::CastOp &v)
+llvm::Value *LLVMIRGenerator::get_value(const ir::CastBuiltinOp &v)
 {
     const auto from_type = get_arithmetic_type(v.val);
     const auto to_type   = v.to_type;
     auto from = get_value(v.val);
     return convert_arithmetic(from, from_type, to_type);
+}
+
+llvm::Value *LLVMIRGenerator::get_value(const ir::CastPointerOp &v)
+{
+    const auto to_type = find_llvm_type(v.to_type);
+    auto from_val = get_value(v.from_val);
+    return data_->ir_builder->CreatePointerCast(from_val, to_type);
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::ArrayElemAddrOp &v)

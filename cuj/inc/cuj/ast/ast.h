@@ -9,6 +9,7 @@
 #include <cuj/ast/opr.h>
 #include <cuj/ast/stat.h>
 #include <cuj/ast/stat_builder.h>
+#include <cuj/ast/value.h>
 
 #include <cuj/ast/detail/class.inl>
 #include <cuj/ast/detail/context.inl>
@@ -17,6 +18,7 @@
 #include <cuj/ast/detail/func_context.inl>
 #include <cuj/ast/detail/stat.inl>
 #include <cuj/ast/detail/stat_builder.inl>
+#include <cuj/ast/detail/value.inl>
 
 CUJ_NAMESPACE_BEGIN(cuj)
 
@@ -40,6 +42,9 @@ using ast::get_current_function;
 
 using ast::push_context;
 using ast::pop_context;
+
+using ast::ptr_cast;
+using ast::cast;
 
 using signed_char_t = Value<signed char>;
 using short_t       = Value<short>;

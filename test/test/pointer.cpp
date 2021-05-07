@@ -104,4 +104,26 @@ TEST_CASE("pointer")
         if(test_func)
             REQUIRE(test_func() == true);
     }
+
+    SECTION("cast")
+    {
+        ScopedContext ctx;
+
+        auto test = to_callable<bool>([]
+        {
+            Value<float> x = 5, y = 7;
+            Pointer<uint8_t> px = ptr_cast<uint8_t>(x.address());
+            Pointer<uint8_t> py = ptr_cast<uint8_t>(y.address());
+            for(int i = 0; i < 4; ++i)
+                py[i] = px[i];
+            $return(x == y);
+        });
+
+        auto jit = ctx.gen_native_jit();
+        auto test_func = jit.get_symbol(test);
+
+        REQUIRE(test_func);
+        if(test_func)
+            REQUIRE(test_func() == true);
+    }
 }

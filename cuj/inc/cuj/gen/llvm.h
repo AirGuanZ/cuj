@@ -103,7 +103,9 @@ private:
 
     llvm::Value *get_value(const ir::CallOp &v);
 
-    llvm::Value *get_value(const ir::CastOp &v);
+    llvm::Value *get_value(const ir::CastBuiltinOp &v);
+
+    llvm::Value *get_value(const ir::CastPointerOp &v);
 
     llvm::Value *get_value(const ir::ArrayElemAddrOp &v);
 

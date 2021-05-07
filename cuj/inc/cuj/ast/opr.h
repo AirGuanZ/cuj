@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cuj/ast/expr.h>
+#include <cuj/ast/value.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::ast)
 
@@ -190,6 +190,14 @@ ArithmeticValue<To> cast(const ArithmeticValue<From> &from)
     auto impl = newRC<InternalCastArithmeticValue<From, To>>();
     impl->from = from.get_impl();
     return ArithmeticValue<To>(std::move(impl));
+}
+
+template<typename To, typename From>
+Pointer<To> ptr_cast(const PointerImpl<From> &from)
+{
+    auto impl = newRC<InternalCastPointerValue<From, To>>();
+    impl->from = from.get_impl();
+    return Pointer<To>(std::move(impl));
 }
 
 CUJ_NAMESPACE_END(cuj::ast)

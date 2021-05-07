@@ -372,14 +372,20 @@ std::string IRPrinter::to_string(const ir::Value &value) const
         result += " -> " + get_typename(v.ret_type);
         return result;
     },
-        [this](const ir::CastOp &v)
+        [this](const ir::CastBuiltinOp &v)
     {
-        return "cast<" + get_typename(v.to_type) + "> " + to_string(v.val);
+        return "builtin_cast<" + get_typename(v.to_type) + "> "
+             + to_string(v.val);
+    },
+        [this](const ir::CastPointerOp &v)
+    {
+        return "pointer_cast<" + get_typename(v.to_type) + "> "
+             + to_string(v.from_val);
     },
         [this](const ir::ArrayElemAddrOp &v)
     {
         return "array_elem_ptr<" + get_typename(v.arr_type) + "> "
-            + to_string(v.arr_alloc);
+             + to_string(v.arr_alloc);
     },
         [this](const ir::IntrinsicOp &v)
     {

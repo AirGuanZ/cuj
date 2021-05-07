@@ -61,10 +61,17 @@ struct IntrinsicOp
     std::vector<BasicValue> args;
 };
 
-struct CastOp
+struct CastBuiltinOp
 {
     BuiltinType to_type;
     BasicValue  val;
+};
+
+struct CastPointerOp
+{
+    const Type *from_type;
+    const Type *to_type;
+    BasicValue  from_val;
 };
 
 struct ArrayElemAddrOp
@@ -112,7 +119,8 @@ using Value = Variant<
     UnaryOp,
     LoadOp,
     CallOp,
-    CastOp,
+    CastBuiltinOp,
+    CastPointerOp,
     ArrayElemAddrOp,
     IntrinsicOp,
     MemberPtrOp,
