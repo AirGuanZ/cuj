@@ -16,6 +16,10 @@ public:
 
     CUDAModule();
 
+    CUDAModule(CUDAModule &&other) noexcept;
+
+    CUDAModule &operator=(CUDAModule &&other) noexcept;
+
     ~CUDAModule();
 
     void load_ptx_from_memory(const void *data, size_t bytes);

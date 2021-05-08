@@ -37,6 +37,17 @@ CUDAModule::CUDAModule()
     impl_ = newBox<Impl>();
 }
 
+CUDAModule::CUDAModule(CUDAModule &&other) noexcept
+{
+    std::swap(impl_, other.impl_);
+}
+
+CUDAModule &CUDAModule::operator=(CUDAModule &&other) noexcept
+{
+    std::swap(impl_, other.impl_);
+    return *this;
+}
+
 CUDAModule::~CUDAModule()
 {
     if(impl_->cu_module)
