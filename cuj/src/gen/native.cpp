@@ -15,6 +15,7 @@
 
 #include <cuj/gen/llvm.h>
 #include <cuj/gen/native.h>
+#include <cuj/util/atomic_add.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 
@@ -53,16 +54,6 @@ namespace
     int is_finite_f64(double x) { return isfinite(x); }
     int is_inf_f64   (double x) { return isinf(x); }
     int is_nan_f64   (double x) { return isnan(x); }
-
-    float atomic_add(float *dst, float val)
-    {
-        return std::atomic_ref(*dst).fetch_add(val);
-    }
-
-    double atomic_add(double *dst, double val)
-    {
-        return std::atomic_ref(*dst).fetch_add(val);
-    }
 
 } // namespace anonymous
 
@@ -161,8 +152,8 @@ void NativeJIT::generate(const ir::Program &prog, OptLevel opt)
     ADD_HOST_FUNC("host.math.isinf.f64",     &is_inf_f64);
     ADD_HOST_FUNC("host.math.isnan.f64",     &is_nan_f64);
 
-    ADD_HOST_FUNC("host.atomic.add.f32", static_cast<float(*)(float *, float)>   (&atomic_add));
-    ADD_HOST_FUNC("host.atomic.add.f64", static_cast<double(*)(double *, double)>(&atomic_add));
+    ADD_HOST_FUNC("host.atomic.add.f32", &atomic_add_float);
+    ADD_HOST_FUNC("host.atomic.add.f64", &atomic_add_double);
 
 #undef ADD_HOST_FUNC
 
