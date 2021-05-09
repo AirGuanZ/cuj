@@ -74,9 +74,9 @@ f32 ceil     (const f32 &x);
 f32 floor    (const f32 &x);
 f32 trunc    (const f32 &x);
 f32 round    (const f32 &x);
-i32   isfinite (const f32 &x);
-i32   isinf    (const f32 &x);
-i32   isnan    (const f32 &x);
+i32 isfinite (const f32 &x);
+i32 isinf    (const f32 &x);
+i32 isnan    (const f32 &x);
 
 f64 abs      (const f64 &x);
 f64 mod      (const f64 &x, const f64 &y);
@@ -99,9 +99,9 @@ f64 ceil     (const f64 &x);
 f64 floor    (const f64 &x);
 f64 trunc    (const f64 &x);
 f64 round    (const f64 &x);
-i32    isfinite (const f64 &x);
-i32    isinf    (const f64 &x);
-i32    isnan    (const f64 &x);
+i32 isfinite (const f64 &x);
+i32 isinf    (const f64 &x);
+i32 isnan    (const f64 &x);
 
 template<typename T>
 ArithmeticValue<T> min(

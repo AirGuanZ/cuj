@@ -22,13 +22,13 @@
 #include <llvm/Transforms/Scalar/GVN.h>
 #include "llvm/Transforms/Utils.h"
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
 #if CUJ_ENABLE_CUDA
 #include <llvm/IR/IntrinsicsNVPTX.h>
 #endif // #if CUJ_ENABLE_CUDA
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #include <cuj/gen/llvm.h>
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cuj/builtin/math/atomic.h>
 #include <cuj/builtin/math/basic.h>
 
 #include <cuj/builtin/math/vec2.h>

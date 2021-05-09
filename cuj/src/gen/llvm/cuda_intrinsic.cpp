@@ -140,6 +140,20 @@ llvm::Value *process_cuda_intrinsic(
     CUJ_CALL_LIBDEVICE(isinf,     false);
     CUJ_CALL_LIBDEVICE(isnan,     false);
 
+    if(name == "atomic.add.f32")
+    {
+        return ir.CreateIntrinsic(
+            llvm::Intrinsic::nvvm_atomic_add_gen_f_sys,
+            { ir.getFloatTy() }, args);
+    }
+
+    if(name == "atomic.add.f64")
+    {
+        return ir.CreateIntrinsic(
+            llvm::Intrinsic::nvvm_atomic_add_gen_f_sys,
+            { ir.getDoubleTy() }, args);
+    }
+
     return nullptr;
 }
 

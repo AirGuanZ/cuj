@@ -124,7 +124,7 @@ llvm::Value *process_host_intrinsic(
             return ir.CreateCall(func, args);                                   \
         }                                                                       \
     } while(false)
-    
+
     CUJ_HOST_MATH_INTRINSIC("math.abs.f32");
     CUJ_HOST_MATH_INTRINSIC("math.mod.f32");
     CUJ_HOST_MATH_INTRINSIC("math.remainder.f32");
@@ -176,6 +176,38 @@ llvm::Value *process_host_intrinsic(
     CUJ_HOST_MATH_INTRINSIC("math.isnan.f64");
 
 #undef CUJ_HOST_MATH_INTRINSIC
+
+    if(name == "atomic.add.f32")
+    {
+        const std::string func_name = "host." + name;
+
+        llvm::Function *func = top_module->getFunction(func_name);
+        if(!func)
+        {
+            auto f32_type = ir.getFloatTy();
+            auto pf32_type = llvm::PointerType::get(f32_type, 0);
+            func = add_func_prototype(
+                top_module, func_name.c_str(), f32_type, pf32_type, f32_type);
+        }
+
+        return ir.CreateCall(func, args);
+    }
+
+    if(name == "atomic.add.f64")
+    {
+        const std::string func_name = "host." + name;
+
+        llvm::Function *func = top_module->getFunction(func_name);
+        if(!func)
+        {
+            auto f64_type = ir.getDoubleTy();
+            auto pf64_type = llvm::PointerType::get(f64_type, 0);
+            func = add_func_prototype(
+                top_module, func_name.c_str(), f64_type, pf64_type, f64_type);
+        }
+
+        return ir.CreateCall(func, args);
+    }
 
     return nullptr;
 }
