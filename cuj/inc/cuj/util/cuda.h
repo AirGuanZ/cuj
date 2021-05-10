@@ -31,7 +31,7 @@ public:
         const std::string &entry_name,
         const Dim3        &block_cnt,
         const Dim3        &block_size,
-        Args           &...kernel_args);
+        Args            ...kernel_args);
 
 private:
 
@@ -60,7 +60,7 @@ void CUDAModule::launch(
     const std::string &entry_name,
     const Dim3        &block_cnt,
     const Dim3        &block_size,
-    Args           &...kernel_args)
+    Args            ...kernel_args)
 {
     if constexpr(sizeof...(kernel_args) > 0)
     {
