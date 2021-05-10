@@ -133,87 +133,87 @@ TEST_CASE("builtin.math.basic")
     
     auto jit = ctx.gen_native_jit();
     
-    REQUIRE(jit.get_symbol(abs32)(-4) == Approx(std::abs(-4)));
-    REQUIRE(jit.get_symbol(abs64)(-5) == Approx(std::abs(-5)));
+    REQUIRE(jit.get_function(abs32)(-4) == Approx(std::abs(-4)));
+    REQUIRE(jit.get_function(abs64)(-5) == Approx(std::abs(-5)));
     
-    REQUIRE(jit.get_symbol(mod32)(7, 2) == Approx(std::fmod(7.0f, 2.0f)));
-    REQUIRE(jit.get_symbol(mod64)(7, 2) == Approx(std::fmod(7.0, 2.0)));
+    REQUIRE(jit.get_function(mod32)(7, 2) == Approx(std::fmod(7.0f, 2.0f)));
+    REQUIRE(jit.get_function(mod64)(7, 2) == Approx(std::fmod(7.0, 2.0)));
     
-    REQUIRE(jit.get_symbol(remainder32)(7, 2) == Approx(std::remainder(7.0f, 2.0f)));
-    REQUIRE(jit.get_symbol(remainder64)(7, 2) == Approx(std::remainder(7.0, 2.0)));
+    REQUIRE(jit.get_function(remainder32)(7, 2) == Approx(std::remainder(7.0f, 2.0f)));
+    REQUIRE(jit.get_function(remainder64)(7, 2) == Approx(std::remainder(7.0, 2.0)));
     
-    REQUIRE(jit.get_symbol(exp32)(5) == Approx(std::exp(5.0f)));
-    REQUIRE(jit.get_symbol(exp64)(5) == Approx(std::exp(5.0)));
+    REQUIRE(jit.get_function(exp32)(5) == Approx(std::exp(5.0f)));
+    REQUIRE(jit.get_function(exp64)(5) == Approx(std::exp(5.0)));
     
-    REQUIRE(jit.get_symbol(exp2_32)(5) == Approx(std::exp2(5.0f)));
-    REQUIRE(jit.get_symbol(exp2_64)(5) == Approx(std::exp2(5.0)));
+    REQUIRE(jit.get_function(exp2_32)(5) == Approx(std::exp2(5.0f)));
+    REQUIRE(jit.get_function(exp2_64)(5) == Approx(std::exp2(5.0)));
     
-    REQUIRE(jit.get_symbol(log32)(5) == Approx(std::log(5.0f)));
-    REQUIRE(jit.get_symbol(log64)(5) == Approx(std::log(5.0)));
+    REQUIRE(jit.get_function(log32)(5) == Approx(std::log(5.0f)));
+    REQUIRE(jit.get_function(log64)(5) == Approx(std::log(5.0)));
     
-    REQUIRE(jit.get_symbol(log2_32)(5) == Approx(std::log2(5.0f)));
-    REQUIRE(jit.get_symbol(log2_64)(5) == Approx(std::log2(5.0)));
+    REQUIRE(jit.get_function(log2_32)(5) == Approx(std::log2(5.0f)));
+    REQUIRE(jit.get_function(log2_64)(5) == Approx(std::log2(5.0)));
     
-    REQUIRE(jit.get_symbol(log10_32)(5) == Approx(std::log10(5.0f)));
-    REQUIRE(jit.get_symbol(log10_64)(5) == Approx(std::log10(5.0)));
+    REQUIRE(jit.get_function(log10_32)(5) == Approx(std::log10(5.0f)));
+    REQUIRE(jit.get_function(log10_64)(5) == Approx(std::log10(5.0)));
     
-    REQUIRE(jit.get_symbol(pow32)(3.2f, 6.7f) == Approx(std::pow(3.2f, 6.7f)));
-    REQUIRE(jit.get_symbol(pow64)(3.2, 6.7)   == Approx(std::pow(3.2, 6.7)));
+    REQUIRE(jit.get_function(pow32)(3.2f, 6.7f) == Approx(std::pow(3.2f, 6.7f)));
+    REQUIRE(jit.get_function(pow64)(3.2, 6.7)   == Approx(std::pow(3.2, 6.7)));
     
-    REQUIRE(jit.get_symbol(sqrt32)(5) == Approx(std::sqrt(5.0f)));
-    REQUIRE(jit.get_symbol(sqrt64)(5) == Approx(std::sqrt(5.0)));
+    REQUIRE(jit.get_function(sqrt32)(5) == Approx(std::sqrt(5.0f)));
+    REQUIRE(jit.get_function(sqrt64)(5) == Approx(std::sqrt(5.0)));
     
-    REQUIRE(jit.get_symbol(sin32)(5) == Approx(std::sin(5.0f)));
-    REQUIRE(jit.get_symbol(sin64)(5) == Approx(std::sin(5.0)));
+    REQUIRE(jit.get_function(sin32)(5) == Approx(std::sin(5.0f)));
+    REQUIRE(jit.get_function(sin64)(5) == Approx(std::sin(5.0)));
     
-    REQUIRE(jit.get_symbol(cos32)(5) == Approx(std::cos(5.0f)));
-    REQUIRE(jit.get_symbol(cos64)(5) == Approx(std::cos(5.0)));
+    REQUIRE(jit.get_function(cos32)(5) == Approx(std::cos(5.0f)));
+    REQUIRE(jit.get_function(cos64)(5) == Approx(std::cos(5.0)));
     
-    REQUIRE(jit.get_symbol(tan32)(5) == Approx(std::tan(5.0f)));
-    REQUIRE(jit.get_symbol(tan64)(5) == Approx(std::tan(5.0)));
+    REQUIRE(jit.get_function(tan32)(5) == Approx(std::tan(5.0f)));
+    REQUIRE(jit.get_function(tan64)(5) == Approx(std::tan(5.0)));
     
-    REQUIRE(jit.get_symbol(asin32)(0.675f) == Approx(std::asin(0.675f)));
-    REQUIRE(jit.get_symbol(asin64)(0.675)  == Approx(std::asin(0.675)));
+    REQUIRE(jit.get_function(asin32)(0.675f) == Approx(std::asin(0.675f)));
+    REQUIRE(jit.get_function(asin64)(0.675)  == Approx(std::asin(0.675)));
     
-    REQUIRE(jit.get_symbol(acos32)(0.675f) == Approx(std::acos(0.675f)));
-    REQUIRE(jit.get_symbol(acos64)(0.675)  == Approx(std::acos(0.675)));
+    REQUIRE(jit.get_function(acos32)(0.675f) == Approx(std::acos(0.675f)));
+    REQUIRE(jit.get_function(acos64)(0.675)  == Approx(std::acos(0.675)));
     
-    REQUIRE(jit.get_symbol(atan32)(0.675f) == Approx(std::atan(0.675f)));
-    REQUIRE(jit.get_symbol(atan64)(0.675)  == Approx(std::atan(0.675)));
+    REQUIRE(jit.get_function(atan32)(0.675f) == Approx(std::atan(0.675f)));
+    REQUIRE(jit.get_function(atan64)(0.675)  == Approx(std::atan(0.675)));
     
-    REQUIRE(jit.get_symbol(atan2_32)(3.2f, 6.7f) == Approx(std::atan2(3.2f, 6.7f)));
-    REQUIRE(jit.get_symbol(atan2_64)(3.2, 6.7)   == Approx(std::atan2(3.2, 6.7)));
+    REQUIRE(jit.get_function(atan2_32)(3.2f, 6.7f) == Approx(std::atan2(3.2f, 6.7f)));
+    REQUIRE(jit.get_function(atan2_64)(3.2, 6.7)   == Approx(std::atan2(3.2, 6.7)));
     
-    REQUIRE(jit.get_symbol(ceil32)(3.2f) == Approx(std::ceil(3.2f)));
-    REQUIRE(jit.get_symbol(ceil64)(3.2)  == Approx(std::ceil(3.2)));
+    REQUIRE(jit.get_function(ceil32)(3.2f) == Approx(std::ceil(3.2f)));
+    REQUIRE(jit.get_function(ceil64)(3.2)  == Approx(std::ceil(3.2)));
     
-    REQUIRE(jit.get_symbol(floor32)(3.2f) == Approx(std::floor(3.2f)));
-    REQUIRE(jit.get_symbol(floor64)(3.2)  == Approx(std::floor(3.2)));
+    REQUIRE(jit.get_function(floor32)(3.2f) == Approx(std::floor(3.2f)));
+    REQUIRE(jit.get_function(floor64)(3.2)  == Approx(std::floor(3.2)));
     
-    REQUIRE(jit.get_symbol(trunc32)(3.2f) == Approx(std::trunc(3.2f)));
-    REQUIRE(jit.get_symbol(trunc64)(3.2)  == Approx(std::trunc(3.2)));
+    REQUIRE(jit.get_function(trunc32)(3.2f) == Approx(std::trunc(3.2f)));
+    REQUIRE(jit.get_function(trunc64)(3.2)  == Approx(std::trunc(3.2)));
     
-    REQUIRE(jit.get_symbol(round32)(3.2f) == Approx(std::round(3.2f)));
-    REQUIRE(jit.get_symbol(round64)(3.2)  == Approx(std::round(3.2)));
+    REQUIRE(jit.get_function(round32)(3.2f) == Approx(std::round(3.2f)));
+    REQUIRE(jit.get_function(round64)(3.2)  == Approx(std::round(3.2)));
     
-    REQUIRE(jit.get_symbol(isfinite32)(3.2f)    == int(std::isfinite(3.2f)));
-    REQUIRE(jit.get_symbol(isfinite64)(3.2)     == int(std::isfinite(3.2)));
-    REQUIRE(jit.get_symbol(isfinite32)(f32_inf) == int(std::isfinite(f32_inf)));
-    REQUIRE(jit.get_symbol(isfinite64)(f64_inf) == int(std::isfinite(f64_inf)));
-    REQUIRE(jit.get_symbol(isfinite32)(f32_nan) == int(std::isfinite(f32_nan)));
-    REQUIRE(jit.get_symbol(isfinite64)(f64_nan) == int(std::isfinite(f64_nan)));
+    REQUIRE(jit.get_function(isfinite32)(3.2f)    == int(std::isfinite(3.2f)));
+    REQUIRE(jit.get_function(isfinite64)(3.2)     == int(std::isfinite(3.2)));
+    REQUIRE(jit.get_function(isfinite32)(f32_inf) == int(std::isfinite(f32_inf)));
+    REQUIRE(jit.get_function(isfinite64)(f64_inf) == int(std::isfinite(f64_inf)));
+    REQUIRE(jit.get_function(isfinite32)(f32_nan) == int(std::isfinite(f32_nan)));
+    REQUIRE(jit.get_function(isfinite64)(f64_nan) == int(std::isfinite(f64_nan)));
     
-    REQUIRE(jit.get_symbol(isinf32)(3.2f)    == int(std::isinf(3.2f)));
-    REQUIRE(jit.get_symbol(isinf64)(3.2)     == int(std::isinf(3.2)));
-    REQUIRE(jit.get_symbol(isinf32)(f32_inf) == int(std::isinf(f32_inf)));
-    REQUIRE(jit.get_symbol(isinf64)(f64_inf) == int(std::isinf(f64_inf)));
-    REQUIRE(jit.get_symbol(isinf32)(f32_nan) == int(std::isinf(f32_nan)));
-    REQUIRE(jit.get_symbol(isinf64)(f64_nan) == int(std::isinf(f64_nan)));
+    REQUIRE(jit.get_function(isinf32)(3.2f)    == int(std::isinf(3.2f)));
+    REQUIRE(jit.get_function(isinf64)(3.2)     == int(std::isinf(3.2)));
+    REQUIRE(jit.get_function(isinf32)(f32_inf) == int(std::isinf(f32_inf)));
+    REQUIRE(jit.get_function(isinf64)(f64_inf) == int(std::isinf(f64_inf)));
+    REQUIRE(jit.get_function(isinf32)(f32_nan) == int(std::isinf(f32_nan)));
+    REQUIRE(jit.get_function(isinf64)(f64_nan) == int(std::isinf(f64_nan)));
     
-    REQUIRE(jit.get_symbol(isnan32)(3.2f)    == int(std::isnan(3.2f)));
-    REQUIRE(jit.get_symbol(isnan64)(3.2)     == int(std::isnan(3.2)));
-    REQUIRE(jit.get_symbol(isnan32)(f32_inf) == int(std::isnan(f32_inf)));
-    REQUIRE(jit.get_symbol(isnan64)(f64_inf) == int(std::isnan(f64_inf)));
-    REQUIRE(jit.get_symbol(isnan32)(f32_nan) == int(std::isnan(f32_nan)));
-    REQUIRE(jit.get_symbol(isnan64)(f64_nan) == int(std::isnan(f64_nan)));
+    REQUIRE(jit.get_function(isnan32)(3.2f)    == int(std::isnan(3.2f)));
+    REQUIRE(jit.get_function(isnan64)(3.2)     == int(std::isnan(3.2)));
+    REQUIRE(jit.get_function(isnan32)(f32_inf) == int(std::isnan(f32_inf)));
+    REQUIRE(jit.get_function(isnan64)(f64_inf) == int(std::isnan(f64_inf)));
+    REQUIRE(jit.get_function(isnan32)(f32_nan) == int(std::isnan(f32_nan)));
+    REQUIRE(jit.get_function(isnan64)(f64_nan) == int(std::isnan(f64_nan)));
 }

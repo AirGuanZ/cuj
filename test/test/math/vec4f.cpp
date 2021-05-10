@@ -33,7 +33,7 @@ struct Vec4fData
             $return(EXPR);                                                      \
         });                                                                     \
         auto jit = ctx.gen_native_jit();                                        \
-        auto func = jit.get_symbol(test);                                       \
+        auto func = jit.get_function(test);                                     \
         REQUIRE(func);                                                          \
         if(func)                                                                \
         {                                                                       \
@@ -68,21 +68,21 @@ TEST_CASE("builtin.math.vec4f")
         auto jit = ctx.gen_native_jit();
 
         Vec4fData vec4f_data = { 1, 2, 3, 4 };
-        jit.get_symbol(test_make_vec4f_0)(&vec4f_data);
+        jit.get_function(test_make_vec4f_0)(&vec4f_data);
         REQUIRE(vec4f_data.x == Approx(0));
         REQUIRE(vec4f_data.y == Approx(0));
         REQUIRE(vec4f_data.z == Approx(0));
         REQUIRE(vec4f_data.w == Approx(0));
 
         vec4f_data = { 1, 2, 3, 4 };
-        jit.get_symbol(test_make_vec4f_1)(&vec4f_data, 3);
+        jit.get_function(test_make_vec4f_1)(&vec4f_data, 3);
         REQUIRE(vec4f_data.x == Approx(3));
         REQUIRE(vec4f_data.y == Approx(3));
         REQUIRE(vec4f_data.z == Approx(3));
         REQUIRE(vec4f_data.w == Approx(3));
 
         vec4f_data = { 1, 2, 3, 4 };
-        jit.get_symbol(test_make_vec4f_2)(&vec4f_data, 3, 4, 5, 6);
+        jit.get_function(test_make_vec4f_2)(&vec4f_data, 3, 4, 5, 6);
         REQUIRE(vec4f_data.x == Approx(3));
         REQUIRE(vec4f_data.y == Approx(4));
         REQUIRE(vec4f_data.z == Approx(5));

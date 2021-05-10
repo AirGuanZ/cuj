@@ -33,9 +33,9 @@ TEST_CASE("function")
         ctx.add_function<int>("add_ints_3", define_add_ints);
 
         auto jit = ctx.gen_native_jit();
-        auto add_ints_1 = jit.get_symbol<int(const int *, int)>("add_ints_1");
-        auto add_ints_2 = jit.get_symbol<int(const int *, int)>("add_ints_2");
-        auto add_ints_3 = jit.get_symbol<int(const int *, int)>("add_ints_3");
+        auto add_ints_1 = jit.get_function_by_name<int(const int *, int)>("add_ints_1");
+        auto add_ints_2 = jit.get_function_by_name<int(const int *, int)>("add_ints_2");
+        auto add_ints_3 = jit.get_function_by_name<int(const int *, int)>("add_ints_3");
 
         REQUIRE(add_ints_1);
         REQUIRE(add_ints_2);
@@ -84,7 +84,7 @@ TEST_CASE("function")
         });
 
         auto jit = ctx.gen_native_jit();
-        auto test_float2_sum = jit.get_symbol(test_float2_sum_func);
+        auto test_float2_sum = jit.get_function(test_float2_sum_func);
 
         REQUIRE(test_float2_sum);
         if(test_float2_sum)
@@ -111,7 +111,7 @@ TEST_CASE("function")
         });
         
         auto jit = ctx.gen_native_jit();
-        auto test_make_vec2f_func = jit.get_symbol(test_make_vec2f);
+        auto test_make_vec2f_func = jit.get_function(test_make_vec2f);
 
         REQUIRE(test_make_vec2f_func);
         if(test_make_vec2f_func)
@@ -141,7 +141,7 @@ TEST_CASE("function")
         });
 
         auto jit = ctx.gen_native_jit();
-        auto test_make_arr4_func = jit.get_symbol(test_make_arr4);
+        auto test_make_arr4_func = jit.get_function(test_make_arr4);
 
         REQUIRE(test_make_arr4_func);
         if(test_make_arr4_func)

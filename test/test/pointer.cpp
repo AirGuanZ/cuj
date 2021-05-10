@@ -29,7 +29,7 @@ TEST_CASE("pointer")
         });
         
         auto jit = ctx.gen_native_jit();
-        auto test_func = jit.get_symbol(test);
+        auto test_func = jit.get_function(test);
 
         REQUIRE(test_func);
         if(test_func)
@@ -56,7 +56,7 @@ TEST_CASE("pointer")
         });
 
         auto jit = ctx.gen_native_jit();
-        auto test_func = jit.get_symbol(test);
+        auto test_func = jit.get_function(test);
 
         REQUIRE(test_func);
         if(test_func)
@@ -98,7 +98,7 @@ TEST_CASE("pointer")
         });
 
         auto jit = ctx.gen_native_jit();
-        auto test_func = jit.get_symbol(test);
+        auto test_func = jit.get_function(test);
 
         REQUIRE(test_func);
         if(test_func)
@@ -120,7 +120,7 @@ TEST_CASE("pointer")
         });
 
         auto jit = ctx.gen_native_jit();
-        auto test_func = jit.get_symbol(test);
+        auto test_func = jit.get_function(test);
 
         REQUIRE(test_func);
         if(test_func)

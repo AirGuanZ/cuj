@@ -96,7 +96,7 @@ Now we can generate exeutable machine code for `pow_n` and query its function po
 ```cpp
 // pow_n_func is a raw function pointer
 auto codegen_result = context.gen_native_jit();
-auto pow_n_func = codegen_result.get_symbol(pow_n);
+auto pow_n_func = codegen_result.get_function(pow_n);
 
 // test output
 std::cout << "n = " << n << std::endl;
@@ -372,8 +372,8 @@ Function pointers can be queried by its CUJ function name or CUJ function handle
         "add_float", [](f32 a, f32 b) { $return(a + b); });
     auto native_jit = context.gen_native_jit();
     
-    auto add_float_func_pointer1 = native_jit.get_symbol<float(float, float)>("add_float");
-    auto add_float_func_pointer2 = native_jit.get_symbol(add_float_handle);
+    auto add_float_func_pointer1 = native_jit.get_function_by_name<float(float, float)>("add_float");
+    auto add_float_func_pointer2 = native_jit.get_function(add_float_handle);
 
     assert(add_float_func_pointer1 == add_float_func_pointer2);
     assert(add_float_func_pointer1(1.0f, 2.0f) == 3.0f);

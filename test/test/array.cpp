@@ -51,8 +51,8 @@ TEST_CASE("array")
         });
 
         auto jit = ctx.gen_native_jit();
-        auto test_array1_func = jit.get_symbol(test_array1);
-        auto test_array2_func = jit.get_symbol(test_array2);
+        auto test_array1_func = jit.get_function(test_array1);
+        auto test_array2_func = jit.get_function(test_array2);
 
         REQUIRE(test_array1_func);
         if(test_array1_func)
@@ -92,7 +92,7 @@ TEST_CASE("array")
         });
 
         auto jit = ctx.gen_native_jit();
-        auto sum_arr_func = jit.get_symbol(sum_arr);
+        auto sum_arr_func = jit.get_function(sum_arr);
 
         REQUIRE(sum_arr_func);
         if(sum_arr_func)
@@ -157,7 +157,7 @@ TEST_CASE("array")
         });
 
         auto jit = ctx.gen_native_jit();
-        auto sum_arr_func = jit.get_symbol(sum_arr);
+        auto sum_arr_func = jit.get_function(sum_arr);
 
         REQUIRE(sum_arr_func);
         if(sum_arr_func)

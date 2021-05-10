@@ -32,7 +32,7 @@ struct Vec3fData
             $return(EXPR);                                                      \
         });                                                                     \
         auto jit = ctx.gen_native_jit();                                        \
-        auto func = jit.get_symbol(test);                                       \
+        auto func = jit.get_function(test);                                     \
         REQUIRE(func);                                                          \
         if(func)                                                                \
         {                                                                       \
@@ -67,19 +67,19 @@ TEST_CASE("builtin.math.vec3f")
         auto jit = ctx.gen_native_jit();
 
         Vec3fData vec3f_data = { 1, 2, 3 };
-        jit.get_symbol(test_make_vec3f_0)(&vec3f_data);
+        jit.get_function(test_make_vec3f_0)(&vec3f_data);
         REQUIRE(vec3f_data.x == Approx(0));
         REQUIRE(vec3f_data.y == Approx(0));
         REQUIRE(vec3f_data.z == Approx(0));
 
         vec3f_data = { 1, 2, 3 };
-        jit.get_symbol(test_make_vec3f_1)(&vec3f_data, 3);
+        jit.get_function(test_make_vec3f_1)(&vec3f_data, 3);
         REQUIRE(vec3f_data.x == Approx(3));
         REQUIRE(vec3f_data.y == Approx(3));
         REQUIRE(vec3f_data.z == Approx(3));
 
         vec3f_data = { 1, 2, 3 };
-        jit.get_symbol(test_make_vec3f_2)(&vec3f_data, 3, 4, 5);
+        jit.get_function(test_make_vec3f_2)(&vec3f_data, 3, 4, 5);
         REQUIRE(vec3f_data.x == Approx(3));
         REQUIRE(vec3f_data.y == Approx(4));
         REQUIRE(vec3f_data.z == Approx(5));

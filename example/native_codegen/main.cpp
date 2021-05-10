@@ -32,7 +32,7 @@ void run()
     std::cout << std::endl << llvm_gen.get_string() << std::endl;
 
     auto codegen_result = context.gen_native_jit();
-    auto pow_n_func = codegen_result.get_symbol(pow_n);
+    auto pow_n_func = codegen_result.get_function(pow_n);
 
     std::cout << "n = " << n << std::endl;
     for(int i = 0; i <= 9; ++i)

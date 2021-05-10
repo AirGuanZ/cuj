@@ -31,7 +31,7 @@ struct Vec2Data
             $return(EXPR);                                                      \
         });                                                                     \
         auto jit = ctx.gen_native_jit();                                        \
-        auto func = jit.get_symbol(test);                                       \
+        auto func = jit.get_function(test);                                     \
         REQUIRE(func);                                                          \
         if(func)                                                                \
         {                                                                       \
@@ -66,17 +66,17 @@ TEST_CASE("builtin.math.vec2f")
         auto jit = ctx.gen_native_jit();
 
         Vec2Data vec2f_data = { 1, 2 };
-        jit.get_symbol(test_make_vec2f_0)(&vec2f_data);
+        jit.get_function(test_make_vec2f_0)(&vec2f_data);
         REQUIRE(vec2f_data.x == Approx(0));
         REQUIRE(vec2f_data.y == Approx(0));
 
         vec2f_data = { 1, 2 };
-        jit.get_symbol(test_make_vec2f_1)(&vec2f_data, 3);
+        jit.get_function(test_make_vec2f_1)(&vec2f_data, 3);
         REQUIRE(vec2f_data.x == Approx(3));
         REQUIRE(vec2f_data.y == Approx(3));
 
         vec2f_data = { 1, 2 };
-        jit.get_symbol(test_make_vec2f_2)(&vec2f_data, 3, 4);
+        jit.get_function(test_make_vec2f_2)(&vec2f_data, 3, 4);
         REQUIRE(vec2f_data.x == Approx(3));
         REQUIRE(vec2f_data.y == Approx(4));
     }
