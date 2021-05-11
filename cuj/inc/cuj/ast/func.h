@@ -105,7 +105,7 @@ namespace detail
     template<typename T>
     auto CFunctionArgTypeAux()
     {
-        if constexpr(is_cuj_class<T> || is_array<T>)
+        if constexpr(is_cuj_class<T> || is_array<T> || is_pointer<T>)
             return reinterpret_cast<void**>(0);
         else
             return reinterpret_cast<T*>(0);

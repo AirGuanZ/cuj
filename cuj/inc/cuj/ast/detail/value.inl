@@ -7,12 +7,6 @@
 
 #include <cuj/ast/detail/call_arg.inl>
 
-#ifdef _MSC_VER
-// avoid spurious MSVC warning in PointerImpl<T>::PointerImpl(U)
-#pragma warning(push)
-#pragma warning(disable: 4717)
-#endif
-
 CUJ_NAMESPACE_BEGIN(cuj::ast)
 
 template<typename T>
@@ -440,7 +434,7 @@ Value<T> PointerImpl<T>::deref() const
         auto addr_value = impl_;
         auto impl = newRC<InternalClassLeftValue<T>>();
         impl->address = addr_value;
-        impl->obj     = newBox<T>(addr_value);
+        impl->obj     = newBox<T>(addr_value, UNINIT);
         return ClassValue<T>(std::move(impl));
     }
 }
@@ -500,7 +494,3 @@ void PointerImpl<T>::swap_impl(PointerImpl<T> &other) noexcept
 }
 
 CUJ_NAMESPACE_END(cuj::ast)
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif

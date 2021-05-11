@@ -126,4 +126,36 @@ TEST_CASE("pointer")
         if(test_func)
             REQUIRE(test_func() == true);
     }
+
+    SECTION("class pointer")
+    {
+        ScopedContext ctx;
+
+        auto test = to_callable<void>(
+            [](const Pointer<int>         &a,
+               const Pointer<math::Vec3f> &b)
+        {
+            ptr_cast<math::Vec3f>(a).deref()->x = b.deref()->x;
+        });
+
+        auto jit = ctx.gen_native_jit();
+        auto test_func = jit.get_function(test);
+
+        REQUIRE(test_func);
+        if(test_func)
+        {
+            struct Data { float x, y, z; };
+
+            Data a = { 1, 2, 3 }, b = { 4, 5, 6 };
+            test_func(&a, &b);
+
+            REQUIRE(a.x == 4);
+            REQUIRE(a.y == 2);
+            REQUIRE(a.z == 3);
+
+            REQUIRE(b.x == 4);
+            REQUIRE(b.y == 5);
+            REQUIRE(b.z == 6);
+        }
+    }
 }
