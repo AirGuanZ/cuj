@@ -46,7 +46,7 @@ ArithmeticValue<T>::ArithmeticValue(const U &other)
     else
     {
         this->init_as_stack_var();
-        *this = other;
+        this->operator=(other);
         return;
     }
 }
@@ -361,7 +361,7 @@ PointerImpl<T>::PointerImpl(const U &other)
     else if constexpr(std::is_same_v<RU, std::nullptr_t>)
     {
         this->init_as_stack_var();
-        *this = other;
+        this->operator=(other);
         return;
     }
     else if constexpr(std::is_convertible_v<RU, RC<InternalPointerValue<T>>>)
@@ -372,7 +372,7 @@ PointerImpl<T>::PointerImpl(const U &other)
     else
     {
         this->init_as_stack_var();
-        *this = other;
+        this->operator=(other);
         return;
     }
 }

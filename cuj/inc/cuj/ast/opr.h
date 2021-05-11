@@ -187,17 +187,19 @@ Value<bool> operator!(const PointerImpl<T> &ptr)
 template<typename To, typename From>
 ArithmeticValue<To> cast(const ArithmeticValue<From> &from)
 {
-    auto impl = newRC<InternalCastArithmeticValue<From, To>>();
+    using TTo = typename detail::DeValueType<To>::Type;
+    auto impl = newRC<InternalCastArithmeticValue<From, TTo>>();
     impl->from = from.get_impl();
-    return ArithmeticValue<To>(std::move(impl));
+    return ArithmeticValue<TTo>(std::move(impl));
 }
 
 template<typename To, typename From>
 Pointer<To> ptr_cast(const PointerImpl<From> &from)
 {
-    auto impl = newRC<InternalCastPointerValue<From, To>>();
+    using TTo = typename detail::DeValueType<To>::Type;
+    auto impl = newRC<InternalCastPointerValue<From, TTo>>();
     impl->from = from.get_impl();
-    return Pointer<To>(std::move(impl));
+    return Pointer<TTo>(std::move(impl));
 }
 
 CUJ_NAMESPACE_END(cuj::ast)
