@@ -136,6 +136,12 @@ inline Vec3i make_vec3i(const i32 &x, const i32 &y, const i32 &z)
 }
 
 template<typename T>
+Vec3<T> operator-(const Vec3<T> &v)
+{
+    return make_vec3<T>(-v->x, -v->y, -v->z);
+}
+
+template<typename T>
 Vec3<T> operator+(const Vec3<T> &lhs, const Vec3<T> &rhs)
 {
     return make_vec3<T>(lhs->x + rhs->x, lhs->y + rhs->y, lhs->z + rhs->z);

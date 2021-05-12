@@ -67,6 +67,9 @@ inline Vec3i make_vec3i(const i32 &v);
 inline Vec3i make_vec3i(const i32 &x, const i32 &y, const i32 &z);
 
 template<typename T>
+Vec3<T> operator-(const Vec3<T> &v);
+
+template<typename T>
 Vec3<T> operator+(const Vec3<T> &lhs, const Vec3<T> &rhs);
 template<typename T>
 Vec3<T> operator-(const Vec3<T> &lhs, const Vec3<T> &rhs);

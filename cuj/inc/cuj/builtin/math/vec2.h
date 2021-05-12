@@ -62,6 +62,9 @@ inline Vec2i make_vec2i(const i32 &v);
 inline Vec2i make_vec2i(const i32 &x, const i32 &y);
 
 template<typename T>
+Vec2<T> operator-(const Vec2<T> &v);
+
+template<typename T>
 Vec2<T> operator+(const Vec2<T> &lhs, const Vec2<T> &rhs);
 template<typename T>
 Vec2<T> operator-(const Vec2<T> &lhs, const Vec2<T> &rhs);

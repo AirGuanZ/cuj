@@ -142,6 +142,12 @@ inline Vec4i make_vec4i(
 }
 
 template<typename T>
+Vec4<T> operator-(const Vec4<T> &v)
+{
+    return make_vec4<T>(-v->x, -v->y, -v->z, -v->w);
+}
+
+template<typename T>
 Vec4<T> operator+(const Vec4<T> &lhs, const Vec4<T> &rhs)
 {
     return make_vec4<T>(

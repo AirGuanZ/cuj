@@ -106,6 +106,9 @@ TEST_CASE("builtin.math.vec3f")
     SECTION("operator")
     {
         ADD_TEST_EXPR(approx_eq(
+            -make_vec3f(2, 3, 4), make_vec3f(-2, -3, -4)));
+
+        ADD_TEST_EXPR(approx_eq(
             make_vec3f(1, 2, 3) + make_vec3f(3, 4, 5), make_vec3f(4, 6, 8)));
 
         ADD_TEST_EXPR(approx_eq(

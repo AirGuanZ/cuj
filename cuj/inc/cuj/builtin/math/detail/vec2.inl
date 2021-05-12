@@ -131,6 +131,12 @@ inline Vec2i make_vec2i(const i32 &x, const i32 &y)
 }
 
 template<typename T>
+Vec2<T> operator-(const Vec2<T> &v)
+{
+    return make_vec2<T>(-v->x, -v->y);
+}
+
+template<typename T>
 Vec2<T> operator+(const Vec2<T> &lhs, const Vec2<T> &rhs)
 {
     return make_vec2<T>(lhs->x + rhs->x, lhs->y + rhs->y);

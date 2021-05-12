@@ -49,7 +49,7 @@ template<typename T>
 ArithmeticValue<T>::ArithmeticValue(const ArithmeticValue &other)
 {
     this->init_as_stack_var();
-    *this = other;
+    this->operator=(other);
     return;
 }
 
@@ -62,7 +62,7 @@ ArithmeticValue<T> &ArithmeticValue<T>::operator=(const U &rhs)
         auto literial_impl = newRC<InternalArithmeticLiterial<U>>();
         literial_impl->literial = rhs;
         auto literial = ArithmeticValue<U>(std::move(literial_impl));
-        *this = literial;
+        this->operator=(literial);
     }
     else
     {
@@ -174,7 +174,7 @@ template<typename T>
 ClassValue<T>::ClassValue(const ClassValue &rhs)
 {
     this->init_as_stack_var();
-    *this = rhs;
+    this->operator=(rhs);
 }
 
 template<typename T>
@@ -257,8 +257,9 @@ ArrayImpl<T, N>::ArrayImpl(const U &other)
     }
     else
     {
+        assert((std::is_same_v<RU, ArrayImpl>));
         this->init_as_stack_var();
-        *this = other;
+        this->operator=(other);
         return;
     }
 }
@@ -267,7 +268,7 @@ template<typename T, size_t N>
 ArrayImpl<T, N>::ArrayImpl(const ArrayImpl &other)
 {
     this->init_as_stack_var();
-    *this = other;
+    this->operator=(other);
 }
 
 template<typename T, size_t N>
@@ -375,7 +376,7 @@ template<typename T>
 PointerImpl<T>::PointerImpl(const PointerImpl &other)
 {
     init_as_stack_var();
-    *this = other;
+    this->operator=(other);
 }
 
 template<typename T>
@@ -393,7 +394,7 @@ PointerImpl<T> &PointerImpl<T>::operator=(const PointerImpl &rhs)
 template<typename T>
 PointerImpl<T> &PointerImpl<T>::operator=(const std::nullptr_t &)
 {
-    *this = PointerImpl<T>(newRC<InternalEmptyPointer<T>>());
+    this->operator=(PointerImpl<T>(newRC<InternalEmptyPointer<T>>()));
     return *this;
 }
 

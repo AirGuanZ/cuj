@@ -73,6 +73,9 @@ inline Vec4i make_vec4i(
     const i32 &x, const i32 &y, const i32 &z, const i32 &w);
 
 template<typename T>
+Vec4<T> operator-(const Vec4<T> &v);
+
+template<typename T>
 Vec4<T> operator+(const Vec4<T> &lhs, const Vec4<T> &rhs);
 template<typename T>
 Vec4<T> operator-(const Vec4<T> &lhs, const Vec4<T> &rhs);
