@@ -130,6 +130,11 @@ TEST_CASE("builtin.math.basic")
         [](f32 x) { $return(math::isnan(x)); });
     auto isnan64 = to_callable<int>(
         [](f64 x) { $return(math::isnan(x)); });
+
+    auto clamp32 = to_callable<float>(
+        [](f32 x, f32 min_x, f32 max_x) { $return(math::clamp(x, min_x, max_x)); });
+    auto clamp64 = to_callable<double>(
+        [](f64 x, f64 min_x, f64 max_x) { $return(math::clamp(x, min_x, max_x)); });
     
     auto jit = ctx.gen_native_jit();
     
@@ -216,4 +221,13 @@ TEST_CASE("builtin.math.basic")
     REQUIRE(jit.get_function(isnan64)(f64_inf) == int(std::isnan(f64_inf)));
     REQUIRE(jit.get_function(isnan32)(f32_nan) == int(std::isnan(f32_nan)));
     REQUIRE(jit.get_function(isnan64)(f64_nan) == int(std::isnan(f64_nan)));
+
+    REQUIRE(jit.get_function(clamp32)(0.5f, 0, 1) == 0.5f);
+    REQUIRE(jit.get_function(clamp64)(0.5, 0, 1) == 0.5);
+
+    REQUIRE(jit.get_function(clamp32)(-1, 0, 1) == 0);
+    REQUIRE(jit.get_function(clamp64)(-1, 0, 1) == 0);
+
+    REQUIRE(jit.get_function(clamp32)(2, 0, 1) == 1);
+    REQUIRE(jit.get_function(clamp64)(2, 0, 1) == 1);
 }

@@ -43,7 +43,7 @@ int64_t pow(int32_t x, uint32_t n)
 }
 ```
 
-However, we always have a faster method `pow_n` for computing `pow(x, n)` for a fixed n. For example, the following function is better for computing `pow(x, 5)` than general `pow`:
+However, we always have a faster method `pow_n` for a fixed n. For example, the following function is better for computing `pow(x, 5)` than general `pow`:
 
 ```cpp
 int64_t pow5(int32_t x)
@@ -60,7 +60,7 @@ The program may need to read `n` from a configuration file or user input, then e
 * generate source code (in C, LLVM IR, etc) for computing `pow_n`, then compile it into executable machine code. When the algorithm becomes more complicated than `pow`, the generator itself also becomes hard to code.
 * use existing `partial evaluation` (PE) tools. However, to my knowledge, there is no practical PE implementation for C/C++ or can be easily integrated into this context.
 
-Now lets try to implement the generator with CUJ. Firstly create a CUJ context for holding everything about the generated code:
+Now let's try to implement the generator with CUJ. Firstly create a CUJ context for holding everything:
 
 ```cpp
 ScopedContext context;
@@ -89,9 +89,9 @@ auto pow_n = to_callable<int64_t>(
 });
 ```
 
-Note that the variable `x` is typed with `i32`, which is a CUJ variable representing a `int32_t` variable. And the `return` statement is replaced with `$return(...)`, which tolds CUJ to generate a return instruction. The `pow_n` algorithm almost have the same form of the above `pow`, except some of its unknown parts are replaced with their corresponding CUJ types, like `int32_t x -> i32 x`. CUJ will trace the execution of the lambda in `to_callable`, and reconstruct the algorithm with a fixed `n`.
+Note that the variable `x` has type `i32`, which is a CUJ type representing  `int32_t`. And the `return` statement is replaced with `$return(...)`, which tolds CUJ to generate a return instruction. The `pow_n` algorithm almost have the same form of the above `pow`, except some of its unknown parts are replaced with their corresponding CUJ types, like `int32_t x -> i32 x`. CUJ will trace the execution of the lambda in `to_callable`, and reconstruct the algorithm with the given `n`.
 
-Now we can generate exeutable machine code for `pow_n` and query its function pointer:
+Now we can generate machine code for `pow_n` and query its function pointer:
 
 ```cpp
 // pow_n_func is a raw function pointer

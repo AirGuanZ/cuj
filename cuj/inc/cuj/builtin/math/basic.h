@@ -135,4 +135,13 @@ ArithmeticValue<T> max(
     return ret;
 }
 
+template<typename T>
+ArithmeticValue<T> clamp(
+    const ArithmeticValue<T> &x,
+    const ArithmeticValue<T> &min_x,
+    const ArithmeticValue<T> &max_x)
+{
+    return math::max(min_x, math::min(max_x, x));
+}
+
 CUJ_NAMESPACE_END(cuj::builtin::math)
