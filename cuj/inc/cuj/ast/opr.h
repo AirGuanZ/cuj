@@ -185,7 +185,7 @@ Value<bool> operator!(const PointerImpl<T> &ptr)
 // cast
 
 template<typename To, typename From>
-ArithmeticValue<To> cast(const ArithmeticValue<From> &from)
+auto cast(const ArithmeticValue<From> &from)
 {
     using TTo = typename detail::DeValueType<To>::Type;
     auto impl = newRC<InternalCastArithmeticValue<From, TTo>>();
@@ -194,7 +194,7 @@ ArithmeticValue<To> cast(const ArithmeticValue<From> &from)
 }
 
 template<typename To, typename From>
-Pointer<To> ptr_cast(const PointerImpl<From> &from)
+auto ptr_cast(const PointerImpl<From> &from)
 {
     using TTo = typename detail::DeValueType<To>::Type;
     auto impl = newRC<InternalCastPointerValue<From, TTo>>();
