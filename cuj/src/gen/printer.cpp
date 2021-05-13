@@ -25,6 +25,7 @@ namespace
         case ir::BinaryOp::Type::Sub:          return "-";
         case ir::BinaryOp::Type::Mul:          return "*";
         case ir::BinaryOp::Type::Div:          return "/";
+        case ir::BinaryOp::Type::Mod:          return "%";
         case ir::BinaryOp::Type::And:          return "&&";
         case ir::BinaryOp::Type::Or:           return "||";
         case ir::BinaryOp::Type::XOr:          return "^";

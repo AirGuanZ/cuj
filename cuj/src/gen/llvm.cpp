@@ -756,6 +756,13 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::BinaryOp &v)
         }
         return data_->ir_builder->CreateFDiv(lhs, rhs);
     }
+    case ir::BinaryOp::Type::Mod:
+    {
+        CUJ_ASSERT(is_integral);
+        if(is_signed)
+            return data_->ir_builder->CreateSRem(lhs, rhs);
+        return data_->ir_builder->CreateURem(lhs, rhs);
+    }
     case ir::BinaryOp::Type::And:
     {
         CUJ_ASSERT(operand_type == ir::BuiltinType::Bool);

@@ -308,7 +308,8 @@ ir::BasicValue InternalBinaryOperator<T, L, R>::gen_ir(ir::IRBuilder &builder) c
     if(type == ir::BinaryOp::Type::Add ||
        type == ir::BinaryOp::Type::Sub ||
        type == ir::BinaryOp::Type::Mul ||
-       type == ir::BinaryOp::Type::Div)
+       type == ir::BinaryOp::Type::Div ||
+       type == ir::BinaryOp::Type::Mod)
     {
         CUJ_ASSERT(std::is_arithmetic_v<L> && std::is_arithmetic_v<R>);
 
