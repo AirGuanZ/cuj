@@ -13,13 +13,17 @@ namespace call_detail
         const RC<typename Value<T>::ImplType> &value,
         std::vector<ir::BasicValue>           &output)
     {
-        if constexpr(is_cuj_class<T> || is_array<T>)
+        if constexpr(is_cuj_class<T>)
         {
-            output.push_back(Value<T>(value).address().get_impl()->gen_ir(builder));
+            output.push_back(value->get_address()->gen_ir(builder));
+        }
+        else if constexpr(is_array<T>)
+        {
+            output.push_back(value->data_ptr->arr_alloc->gen_ir(builder));
         }
         else
         {
-            output.push_back(Value<T>(value).get_impl()->gen_ir(builder));
+            output.push_back(value->gen_ir(builder));
         }
     }
 

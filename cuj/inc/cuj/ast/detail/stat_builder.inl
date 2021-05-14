@@ -164,6 +164,7 @@ ReturnBuilder::ReturnBuilder(const ArithmeticValue<T> &val)
         case ir::BuiltinType::Void:
             throw CUJException(
                 "convert value to void in return statement");
+        CUJ_AUTO_CAST_RETURN(Char, char)
         CUJ_AUTO_CAST_RETURN(U8,   uint8_t)
         CUJ_AUTO_CAST_RETURN(U16,  uint16_t)
         CUJ_AUTO_CAST_RETURN(U32,  uint32_t)

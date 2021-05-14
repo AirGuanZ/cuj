@@ -20,6 +20,8 @@
 #include <cuj/ast/detail/stat_builder.inl>
 #include <cuj/ast/detail/value.inl>
 
+using cuj::ast::operator ""_cuj;
+
 CUJ_NAMESPACE_BEGIN(cuj)
 
 using ast::Context;
@@ -34,6 +36,7 @@ using ast::ClassBase;
 using ast::ClassValue;
 using ast::Pointer;
 using ast::Value;
+using ast::Variable;
 
 using ast::to_callable;
 
@@ -46,32 +49,34 @@ using ast::pop_context;
 using ast::ptr_cast;
 using ast::cast;
 
-using signed_char_t = Value<signed char>;
-using short_t       = Value<short>;
-using int_t         = Value<int>;
-using long_t        = Value<long>;
-using longlong_t    = Value<long long>;
+using char_t = Variable<char>;
 
-using unsigned_char_t     = Value<unsigned char>;
-using unsigned_short_t    = Value<unsigned short>;
-using unsigned_int_t      = Value<unsigned int>;
-using unsigned_long_t     = Value<unsigned long>;
-using unsigned_longlong_t = Value<unsigned long long>;
+using signed_char_t = Variable<signed char>;
+using short_t       = Variable<short>;
+using int_t         = Variable<int>;
+using long_t        = Variable<long>;
+using longlong_t    = Variable<long long>;
 
-using i8  = Value<int8_t>;
-using i16 = Value<int16_t>;
-using i32 = Value<int32_t>;
-using i64 = Value<int64_t>;
+using unsigned_char_t     = Variable<unsigned char>;
+using unsigned_short_t    = Variable<unsigned short>;
+using unsigned_int_t      = Variable<unsigned int>;
+using unsigned_long_t     = Variable<unsigned long>;
+using unsigned_longlong_t = Variable<unsigned long long>;
 
-using u8  = Value<uint8_t>;
-using u16 = Value<uint16_t>;
-using u32 = Value<uint32_t>;
-using u64 = Value<uint64_t>;
+using i8  = Variable<int8_t>;
+using i16 = Variable<int16_t>;
+using i32 = Variable<int32_t>;
+using i64 = Variable<int64_t>;
 
-using f32 = Value<float>;
-using f64 = Value<double>;
+using u8  = Variable<uint8_t>;
+using u16 = Variable<uint16_t>;
+using u32 = Variable<uint32_t>;
+using u64 = Variable<uint64_t>;
 
-using boolean = Value<bool>;
+using f32 = Variable<float>;
+using f64 = Variable<double>;
+
+using boolean = Variable<bool>;
 
 CUJ_NAMESPACE_END(cuj)
 

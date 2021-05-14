@@ -21,7 +21,7 @@ struct BasicImmediateValue
     Variant<
         uint8_t, uint16_t, uint32_t, uint64_t,
         int8_t, int16_t, int32_t, int64_t,
-        bool, float, double> value;
+        char, bool, float, double> value;
 };
 
 struct AllocAddress
@@ -29,7 +29,12 @@ struct AllocAddress
     int alloc_index;
 };
 
+struct ConstString
+{
+    std::string content;
+};
+
 using BasicValue = Variant<
-    BasicTempValue, BasicImmediateValue, AllocAddress>;
+    BasicTempValue, BasicImmediateValue, AllocAddress, ConstString>;
 
 CUJ_NAMESPACE_END(cuj::ir)

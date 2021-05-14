@@ -49,7 +49,7 @@ TEST_CASE("pointer")
             ret = ret && (1 + arr[0].address() == arr[1].address());
             ret = ret && (arr[3].address() - 3 == arr[0].address());
 
-            u64 diff = arr[2].address() - arr[0].address();
+            i64 diff = arr[2].address() - arr[0].address();
             ret = ret && (arr[2].address() - diff == arr[0].address());
 
             $return(ret);
@@ -132,7 +132,7 @@ TEST_CASE("pointer")
         ScopedContext ctx;
 
         auto test = to_callable<void>(
-            [](const Pointer<int>         &a,
+            [](const Pointer<void>        &a,
                const Pointer<math::Vec3f> &b)
         {
             ptr_cast<math::Vec3f>(a).deref()->x = b.deref()->x;

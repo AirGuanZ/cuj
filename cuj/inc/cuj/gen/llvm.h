@@ -91,6 +91,8 @@ private:
 
     void generate(const ir::Call &call);
 
+    void generate(const ir::IntrinsicCall &call);
+
     llvm::Value *get_value(const ir::Value &v);
 
     llvm::Value *get_value(const ir::BasicValue &v);
@@ -126,6 +128,8 @@ private:
     llvm::Value *get_value(const ir::BasicImmediateValue &v);
 
     llvm::Value *get_value(const ir::AllocAddress &v);
+
+    llvm::Value *get_value(const ir::ConstString &v);
 
     llvm::Value *convert_to_bool(llvm::Value *from, ir::BuiltinType from_type);
 

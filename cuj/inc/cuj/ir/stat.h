@@ -17,13 +17,14 @@ struct Return;
 struct ReturnArray;
 struct ReturnClass;
 struct Call;
+struct IntrinsicCall;
 
 using Statement = Variant<
     Store, Assign,
     Break, Continue,
     Block, If, While,
     Return, ReturnArray, ReturnClass,
-    Call>;
+    Call, IntrinsicCall>;
 
 struct Store
 {
@@ -84,6 +85,11 @@ struct ReturnArray
 struct Call
 {
     CallOp op;
+};
+
+struct IntrinsicCall
+{
+    IntrinsicOp op;
 };
 
 CUJ_NAMESPACE_END(cuj::ir)

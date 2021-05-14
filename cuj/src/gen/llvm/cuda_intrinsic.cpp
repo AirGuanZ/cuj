@@ -50,7 +50,7 @@ void link_with_libdevice(
     }
 }
 
-llvm::Value *process_cuda_intrinsic(
+llvm::Value *process_cuda_intrinsic_op(
     llvm::Module                     *top_module,
     llvm::IRBuilder<>                &ir,
     const std::string                &name,

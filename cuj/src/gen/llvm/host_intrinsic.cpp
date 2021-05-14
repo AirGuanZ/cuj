@@ -106,7 +106,51 @@ namespace
 
 } // namespace anonymous
 
-llvm::Value *process_host_intrinsic(
+bool process_host_intrinsic_stat(
+    llvm::LLVMContext               *context,
+    llvm::Module                    *top_module,
+    llvm::IRBuilder<>               &ir,
+    const std::string               &name,
+    const std::vector<llvm::Value*> &args)
+{
+    if(name == "system.print")
+    {
+        const std::string func_name = "host." + name;
+        llvm::Function *func = top_module->getFunction(func_name);
+        if(!func)
+        {
+            auto void_type = llvm::Type::getVoidTy(*context);
+            auto pchar_type = llvm::PointerType::get(
+                llvm::Type::getInt8Ty(*context), 0);
+            func = add_func_prototype(
+                top_module, func_name.c_str(), void_type, pchar_type);
+        }
+
+        ir.CreateCall(func, args);
+        return true;
+    }
+
+    if(name == "system.free")
+    {
+        const std::string func_name = "host." + name;
+        llvm::Function *func = top_module->getFunction(func_name);
+        if(!func)
+        {
+            auto void_type = llvm::Type::getVoidTy(*context);
+            auto ptr_type = llvm::PointerType::get(
+                llvm::Type::getInt8Ty(*context), 0);
+            func = add_func_prototype(
+                top_module, func_name.c_str(), void_type, ptr_type);
+        }
+
+        ir.CreateCall(func, args);
+        return true;
+    }
+
+    return false;
+}
+
+llvm::Value *process_host_intrinsic_op(
     llvm::LLVMContext                *context,
     llvm::Module                     *top_module,
     llvm::IRBuilder<>                &ir,
@@ -204,6 +248,28 @@ llvm::Value *process_host_intrinsic(
             auto pf64_type = llvm::PointerType::get(f64_type, 0);
             func = add_func_prototype(
                 top_module, func_name.c_str(), f64_type, pf64_type, f64_type);
+        }
+
+        return ir.CreateCall(func, args);
+    }
+
+    if(name == "system.malloc")
+    {
+        const std::string func_name = "host." + name;
+        llvm::Function *func = top_module->getFunction(func_name);
+        if(!func)
+        {
+            auto ptr_type = llvm::PointerType::get(
+                llvm::Type::getInt8Ty(*context), 0);
+
+            llvm::Type *size_type;
+            if constexpr(sizeof(size_t) == 4)
+                size_type = llvm::Type::getInt32Ty(*context);
+            else
+                size_type = llvm::Type::getInt64Ty(*context);
+
+            func = add_func_prototype(
+                top_module, func_name.c_str(), ptr_type, size_type);
         }
 
         return ir.CreateCall(func, args);

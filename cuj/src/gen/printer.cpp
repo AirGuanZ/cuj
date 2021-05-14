@@ -175,7 +175,8 @@ void IRPrinter::print(const ir::Statement &stat)
         MATCH_STAT(Return),
         MATCH_STAT(ReturnClass),
         MATCH_STAT(ReturnArray),
-        MATCH_STAT(Call));
+        MATCH_STAT(Call),
+        MATCH_STAT(IntrinsicCall));
 
 #undef MATCH_STAT
 }
@@ -273,6 +274,14 @@ void IRPrinter::print(const ir::Call &call)
     str_.new_line();
 }
 
+void IRPrinter::print(const ir::IntrinsicCall &call)
+{
+    str_.append("intrinsic ", call.op.name);
+    for(auto &a : call.op.args)
+        str_.append(" ", to_string(a));
+    str_.new_line();
+}
+
 std::string IRPrinter::get_typename(const ir::Type *type) const
 {
     return match_variant(
@@ -304,6 +313,7 @@ std::string IRPrinter::get_typename(ir::BuiltinType type) const
     switch(type)
     {
     case ir::BuiltinType::Void: return "void";
+    case ir::BuiltinType::Char: return "char";
     case ir::BuiltinType::U8:   return "u8";
     case ir::BuiltinType::U16:  return "u16";
     case ir::BuiltinType::U32:  return "u32";
@@ -440,6 +450,10 @@ std::string IRPrinter::to_string(const ir::BasicValue &val) const
         auto it = alloc_names_.find(v.alloc_index);
         CUJ_ASSERT(it != alloc_names_.end());
         return it->second;
+    },
+        [this](const ir::ConstString &v)
+    {
+        return v.content;
     });
 }
 
@@ -455,17 +469,18 @@ std::string IRPrinter::to_string(const ir::BasicImmediateValue &val) const
 
     return match_variant(
         val.value,
-        IMM_VAL_TO_STR(uint8_t, u8),
+        IMM_VAL_TO_STR(char,     char),
+        IMM_VAL_TO_STR(uint8_t,  u8),
         IMM_VAL_TO_STR(uint16_t, u16),
         IMM_VAL_TO_STR(uint32_t, u32),
         IMM_VAL_TO_STR(uint64_t, u64),
-        IMM_VAL_TO_STR(int8_t, i8),
-        IMM_VAL_TO_STR(int16_t, i16),
-        IMM_VAL_TO_STR(int32_t, i32),
-        IMM_VAL_TO_STR(int64_t, i64),
-        IMM_VAL_TO_STR(float, f32),
-        IMM_VAL_TO_STR(double, f64),
-        IMM_VAL_TO_STR(bool, bool));
+        IMM_VAL_TO_STR(int8_t,   i8),
+        IMM_VAL_TO_STR(int16_t,  i16),
+        IMM_VAL_TO_STR(int32_t,  i32),
+        IMM_VAL_TO_STR(int64_t,  i64),
+        IMM_VAL_TO_STR(float,    f32),
+        IMM_VAL_TO_STR(double,   f64),
+        IMM_VAL_TO_STR(bool,     bool));
 
 #undef IMM_VAL_TO_STR
 }

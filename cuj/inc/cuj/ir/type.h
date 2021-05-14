@@ -8,7 +8,7 @@ CUJ_NAMESPACE_BEGIN(cuj::ir)
 
 enum class BuiltinType
 {
-    Void,
+    Void, Char,
     U8, U16, U32, U64,
     S8, S16, S32, S64,
     F32, F64, Bool
@@ -24,6 +24,7 @@ namespace detail
     template<typename T> struct BuiltinTypeAux;
 
     CUJ_BT_AUX(void, Void);
+    CUJ_BT_AUX(char, Char);
 
     CUJ_BT_AUX(uint8_t,  U8);
     CUJ_BT_AUX(uint16_t, U16);

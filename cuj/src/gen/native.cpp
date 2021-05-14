@@ -5,6 +5,7 @@
 #endif
 
 #include <atomic>
+#include <iostream>
 
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/Support/TargetSelect.h>
@@ -54,6 +55,11 @@ namespace
     int is_finite_f64(double x) { return isfinite(x); }
     int is_inf_f64   (double x) { return isinf(x); }
     int is_nan_f64   (double x) { return isnan(x); }
+
+    void print(const char *msg)
+    {
+        std::cout << msg << std::endl;
+    }
 
 } // namespace anonymous
 
@@ -154,6 +160,10 @@ void NativeJIT::generate(const ir::Program &prog, OptLevel opt)
 
     ADD_HOST_FUNC("host.atomic.add.f32", &atomic_add_float);
     ADD_HOST_FUNC("host.atomic.add.f64", &atomic_add_double);
+
+    ADD_HOST_FUNC("host.system.print",  &print);
+    ADD_HOST_FUNC("host.system.malloc", &::malloc);
+    ADD_HOST_FUNC("host.system.free",   &::free);
 
 #undef ADD_HOST_FUNC
 

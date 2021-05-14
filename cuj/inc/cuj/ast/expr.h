@@ -39,6 +39,18 @@ class ClassValue;
 template<typename T>
 class PointerImpl;
 
+template<typename T>
+class ArithmeticVariable;
+
+template<typename T>
+class ClassVariable;
+
+template<typename T, size_t N>
+class ArrayVariable;
+
+template<typename T>
+class PointerVariable;
+
 template<typename C>
 class ClassBase;
 
@@ -121,6 +133,30 @@ namespace detail
     };
 
     template<typename T>
+    struct DeValueType<ArithmeticVariable<T>>
+    {
+        using Type = T;
+    };
+
+    template<typename T>
+    struct DeValueType<ClassVariable<T>>
+    {
+        using Type = typename DeValueType<T>::Type;
+    };
+
+    template<typename T>
+    struct DeValueType<PointerVariable<T>>
+    {
+        using Type = PointerImpl<typename DeValueType<T>::Type>;
+    };
+
+    template<typename T, size_t N>
+    struct DeValueType<ArrayVariable<T, N>>
+    {
+        using Type = ArrayImpl<typename DeValueType<T>::Type, N>;
+    };
+
+    template<typename T>
     struct DeValueType<PointerImpl<T>>
     {
         using Type = PointerImpl<typename DeValueType<T>::Type>;
@@ -152,6 +188,9 @@ using RawToCUJType = typename detail::RawToCUJType<T>::Type;
 template<typename T>
 using Value = std::remove_pointer_t<
     decltype(detail::CUJValueTypeAux<RawToCUJType<T>>())>;
+
+template<typename T>
+using Variable = typename Value<T>::VariableType;
 
 template<typename T>
 constexpr bool is_pointer = detail::IsPointerValue<T>::value;
@@ -323,6 +362,15 @@ template<typename T>
 class InternalEmptyPointer : public InternalPointerValue<T>
 {
 public:
+
+    ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
+};
+
+class InternalConstString : public InternalPointerValue<char>
+{
+public:
+
+    std::string content;
 
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };

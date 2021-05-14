@@ -5,6 +5,18 @@
 CUJ_NAMESPACE_BEGIN(cuj::ast)
 
 template<typename T>
+class ArithmeticVariable;
+
+template<typename T>
+class ClassVariable;
+
+template<typename T, size_t N>
+class ArrayVariable;
+
+template<typename T>
+class PointerVariable;
+
+template<typename T>
 class ArithmeticValue
 {
     RC<InternalArithmeticValue<T>> impl_;
@@ -15,13 +27,19 @@ public:
 
     using ArithmeticType = T;
 
+    using VariableType = ArithmeticVariable<T>;
+
     using ImplType = InternalArithmeticValue<T>;
 
     ArithmeticValue();
 
-    template<typename U>
-    ArithmeticValue(const U &other);
+    explicit ArithmeticValue(UninitializeFlag) { }
 
+    ArithmeticValue(RC<InternalArithmeticValue<T>> impl);
+
+    template<typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    ArithmeticValue(U other);
+    
     ArithmeticValue(const ArithmeticValue &other);
 
     template<typename U>
@@ -49,6 +67,8 @@ class ClassValue
     void init_as_stack_var(const Args &...args);
 
 public:
+
+    using VariableType = ClassVariable<T>;
 
     using ImplType = InternalClassLeftValue<T>;
 
@@ -87,6 +107,8 @@ class ArrayImpl
     PointerImpl<T> get_element_ptr(const ArithmeticValue<I> &index) const;
 
 public:
+
+    using VariableType = ArrayVariable<T, N>;
 
     using ImplType = InternalArrayValue<T, N>;
 
@@ -132,13 +154,16 @@ class PointerImpl
         is_array<T>             ||
         is_pointer<T>           ||
         std::is_arithmetic_v<T> ||
-        is_cuj_class<T>);
+        is_cuj_class<T>         ||
+        std::is_void_v<T>);
 
     RC<InternalPointerValue<T>> impl_;
 
     void init_as_stack_var();
 
 public:
+
+    using VariableType = PointerVariable<T>;
 
     using ImplType = InternalPointerValue<T>;
 
@@ -183,5 +208,117 @@ public:
 
 template<typename T>
 using Pointer = PointerImpl<typename detail::DeValueType<T>::Type>;
+
+template<typename T>
+class ArithmeticVariable : public ArithmeticValue<T>
+{
+public:
+
+    using ArithmeticValue<T>::ArithmeticValue;
+
+    ArithmeticVariable(const ArithmeticValue<T> &other)
+        : ArithmeticValue<T>(other)
+    {
+        
+    }
+
+    template<typename U>
+    ArithmeticVariable &operator=(U &&other) const
+    {
+        Value<T>::operator=(std::forward<U>(other));
+        return *this;
+    }
+
+    template<typename U>
+    ArithmeticVariable &operator=(U &&other)
+    {
+        Value<T>::operator=(std::forward<U>(other));
+        return *this;
+    }
+};
+
+template<typename T>
+class ClassVariable : public ClassValue<T>
+{
+public:
+
+    using ClassValue<T>::ClassValue;
+
+    ClassVariable(const ClassValue<T> &other)
+        : ClassValue<T>(other)
+    {
+        
+    }
+
+    template<typename U>
+    ClassVariable &operator=(U &&other) const
+    {
+        Value<T>::operator=(std::forward<U>(other));
+        return *this;
+    }
+
+    template<typename U>
+    ClassVariable &operator=(U &&other)
+    {
+        Value<T>::operator=(std::forward<U>(other));
+        return *this;
+    }
+};
+
+template<typename T>
+class PointerVariable : public PointerImpl<T>
+{
+public:
+
+    using PointerImpl<T>::PointerImpl;
+
+    PointerVariable(const PointerImpl<T> &other)
+        : PointerImpl<T>(other)
+    {
+        
+    }
+
+    template<typename U>
+    PointerVariable &operator=(U &&other) const
+    {
+        Value<T>::operator=(std::forward<U>(other));
+        return *this;
+    }
+
+    template<typename U>
+    PointerVariable &operator=(U &&other)
+    {
+        Value<T>::operator=(std::forward<U>(other));
+        return *this;
+    }
+};
+
+template<typename T, size_t N>
+class ArrayVariable : public ArrayImpl<T, N>
+{
+public:
+
+    using ArrayImpl<T, N>::ArrayImpl;
+
+    ArrayVariable(const ArrayImpl<T, N> &other)
+        : ArrayImpl<T, N>(other)
+    {
+        
+    }
+
+    template<typename U>
+    ArrayVariable &operator=(U &&other) const
+    {
+        Value<T>::operator=(std::forward<U>(other));
+        return *this;
+    }
+
+    template<typename U>
+    ArrayVariable &operator=(U &&other)
+    {
+        Value<T>::operator=(std::forward<U>(other));
+        return *this;
+    }
+};
 
 CUJ_NAMESPACE_END(cuj::ast)

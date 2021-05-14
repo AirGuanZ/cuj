@@ -204,6 +204,11 @@ ir::BasicValue InternalEmptyPointer<T>::gen_ir(ir::IRBuilder &builder) const
     return ret;
 }
 
+inline ir::BasicValue InternalConstString::gen_ir(ir::IRBuilder &builder) const
+{
+    return ir::ConstString{ content };
+}
+
 template<typename From, typename To>
 ir::BasicValue InternalCastArithmeticValue<From, To>::gen_ir(ir::IRBuilder &builder) const
 {

@@ -47,6 +47,8 @@ private:
 
     void print(const ir::Call &call);
 
+    void print(const ir::IntrinsicCall &call);
+
     std::string get_typename(const ir::Type *type) const;
 
     std::string get_typename(ir::BuiltinType type) const;

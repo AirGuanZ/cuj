@@ -16,7 +16,7 @@ void run()
         [n](i32 x) mutable
     {
         i64 result = 1;
-        i64 base = x;
+        i64 base   = cast<i64>(x);
         while(n)
         {
             if(n & 1)

@@ -54,6 +54,7 @@ namespace
         case ir::BuiltinType::S32:
         case ir::BuiltinType::S64:
         case ir::BuiltinType::Bool:
+        case ir::BuiltinType::Char:
             return true;
         case ir::BuiltinType::Void:
         case ir::BuiltinType::F32:
@@ -81,6 +82,8 @@ namespace
         case ir::BuiltinType::F32:
         case ir::BuiltinType::F64:
             return true;
+        case ir::BuiltinType::Char:
+            return std::is_signed_v<char>;
         }
         unreachable();
     }
@@ -92,6 +95,7 @@ namespace
         {
         case ir::BuiltinType::Void:
             unreachable();
+        case ir::BuiltinType::Char:
         case ir::BuiltinType::Bool:
         case ir::BuiltinType::U8:
         case ir::BuiltinType::S8:
@@ -129,13 +133,20 @@ void link_with_libdevice(
     llvm::LLVMContext *context,
     llvm::Module      *dest_module);
 
-llvm::Value *process_cuda_intrinsic(
+llvm::Value *process_cuda_intrinsic_op(
     llvm::Module                     *top_module,
     llvm::IRBuilder<>                &ir,
     const std::string                &name,
     const std::vector<llvm::Value *> &args);
 
-llvm::Value *process_host_intrinsic(
+bool process_host_intrinsic_stat(
+    llvm::LLVMContext               *context,
+    llvm::Module                    *top_module,
+    llvm::IRBuilder<>               &ir,
+    const std::string               &name,
+    const std::vector<llvm::Value*> &args);
+
+llvm::Value *process_host_intrinsic_op(
     llvm::LLVMContext                *context,
     llvm::Module                     *top_module,
     llvm::IRBuilder<>                &ir,
@@ -149,9 +160,9 @@ struct LLVMIRGenerator::Data
     std::unique_ptr<llvm::IRBuilder<>> ir_builder;
     std::unique_ptr<llvm::Module>      top_module;
     
-    std::map<std::string, llvm::Function *>  functions;
-
-    std::map<std::string, llvm::Function *> external_functions;
+    std::map<std::string, llvm::Function *>       functions;
+    std::map<std::string, llvm::Function *>       external_functions;
+    std::map<std::string, llvm::GlobalVariable *> global_string_consts;
 
     // per function
 
@@ -271,6 +282,7 @@ llvm::Type *LLVMIRGenerator::create_llvm_type_record(ir::BuiltinType type)
     {
     case ir::BuiltinType::Void:
         return llvm::Type::getVoidTy(*llvm_ctx);
+    case ir::BuiltinType::Char:
     case ir::BuiltinType::U8:
     case ir::BuiltinType::S8:
     case ir::BuiltinType::Bool:
@@ -306,7 +318,13 @@ llvm::Type *LLVMIRGenerator::create_llvm_type_record(const ir::IntrinsicType &ty
 
 llvm::Type *LLVMIRGenerator::create_llvm_type_record(const ir::PointerType &type)
 {
-    auto elem_type = find_llvm_type(type.pointed_type);
+    llvm::Type *elem_type;
+    if(auto builtin_type = type.pointed_type->as_if<ir::BuiltinType>();
+       builtin_type && *builtin_type == ir::BuiltinType::Void)
+        elem_type = llvm::Type::getInt8Ty(*llvm_ctx);
+    else
+        elem_type = find_llvm_type(type.pointed_type);
+
     auto result = llvm::PointerType::get(elem_type, 0);
     return result;
 }
@@ -535,17 +553,18 @@ void LLVMIRGenerator::copy_func_args(const ir::Function &func)
 void LLVMIRGenerator::generate(const ir::Statement &s)
 {
     s.match(
-        [this](const ir::Store       &_s) { generate(_s); },
-        [this](const ir::Assign      &_s) { generate(_s); },
-        [this](const ir::Break       &_s) { generate(_s); },
-        [this](const ir::Continue    &_s) { generate(_s); },
-        [this](const ir::Block       &_s) { generate(_s); },
-        [this](const ir::If          &_s) { generate(_s); },
-        [this](const ir::While       &_s) { generate(_s); },
-        [this](const ir::Return      &_s) { generate(_s); },
-        [this](const ir::ReturnClass &_s) { generate(_s); },
-        [this](const ir::ReturnArray &_s) { generate(_s); },
-        [this](const ir::Call        &_s) { generate(_s); });
+        [this](const ir::Store         &_s) { generate(_s); },
+        [this](const ir::Assign        &_s) { generate(_s); },
+        [this](const ir::Break         &_s) { generate(_s); },
+        [this](const ir::Continue      &_s) { generate(_s); },
+        [this](const ir::Block         &_s) { generate(_s); },
+        [this](const ir::If            &_s) { generate(_s); },
+        [this](const ir::While         &_s) { generate(_s); },
+        [this](const ir::Return        &_s) { generate(_s); },
+        [this](const ir::ReturnClass   &_s) { generate(_s); },
+        [this](const ir::ReturnArray   &_s) { generate(_s); },
+        [this](const ir::Call          &_s) { generate(_s); },
+        [this](const ir::IntrinsicCall &_s) { generate(_s); });
 }
 
 void LLVMIRGenerator::generate(const ir::Store &store)
@@ -684,6 +703,25 @@ void LLVMIRGenerator::generate(const ir::Call &call)
     data_->ir_builder->CreateCall(func, args);
 }
 
+void LLVMIRGenerator::generate(const ir::IntrinsicCall &call)
+{
+    std::vector<llvm::Value *> args;
+    for(auto &a : call.op.args)
+        args.push_back(get_value(a));
+
+    if(target_ == Target::Host)
+    {
+        if(process_host_intrinsic_stat(
+            llvm_ctx.get(), data_->top_module.get(),
+            *data_->ir_builder, call.op.name, args))
+            return;
+    }
+
+    throw CUJException(
+        "unknown intrinsic: " + call.op.name +
+        " on target " + get_target_name(target_));
+}
+
 llvm::Value *LLVMIRGenerator::get_value(const ir::Value &v)
 {
     return v.match(
@@ -708,7 +746,8 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::BasicValue &v)
     return v.match(
         [this](const ir::BasicTempValue      &v) { return get_value(v); },
         [this](const ir::BasicImmediateValue &v) { return get_value(v); },
-        [this](const ir::AllocAddress        &v) { return get_value(v); });
+        [this](const ir::AllocAddress        &v) { return get_value(v); },
+        [this](const ir::ConstString         &v) { return get_value(v); });
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::BinaryOp &v)
@@ -847,6 +886,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::UnaryOp &v)
         {
         case ir::BuiltinType::Void:
             std::terminate();
+        case ir::BuiltinType::Char:
         case ir::BuiltinType::U8:
         case ir::BuiltinType::U16:
         case ir::BuiltinType::U32:
@@ -952,7 +992,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::IntrinsicOp &v)
 
     if(target_ == Target::Host)
     {
-        auto ret = process_host_intrinsic(
+        auto ret = process_host_intrinsic_op(
             llvm_ctx.get(), data_->top_module.get(),
             *data_->ir_builder, v.name, args);
         if(ret)
@@ -961,7 +1001,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::IntrinsicOp &v)
 
     if(target_ == Target::PTX)
     {
-        auto ret = process_cuda_intrinsic(
+        auto ret = process_cuda_intrinsic_op(
             data_->top_module.get(), *data_->ir_builder, v.name, args);
         if(ret)
             return ret;
@@ -1036,6 +1076,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::BasicImmediateValue &v)
     }
 
     return v.value.match(
+        CUJ_IMM_INT(char,     8,  std::is_signed_v<char>),
         CUJ_IMM_INT(uint8_t,  8,  false),
         CUJ_IMM_INT(uint16_t, 16, false),
         CUJ_IMM_INT(uint32_t, 32, false),
@@ -1067,6 +1108,43 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::AllocAddress &v)
 {
     CUJ_ASSERT(data_->index_to_allocas.count(v.alloc_index));
     return data_->index_to_allocas[v.alloc_index];
+}
+
+llvm::Value *LLVMIRGenerator::get_value(const ir::ConstString &v)
+{
+    const int GLOBAL_ADDR_SPACE = target_ == Target::PTX ? 1 : 0;
+
+    llvm::GlobalVariable *arr;
+    if(auto it = data_->global_string_consts.find(v.content);
+        it == data_->global_string_consts.end())
+    {
+        arr = data_->ir_builder->CreateGlobalString(
+            v.content, "", GLOBAL_ADDR_SPACE, data_->top_module.get());
+        data_->global_string_consts[v.content] = arr;
+    }
+    else
+        arr = it->second;
+
+    std::vector<llvm::Value *> indices(2);
+    indices[0] = llvm::ConstantInt::get(
+        *llvm_ctx, llvm::APInt(32, 0, false));
+    indices[1] = llvm::ConstantInt::get(
+        *llvm_ctx, llvm::APInt(32, 0, false));
+
+    auto val = data_->ir_builder->CreateGEP(arr, indices);
+    if(target_ == Target::PTX)
+    {
+        auto src_type = llvm::PointerType::get(
+            llvm::Type::getInt8Ty(*llvm_ctx), GLOBAL_ADDR_SPACE);
+        auto dst_type = llvm::PointerType::get(
+            llvm::Type::getInt8Ty(*llvm_ctx), 0);
+
+        val = data_->ir_builder->CreateIntrinsic(
+            llvm::Intrinsic::nvvm_ptr_global_to_gen,
+            { dst_type, src_type }, {});
+    }
+
+    return val;
 }
 
 llvm::Value *LLVMIRGenerator::convert_to_bool(
@@ -1180,6 +1258,7 @@ ir::BuiltinType LLVMIRGenerator::get_arithmetic_type(const ir::BasicValue &v)
         [](const ir::BasicImmediateValue &t)
     {
         return t.value.match(
+            [](char c)   { return ir::BuiltinType::Char; },
             [](uint8_t)  { return ir::BuiltinType::U8;   },
             [](uint16_t) { return ir::BuiltinType::U16;  },
             [](uint32_t) { return ir::BuiltinType::U32;  },
@@ -1193,6 +1272,10 @@ ir::BuiltinType LLVMIRGenerator::get_arithmetic_type(const ir::BasicValue &v)
             [](bool)     { return ir::BuiltinType::Bool; });
     },
         [](const ir::AllocAddress &) -> ir::BuiltinType
+    {
+        unreachable();
+    },
+        [](const ir::ConstString &) -> ir::BuiltinType
     {
         unreachable();
     });

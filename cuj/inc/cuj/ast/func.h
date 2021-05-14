@@ -31,6 +31,42 @@ namespace detail
     };
 
     template<typename T>
+    struct MakeArgValue<ArithmeticVariable<T>>
+    {
+        static auto process(const ArithmeticVariable<T> &val)
+        {
+            return MakeArgValue<ArithmeticValue<T>>::process(val);
+        }
+    };
+
+    template<typename T>
+    struct MakeArgValue<ClassVariable<T>>
+    {
+        static auto process(const ClassVariable<T> &val)
+        {
+            return MakeArgValue<ClassValue<T>>::process(val);
+        }
+    };
+
+    template<typename T>
+    struct MakeArgValue<PointerVariable<T>>
+    {
+        static auto process(const PointerVariable<T> &val)
+        {
+            return MakeArgValue<PointerImpl<T>>::process(val);
+        }
+    };
+
+    template<typename T, size_t N>
+    struct MakeArgValue<ArrayVariable<T, N>>
+    {
+        static auto process(const ArrayVariable<T, N> &val)
+        {
+            return MakeArgValue<ArrayImpl<T, N>>::process(val);
+        }
+    };
+
+    template<typename T>
     struct MakeArgValue<ClassValue<T>>
     {
         static auto process(const ClassValue<T> &val)
