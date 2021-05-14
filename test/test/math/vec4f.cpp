@@ -89,6 +89,12 @@ TEST_CASE("builtin.math.vec4f")
         REQUIRE(vec4f_data.w == Approx(6));
     }
 
+    SECTION("elem")
+    {
+        ADD_TEST_EXPR(
+            approx_eq_f(make_vec4f(2, 3, 4, 5)->elem(3), 5));
+    }
+
     SECTION("function")
     {
         ADD_TEST_EXPR(

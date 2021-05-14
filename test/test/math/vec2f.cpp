@@ -81,6 +81,12 @@ TEST_CASE("builtin.math.vec2f")
         REQUIRE(vec2f_data.y == Approx(4));
     }
 
+    SECTION("elem")
+    {
+        ADD_TEST_EXPR(
+            approx_eq_f(make_vec2f(2, 3)->elem(1), 3));
+    }
+
     SECTION("function")
     {
         ADD_TEST_EXPR(

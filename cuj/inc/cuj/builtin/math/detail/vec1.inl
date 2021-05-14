@@ -60,6 +60,18 @@ ClassValue<Vec1Impl<T>> Vec1Impl<T>::normalize() const
 }
 
 template<typename T>
+Value<T> Vec1Impl<T>::elem(const ArithmeticValue<size_t> &i) const
+{
+    return elem_addr(i).deref();
+}
+
+template<typename T>
+Pointer<T> Vec1Impl<T>::elem_addr(const ArithmeticValue<size_t> &i) const
+{
+    return x.address() + i;
+}
+
+template<typename T>
 Vec1<T> make_vec1()
 {
     return make_vec1<T>(0);

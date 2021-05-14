@@ -85,6 +85,12 @@ TEST_CASE("builtin.math.vec3f")
         REQUIRE(vec3f_data.z == Approx(5));
     }
 
+    SECTION("elem")
+    {
+        ADD_TEST_EXPR(
+            approx_eq_f(make_vec3f(2, 3, 4)->elem(2), 4));
+    }
+
     SECTION("function")
     {
         ADD_TEST_EXPR(

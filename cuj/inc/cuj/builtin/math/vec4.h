@@ -40,6 +40,10 @@ public:
     Value<T> max_elem() const;
 
     ClassValue<Vec4Impl<T>> normalize() const;
+
+    Value<T> elem(const ArithmeticValue<size_t> &i) const;
+
+    Pointer<T> elem_addr(const ArithmeticValue<size_t> &i) const;
 };
 
 template<typename T>
