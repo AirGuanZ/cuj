@@ -73,6 +73,8 @@ using u16 = Variable<uint16_t>;
 using u32 = Variable<uint32_t>;
 using u64 = Variable<uint64_t>;
 
+using usize = Variable<size_t>;
+
 using f32 = Variable<float>;
 using f64 = Variable<double>;
 

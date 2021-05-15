@@ -10,10 +10,4 @@ Pointer<void> malloc(const ArithmeticValue<size_t> &bytes);
 
 void free(const ast::PointerImpl<void> &ptr);
 
-template<typename T>
-void free(const ast::PointerImpl<T> &ptr)
-{
-    system::free(ast::ptr_cast<void>(ptr));
-}
-
 CUJ_NAMESPACE_END(cuj::builtin::system)

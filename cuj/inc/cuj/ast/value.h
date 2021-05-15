@@ -182,6 +182,9 @@ public:
 
     PointerImpl &operator=(const std::nullptr_t &);
 
+    template<typename U, typename = std::enable_if_t<!std::is_same_v<U, void> && std::is_same_v<T, void>>>
+    PointerImpl &operator=(const PointerImpl<U> &other);
+
     Value<T> deref() const;
 
     Value<T> operator*() const { return this->deref(); }

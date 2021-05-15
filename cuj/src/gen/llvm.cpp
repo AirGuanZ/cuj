@@ -586,6 +586,10 @@ void LLVMIRGenerator::generate(const ir::Break &)
     if(data_->break_dests.empty())
         throw CUJException("invalid break statement: no outer loop");
     data_->ir_builder->CreateBr(data_->break_dests.top());
+
+    auto new_block = llvm::BasicBlock::Create(
+        *llvm_ctx, "after break", data_->function);
+    data_->ir_builder->SetInsertPoint(new_block);
 }
 
 void LLVMIRGenerator::generate(const ir::Continue &)
@@ -593,6 +597,10 @@ void LLVMIRGenerator::generate(const ir::Continue &)
     if(data_->continue_dests.empty())
         throw CUJException("invalid continue statement: no outer loop");
     data_->ir_builder->CreateBr(data_->continue_dests.top());
+
+    auto new_block = llvm::BasicBlock::Create(
+        *llvm_ctx, "after break", data_->function);
+    data_->ir_builder->SetInsertPoint(new_block);
 }
 
 void LLVMIRGenerator::generate(const ir::Block &block)
@@ -1141,7 +1149,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::ConstString &v)
 
         val = data_->ir_builder->CreateIntrinsic(
             llvm::Intrinsic::nvvm_ptr_global_to_gen,
-            { dst_type, src_type }, {});
+            { dst_type, src_type }, { val });
     }
 
     return val;

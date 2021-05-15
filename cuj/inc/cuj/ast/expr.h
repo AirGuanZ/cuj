@@ -73,7 +73,7 @@ namespace detail
     struct IsPointerValue
         <T, std::void_t<typename T::CUJPointerTag>> : std::true_type
     {
-        static_assert(std::is_same_v<T, PointerImpl<typename T::PointedType>>);
+        static_assert(std::is_base_of_v<PointerImpl<typename T::PointedType>, T>);
     };
 
     template<typename T, typename = void>

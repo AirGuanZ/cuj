@@ -359,8 +359,9 @@ PointerImpl<T>::PointerImpl(const U &other)
     else
     {
         static_assert(
-            std::is_null_pointer_v<RU> ||
-            std::is_base_of_v<PointerImpl, RU>);
+            std::is_null_pointer_v<RU>         ||
+            std::is_base_of_v<PointerImpl, RU> ||
+            (std::is_same_v<T, void> && is_pointer<RU>));
         this->init_as_stack_var();
         this->operator=(other);
         return;
@@ -390,6 +391,14 @@ template<typename T>
 PointerImpl<T> &PointerImpl<T>::operator=(const std::nullptr_t &)
 {
     this->operator=(PointerImpl<T>(newRC<InternalEmptyPointer<T>>()));
+    return *this;
+}
+
+template<typename T>
+template<typename U, typename>
+PointerImpl<T> &PointerImpl<T>::operator=(const PointerImpl<U> &other)
+{
+    this->operator=(ptr_cast<void>(other));
     return *this;
 }
 

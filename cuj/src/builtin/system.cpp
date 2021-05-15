@@ -1,4 +1,4 @@
-#include <cuj/builtin/system/system.h>
+#include <cuj/builtin/system.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::builtin::system)
 

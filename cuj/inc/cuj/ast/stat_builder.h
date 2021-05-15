@@ -46,6 +46,9 @@ public:
     template<typename T>
     explicit WhileBuilder(const PointerImpl<T> &cond);
 
+    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    explicit WhileBuilder(T cond) : WhileBuilder(create_literial(cond)) { }
+
     ~WhileBuilder();
 
     void operator+(const std::function<void()> &body_func);
