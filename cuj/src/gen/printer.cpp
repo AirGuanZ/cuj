@@ -28,7 +28,9 @@ namespace
         case ir::BinaryOp::Type::Mod:          return "%";
         case ir::BinaryOp::Type::And:          return "&&";
         case ir::BinaryOp::Type::Or:           return "||";
-        case ir::BinaryOp::Type::XOr:          return "^";
+        case ir::BinaryOp::Type::BitwiseAnd:   return "&";
+        case ir::BinaryOp::Type::BitwiseOr:    return "|";
+        case ir::BinaryOp::Type::BitwiseXOr:   return "^";
         case ir::BinaryOp::Type::Equal:        return "==";
         case ir::BinaryOp::Type::NotEqual:     return "!=";
         case ir::BinaryOp::Type::Less:         return "<";

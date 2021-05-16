@@ -310,11 +310,14 @@ ir::BasicValue InternalBinaryOperator<T, L, R>::gen_ir(ir::IRBuilder &builder) c
     auto lhs_val = lhs->gen_ir(builder);
     auto rhs_val = rhs->gen_ir(builder);
 
-    if(type == ir::BinaryOp::Type::Add ||
-       type == ir::BinaryOp::Type::Sub ||
-       type == ir::BinaryOp::Type::Mul ||
-       type == ir::BinaryOp::Type::Div ||
-       type == ir::BinaryOp::Type::Mod)
+    if(type == ir::BinaryOp::Type::Add        ||
+       type == ir::BinaryOp::Type::Sub        ||
+       type == ir::BinaryOp::Type::Mul        ||
+       type == ir::BinaryOp::Type::Div        ||
+       type == ir::BinaryOp::Type::Mod        ||
+       type == ir::BinaryOp::Type::BitwiseAnd ||
+       type == ir::BinaryOp::Type::BitwiseOr  ||
+       type == ir::BinaryOp::Type::BitwiseXOr)
     {
         CUJ_ASSERT(std::is_arithmetic_v<L> && std::is_arithmetic_v<R>);
 
@@ -328,8 +331,7 @@ ir::BasicValue InternalBinaryOperator<T, L, R>::gen_ir(ir::IRBuilder &builder) c
             unreachable();
     }
     else if(type == ir::BinaryOp::Type::And ||
-            type == ir::BinaryOp::Type::Or  ||
-            type == ir::BinaryOp::Type::XOr)
+            type == ir::BinaryOp::Type::Or)
     {
         if constexpr(std::is_arithmetic_v<L>)
             lhs_val = detail::gen_arithmetic_cast<L, bool>(lhs_val, builder);

@@ -16,7 +16,10 @@ struct BinaryOp
 
         And,
         Or,
-        XOr,
+
+        BitwiseAnd,
+        BitwiseOr,
+        BitwiseXOr,
 
         Equal,
         NotEqual,

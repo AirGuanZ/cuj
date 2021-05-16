@@ -820,9 +820,19 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::BinaryOp &v)
         CUJ_ASSERT(operand_type == ir::BuiltinType::Bool);
         return i1_to_bool(data_->ir_builder->CreateOr(lhs, rhs));
     }
-    case ir::BinaryOp::Type::XOr:
+    case ir::BinaryOp::Type::BitwiseAnd:
     {
-        CUJ_ASSERT(operand_type == ir::BuiltinType::Bool);
+        CUJ_ASSERT(is_integral);
+        return data_->ir_builder->CreateAnd(lhs, rhs);
+    }
+    case ir::BinaryOp::Type::BitwiseOr:
+    {
+        CUJ_ASSERT(is_integral);
+        return data_->ir_builder->CreateOr(lhs, rhs);
+    }
+    case ir::BinaryOp::Type::BitwiseXOr:
+    {
+        CUJ_ASSERT(is_integral);
         return data_->ir_builder->CreateXor(lhs, rhs);
     }
     case ir::BinaryOp::Type::Equal:
