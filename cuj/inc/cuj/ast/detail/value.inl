@@ -336,36 +336,17 @@ PointerImpl<T>::PointerImpl()
 }
 
 template<typename T>
-template<typename U>
-PointerImpl<T>::PointerImpl(const U &other)
+PointerImpl<T>::PointerImpl(const std::nullptr_t &)
 {
-    using RU = rm_cvref_t<U>;
+    init_as_stack_var();
+    this->operator=(nullptr);
+}
 
-    if constexpr(std::is_same_v<RU, UninitializeFlag>)
-    {
-        return;
-    }
-    else if constexpr(std::is_same_v<RU, std::nullptr_t>)
-    {
-        this->init_as_stack_var();
-        this->operator=(other);
-        return;
-    }
-    else if constexpr(std::is_convertible_v<RU, RC<InternalPointerValue<T>>>)
-    {
-        impl_ = other;
-        return;
-    }
-    else
-    {
-        static_assert(
-            std::is_null_pointer_v<RU>         ||
-            std::is_base_of_v<PointerImpl, RU> ||
-            (std::is_same_v<T, void> && is_pointer<RU>));
-        this->init_as_stack_var();
-        this->operator=(other);
-        return;
-    }
+template<typename T>
+PointerImpl<T>::PointerImpl(RC<InternalPointerValue<T>> impl)
+    : impl_(std::move(impl))
+{
+
 }
 
 template<typename T>
@@ -442,6 +423,12 @@ Value<T> PointerImpl<T>::deref() const
         impl->obj     = newBox<T>(addr_value, UNINIT);
         return Value<T>(std::move(impl));
     }
+}
+
+template<typename T>
+PointerImpl<T>::operator PointerImpl<void>() const
+{
+    return ptr_cast<void>(*this);
 }
 
 template<typename T>

@@ -366,11 +366,12 @@ public:
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };
 
-class InternalConstString : public InternalPointerValue<char>
+template<typename T>
+class InternalConstData : public InternalPointerValue<T>
 {
 public:
 
-    std::string content;
+    std::vector<unsigned char> bytes;
 
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };

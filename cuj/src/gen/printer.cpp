@@ -453,9 +453,9 @@ std::string IRPrinter::to_string(const ir::BasicValue &val) const
         CUJ_ASSERT(it != alloc_names_.end());
         return it->second;
     },
-        [this](const ir::ConstString &v)
+        [this](const ir::ConstData &v)
     {
-        return v.content;
+        return "data<" + get_typename(v.elem_type) + ">";
     });
 }
 

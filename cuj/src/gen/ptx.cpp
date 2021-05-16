@@ -40,13 +40,14 @@ void PTXGenerator::generate(const ir::Program &prog)
         throw CUJException(err);
     
     auto machine = target->createTargetMachine(target_triple, "", {}, {}, {});
+    auto data_layout = machine->createDataLayout();
 
     LLVMIRGenerator ir_gen;
     ir_gen.set_target(LLVMIRGenerator::Target::PTX);
-    ir_gen.generate(prog);
+    ir_gen.generate(prog, &data_layout);
 
     auto llvm_module = ir_gen.get_module();
-    llvm_module->setDataLayout(machine->createDataLayout());
+    llvm_module->setDataLayout(data_layout);
 
     llvm::PassManagerBuilder pass_mgr_builder;
     machine->adjustPassManager(pass_mgr_builder);

@@ -20,7 +20,7 @@
 #include <llvm/Transforms/IPO/PassManagerBuilder.h>
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/Scalar/GVN.h>
-#include "llvm/Transforms/Utils.h"
+#include <llvm/Transforms/Utils.h>
 
 #if CUJ_ENABLE_CUDA
 #include <llvm/IR/IntrinsicsNVPTX.h>
@@ -160,9 +160,11 @@ struct LLVMIRGenerator::Data
     std::unique_ptr<llvm::IRBuilder<>> ir_builder;
     std::unique_ptr<llvm::Module>      top_module;
     
-    std::map<std::string, llvm::Function *>       functions;
-    std::map<std::string, llvm::Function *>       external_functions;
-    std::map<std::string, llvm::GlobalVariable *> global_string_consts;
+    std::map<std::string, llvm::Function *> functions;
+    std::map<std::string, llvm::Function *> external_functions;
+
+    std::map<std::string,                llvm::GlobalVariable *> global_string_consts;
+    std::map<std::vector<unsigned char>, llvm::GlobalVariable *> global_data_consts;
 
     // per function
 
@@ -187,13 +189,16 @@ void LLVMIRGenerator::set_target(Target target)
     target_ = target;
 }
 
-void LLVMIRGenerator::generate(const ir::Program &prog)
+void LLVMIRGenerator::generate(const ir::Program &prog, llvm::DataLayout *dl)
 {
     if(!llvm_ctx)
         llvm_ctx = newBox<llvm::LLVMContext>();
 
     CUJ_ASSERT(!data_);
     data_ = new Data;
+
+    CUJ_ASSERT(!dl_);
+    dl_ = dl;
     
     data_->ir_builder = newBox<llvm::IRBuilder<>>(*llvm_ctx);
     data_->top_module = newBox<llvm::Module>("cuj", *llvm_ctx);
@@ -203,6 +208,9 @@ void LLVMIRGenerator::generate(const ir::Program &prog)
         data_->top_module->setTargetTriple("nvptx64-nvidia-cuda");
         link_with_libdevice(llvm_ctx.get(), data_->top_module.get());
     }
+
+    if(dl_)
+        data_->top_module->setDataLayout(*dl_);
 
     // IMPROVE: func-level opt pipeline
     llvm::legacy::FunctionPassManager fpm(data_->top_module.get());
@@ -755,7 +763,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::BasicValue &v)
         [this](const ir::BasicTempValue      &v) { return get_value(v); },
         [this](const ir::BasicImmediateValue &v) { return get_value(v); },
         [this](const ir::AllocAddress        &v) { return get_value(v); },
-        [this](const ir::ConstString         &v) { return get_value(v); });
+        [this](const ir::ConstData           &v) { return get_value(v); });
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::BinaryOp &v)
@@ -1128,20 +1136,41 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::AllocAddress &v)
     return data_->index_to_allocas[v.alloc_index];
 }
 
-llvm::Value *LLVMIRGenerator::get_value(const ir::ConstString &v)
+llvm::Value *LLVMIRGenerator::get_value(const ir::ConstData &v)
 {
     const int GLOBAL_ADDR_SPACE = target_ == Target::PTX ? 1 : 0;
 
-    llvm::GlobalVariable *arr;
-    if(auto it = data_->global_string_consts.find(v.content);
-        it == data_->global_string_consts.end())
+    auto u8_type   = llvm::Type::getInt8Ty(*llvm_ctx);
+    auto elem_type = find_llvm_type(v.elem_type);
+
+    llvm::GlobalVariable *global_var;
+    if(auto it = data_->global_data_consts.find(v.bytes);
+       it == data_->global_data_consts.end())
     {
-        arr = data_->ir_builder->CreateGlobalString(
-            v.content, "", GLOBAL_ADDR_SPACE, data_->top_module.get());
-        data_->global_string_consts[v.content] = arr;
+        auto arr_type = llvm::ArrayType::get(u8_type, v.bytes.size());
+
+        std::vector<llvm::Constant *> byte_consts;
+        byte_consts.reserve(v.bytes.size());
+        for(auto b : v.bytes)
+            byte_consts.push_back(llvm::ConstantInt::get(u8_type, b, false));
+        auto init_const = llvm::ConstantArray::get(arr_type, byte_consts);
+
+        global_var = new llvm::GlobalVariable(
+            *data_->top_module, arr_type, true,
+            llvm::GlobalValue::InternalLinkage, init_const,
+            "", nullptr, llvm::GlobalValue::NotThreadLocal,
+            GLOBAL_ADDR_SPACE);
+
+        if(dl_)
+            global_var->setAlignment(dl_->getPrefTypeAlign(elem_type));
+        else
+        {
+            global_var->setAlignment(
+                llvm::MaybeAlign(llvm::Align(alignof(void *))));
+        }
     }
     else
-        arr = it->second;
+        global_var = it->second;
 
     std::vector<llvm::Value *> indices(2);
     indices[0] = llvm::ConstantInt::get(
@@ -1149,18 +1178,19 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::ConstString &v)
     indices[1] = llvm::ConstantInt::get(
         *llvm_ctx, llvm::APInt(32, 0, false));
 
-    auto val = data_->ir_builder->CreateGEP(arr, indices);
+    auto val = data_->ir_builder->CreateGEP(global_var, indices);
     if(target_ == Target::PTX)
     {
-        auto src_type = llvm::PointerType::get(
-            llvm::Type::getInt8Ty(*llvm_ctx), GLOBAL_ADDR_SPACE);
-        auto dst_type = llvm::PointerType::get(
-            llvm::Type::getInt8Ty(*llvm_ctx), 0);
+        auto src_type = llvm::PointerType::get(u8_type, GLOBAL_ADDR_SPACE);
+        auto dst_type = llvm::PointerType::get(u8_type, 0);
 
         val = data_->ir_builder->CreateIntrinsic(
             llvm::Intrinsic::nvvm_ptr_global_to_gen,
             { dst_type, src_type }, { val });
     }
+
+    val = data_->ir_builder->CreatePointerCast(
+        val, llvm::PointerType::get(elem_type, 0));
 
     return val;
 }
@@ -1293,7 +1323,7 @@ ir::BuiltinType LLVMIRGenerator::get_arithmetic_type(const ir::BasicValue &v)
     {
         unreachable();
     },
-        [](const ir::ConstString &) -> ir::BuiltinType
+        [](const ir::ConstData &) -> ir::BuiltinType
     {
         unreachable();
     });

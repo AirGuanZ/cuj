@@ -204,9 +204,11 @@ ir::BasicValue InternalEmptyPointer<T>::gen_ir(ir::IRBuilder &builder) const
     return ret;
 }
 
-inline ir::BasicValue InternalConstString::gen_ir(ir::IRBuilder &builder) const
+template<typename T>
+ir::BasicValue InternalConstData<T>::gen_ir(ir::IRBuilder &builder) const
 {
-    return ir::ConstString{ content };
+    auto type = get_current_context()->get_type<T>();
+    return ir::ConstData{ bytes, type };
 }
 
 template<typename From, typename To>
@@ -220,8 +222,8 @@ template<typename From, typename To>
 ir::BasicValue InternalCastPointerValue<From, To>::gen_ir(ir::IRBuilder &builder) const
 {
     auto context = get_current_context();
-    auto from_type = context->get_type<Pointer<From>>();
-    auto to_type   = context->get_type<Pointer<To>>();
+    auto from_type = context->get_type<PointerValue<From>>();
+    auto to_type   = context->get_type<PointerValue<To>>();
 
     auto from_val = from->gen_ir(builder);
     auto op = ir::CastPointerOp{ from_type, to_type, from_val };

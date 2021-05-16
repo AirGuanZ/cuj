@@ -203,16 +203,33 @@ auto ptr_cast(const PointerImpl<From> &from)
     using TTo = typename detail::DeValueType<To>::Type;
     auto impl = newRC<InternalCastPointerValue<From, TTo>>();
     impl->from = from.get_impl();
-    return Pointer<TTo>(std::move(impl));
+    return PointerImpl<TTo>(std::move(impl));
+}
+
+// const data
+
+template<typename T>
+auto const_data(const void *data, size_t bytes)
+{
+    auto impl = newRC<InternalConstData<T>>();
+    impl->bytes.resize(bytes);
+    std::memcpy(impl->bytes.data(), data, bytes);
+    return PointerImpl<T>(impl);
+}
+
+template<typename T, typename U, size_t N>
+auto const_data(const U(&data)[N])
+{
+    return ast::const_data<T>(&data[0], sizeof(U) * N);
 }
 
 // string literial
 
 inline auto string_literial(std::string_view s)
 {
-    auto impl = newRC<InternalConstString>();
-    impl->content = s;
-    return Pointer<char>(std::move(impl));
+    std::vector<char> data(s.size() + 1);
+    std::memcpy(data.data(), s.data(), s.size());
+    return const_data<char>(data.data(), data.size());
 }
 
 inline auto operator ""_cuj(const char *s, size_t size)

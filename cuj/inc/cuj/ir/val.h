@@ -29,12 +29,13 @@ struct AllocAddress
     int alloc_index;
 };
 
-struct ConstString
+struct ConstData
 {
-    std::string content;
+    std::vector<unsigned char> bytes;
+    const Type                *elem_type;
 };
 
 using BasicValue = Variant<
-    BasicTempValue, BasicImmediateValue, AllocAddress, ConstString>;
+    BasicTempValue, BasicImmediateValue, AllocAddress, ConstData>;
 
 CUJ_NAMESPACE_END(cuj::ir)

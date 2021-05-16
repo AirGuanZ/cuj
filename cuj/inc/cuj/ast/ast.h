@@ -49,6 +49,9 @@ using ast::pop_context;
 using ast::ptr_cast;
 using ast::cast;
 
+using ast::const_data;
+using ast::string_literial;
+
 using char_t = Variable<char>;
 
 using signed_char_t = Variable<signed char>;

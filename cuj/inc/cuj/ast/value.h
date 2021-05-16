@@ -145,7 +145,10 @@ public:
 };
 
 template<typename T, size_t N>
-using Array = ArrayImpl<typename detail::DeValueType<T>::Type, N>;
+using ArrayValue = ArrayImpl<typename detail::DeValueType<T>::Type, N>;
+
+template<typename T, size_t N>
+using Array = typename ArrayValue<T, N>::VariableType;
 
 template<typename T>
 class PointerImpl
@@ -173,8 +176,11 @@ public:
 
     PointerImpl();
 
-    template<typename U>
-    PointerImpl(const U &other);
+    PointerImpl(UninitializeFlag) { }
+
+    PointerImpl(const std::nullptr_t &);
+
+    PointerImpl(RC<InternalPointerValue<T>> impl);
 
     PointerImpl(const PointerImpl &other);
 
@@ -188,6 +194,8 @@ public:
     Value<T> deref() const;
 
     Value<T> operator*() const { return this->deref(); }
+
+    operator PointerImpl<void>() const;
 
     PointerImpl<PointerImpl<T>> address() const;
 
@@ -210,7 +218,10 @@ public:
 };
 
 template<typename T>
-using Pointer = PointerImpl<typename detail::DeValueType<T>::Type>;
+using PointerValue = PointerImpl<typename detail::DeValueType<T>::Type>;
+
+template<typename T>
+using Pointer = typename PointerValue<T>::VariableType;
 
 template<typename T>
 class ArithmeticVariable : public ArithmeticValue<T>
@@ -228,14 +239,14 @@ public:
     template<typename U>
     ArithmeticVariable &operator=(U &&other) const
     {
-        Value<T>::operator=(std::forward<U>(other));
+        ArithmeticValue<T>::operator=(std::forward<U>(other));
         return *this;
     }
 
     template<typename U>
     ArithmeticVariable &operator=(U &&other)
     {
-        Value<T>::operator=(std::forward<U>(other));
+        ArithmeticValue<T>::operator=(std::forward<U>(other));
         return *this;
     }
 };
@@ -256,14 +267,14 @@ public:
     template<typename U>
     ClassVariable &operator=(U &&other) const
     {
-        Value<T>::operator=(std::forward<U>(other));
+        ClassValue<T>::operator=(std::forward<U>(other));
         return *this;
     }
 
     template<typename U>
     ClassVariable &operator=(U &&other)
     {
-        Value<T>::operator=(std::forward<U>(other));
+        ClassValue<T>::operator=(std::forward<U>(other));
         return *this;
     }
 };
@@ -284,14 +295,14 @@ public:
     template<typename U>
     PointerVariable &operator=(U &&other) const
     {
-        Value<T>::operator=(std::forward<U>(other));
+        PointerImpl<T>::operator=(std::forward<U>(other));
         return *this;
     }
 
     template<typename U>
     PointerVariable &operator=(U &&other)
     {
-        Value<T>::operator=(std::forward<U>(other));
+        PointerImpl<T>::operator=(std::forward<U>(other));
         return *this;
     }
 };
@@ -312,14 +323,14 @@ public:
     template<typename U>
     ArrayVariable &operator=(U &&other) const
     {
-        Value<T>::operator=(std::forward<U>(other));
+        ArrayImpl<T, N>::operator=(std::forward<U>(other));
         return *this;
     }
 
     template<typename U>
     ArrayVariable &operator=(U &&other)
     {
-        Value<T>::operator=(std::forward<U>(other));
+        ArrayImpl<T, N>::operator=(std::forward<U>(other));
         return *this;
     }
 };

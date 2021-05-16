@@ -65,17 +65,23 @@ TEST_CASE("string")
         REQUIRE(test_strlen_func);
         if(test_strlen_func)
         {
-            REQUIRE(test_strlen_func("123456") == 6);
-            REQUIRE(test_strlen_func("") == 0);
+            char s1[] = "123456";
+            char s2[] = "";
+            REQUIRE(test_strlen_func(s1) == 6);
+            REQUIRE(test_strlen_func(s2) == 0);
         }
 
         auto test_strcmp_func = jit.get_function(test_strcmp);
         REQUIRE(test_strcmp_func);
         if(test_strcmp_func)
         {
-            REQUIRE(test_strcmp_func("abc", "abcde") == -1);
-            REQUIRE(test_strcmp_func("abc", "abc") == 0);
-            REQUIRE(test_strcmp_func("adc", "abc") == 1);
+            char s1[] = "abc", s2[] = "abcde";
+            char s3[] = "abc", s4[] = "abc";
+            char s5[] = "adc", s6[] = "abc";
+
+            REQUIRE(test_strcmp_func(s1, s2) == -1);
+            REQUIRE(test_strcmp_func(s3, s4) == 0);
+            REQUIRE(test_strcmp_func(s5, s6) == 1);
         }
 
         auto test_strcpy_func = jit.get_function(test_strcpy);
@@ -102,9 +108,9 @@ TEST_CASE("string")
         REQUIRE(test_memset_func);
         if(test_memset_func)
         {
-            char dst[] = "12345";
+            char dst[] = "12345", s[] = "1aaa5";
             test_memset_func(dst + 1, 'a', 3);
-            REQUIRE(std::strcmp(dst, "1aaa5") == 0);
+            REQUIRE(std::strcmp(dst, s) == 0);
         }
     }
 

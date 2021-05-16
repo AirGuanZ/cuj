@@ -1,14 +1,24 @@
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 4141)
-#pragma warning(disable: 4624)
-#endif
-
 #include <atomic>
 #include <iostream>
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4141)
+#pragma warning(disable: 4244)
+#pragma warning(disable: 4624)
+#pragma warning(disable: 4626)
+#pragma warning(disable: 4996)
+#endif
+
+#include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/IR/LegacyPassManager.h>
+#include <llvm/Support/Host.h>
+#include <llvm/Support/TargetRegistry.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/Target/TargetMachine.h>
+#include <llvm/Target/TargetOptions.h>
+#include <llvm/Transforms/IPO/PassManagerBuilder.h>
 
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -22,8 +32,6 @@ CUJ_NAMESPACE_BEGIN(cuj::gen)
 
 struct NativeJIT::Impl
 {
-    LLVMIRGenerator llvm_gen;
-
     std::unique_ptr<llvm::ExecutionEngine> exec_engine;
 };
 
@@ -71,32 +79,55 @@ void NativeJIT::generate(const ir::Program &prog, OptLevel opt)
 
     CUJ_ASSERT(!impl_);
     impl_ = new Impl;
-    impl_->llvm_gen.set_target(LLVMIRGenerator::Target::Host);
-    impl_->llvm_gen.generate(prog);
 
-    std::string err_str;
-    llvm::EngineBuilder engine_builder(impl_->llvm_gen.get_module_ownership());
-    engine_builder.setErrorStr(&err_str);
+    auto target_triple = llvm::sys::getDefaultTargetTriple();
 
+    std::string err;
+    auto target = llvm::TargetRegistry::lookupTarget(target_triple, err);
+    if(!target)
+        throw CUJException(err);
+    err = {};
+
+    llvm::CodeGenOpt::Level codegen_opt;
     switch(opt)
     {
-    case OptLevel::O0:
-        engine_builder.setOptLevel(llvm::CodeGenOpt::None);
-        break;
-    case OptLevel::O1:
-        engine_builder.setOptLevel(llvm::CodeGenOpt::Less);
-        break;
-    case OptLevel::O2:
-        engine_builder.setOptLevel(llvm::CodeGenOpt::Default);
-        break;
-    case OptLevel::O3:
-        engine_builder.setOptLevel(llvm::CodeGenOpt::Aggressive);
-        break;
+    case OptLevel::O0: codegen_opt = llvm::CodeGenOpt::None;       break;
+    case OptLevel::O1: codegen_opt = llvm::CodeGenOpt::Less;       break;
+    case OptLevel::O2: codegen_opt = llvm::CodeGenOpt::Default;    break;
+    case OptLevel::O3: codegen_opt = llvm::CodeGenOpt::Aggressive; break;
     }
 
-    auto exec_engine = engine_builder.create();
+    auto machine = target->createTargetMachine(
+        target_triple, "generic", {}, {}, {}, {}, codegen_opt, true);
+    auto data_layout = machine->createDataLayout();
+    
+    LLVMIRGenerator llvm_gen;
+    llvm_gen.set_target(LLVMIRGenerator::Target::Host);
+    llvm_gen.generate(prog, &data_layout);
+
+    llvm::PassManagerBuilder pass_mgr_builder;
+    switch(opt)
+    {
+    case OptLevel::O0: pass_mgr_builder.OptLevel = 0; break;
+    case OptLevel::O1: pass_mgr_builder.OptLevel = 1; break;
+    case OptLevel::O2: pass_mgr_builder.OptLevel = 2; break;
+    case OptLevel::O3: pass_mgr_builder.OptLevel = 3; break;
+    }
+    machine->adjustPassManager(pass_mgr_builder);
+
+    llvm::legacy::PassManager passes;
+    passes.add(
+        createTargetTransformInfoWrapperPass(machine->getTargetIRAnalysis()));
+    pass_mgr_builder.populateModulePassManager(passes);
+    passes.run(*llvm_gen.get_module());
+    
+    llvm::EngineBuilder engine_builder(llvm_gen.get_module_ownership());
+    engine_builder.setErrorStr(&err);
+    engine_builder.setOptLevel(codegen_opt);
+
+    auto exec_engine = engine_builder.create(machine);
     if(!exec_engine)
-        throw CUJException(err_str);
+        throw CUJException(err);
     impl_->exec_engine.reset(exec_engine);
 
 #define ADD_HOST_FUNC(NAME, FUNC)                                               \

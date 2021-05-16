@@ -158,4 +158,9 @@ TEST_CASE("pointer")
             REQUIRE(b.z == 6);
         }
     }
+
+    SECTION("raw data")
+    {
+        
+    }
 }

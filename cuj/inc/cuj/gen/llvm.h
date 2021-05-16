@@ -35,7 +35,7 @@ public:
 
     void set_target(Target target);
 
-    void generate(const ir::Program &prog);
+    void generate(const ir::Program &prog, llvm::DataLayout *dl = nullptr);
 
     llvm::Module *get_module() const;
 
@@ -129,7 +129,7 @@ private:
 
     llvm::Value *get_value(const ir::AllocAddress &v);
 
-    llvm::Value *get_value(const ir::ConstString &v);
+    llvm::Value *get_value(const ir::ConstData &v);
 
     llvm::Value *convert_to_bool(llvm::Value *from, ir::BuiltinType from_type);
 
@@ -143,6 +143,8 @@ private:
     llvm::Value *i1_to_bool(llvm::Value *val);
     
     Target target_ = Target::Host;
+
+    llvm::DataLayout *dl_ = nullptr;
     
     Data *data_ = nullptr;
 };
