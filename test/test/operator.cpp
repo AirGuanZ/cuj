@@ -86,4 +86,25 @@ TEST_CASE("operator")
         if(test_func)
             REQUIRE(test_func() == true);
     }
+
+    SECTION("select")
+    {
+        ScopedContext ctx;
+
+        auto test = to_callable<float>(
+            [](boolean cond, f32 a, f32 b)
+        {
+            $return(select(cond, a, b));
+        });
+
+        auto jit = ctx.gen_native_jit();
+        auto test_func = jit.get_function(test);
+
+        REQUIRE(test_func);
+        if(test_func)
+        {
+            REQUIRE(test_func(true, 0, 1) == 0);
+            REQUIRE(test_func(false, 0, 1) == 1);
+        }
+    }
 }

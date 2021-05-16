@@ -237,4 +237,12 @@ inline auto operator ""_cuj(const char *s, size_t size)
     return string_literial(std::string_view(s, size));
 }
 
+// select
+
+template<typename T, typename C>
+ArithmeticValue<T> select(
+    const ArithmeticValue<C> &cond,
+    const ArithmeticValue<T> &true_val,
+    const ArithmeticValue<T> &false_val);
+
 CUJ_NAMESPACE_END(cuj::ast)

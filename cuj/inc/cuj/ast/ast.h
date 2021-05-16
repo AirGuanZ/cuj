@@ -16,6 +16,7 @@
 #include <cuj/ast/detail/expr.inl>
 #include <cuj/ast/detail/func.inl>
 #include <cuj/ast/detail/func_context.inl>
+#include <cuj/ast/detail/opr.inl>
 #include <cuj/ast/detail/stat.inl>
 #include <cuj/ast/detail/stat_builder.inl>
 #include <cuj/ast/detail/value.inl>
@@ -51,6 +52,8 @@ using ast::cast;
 
 using ast::const_data;
 using ast::string_literial;
+
+using ast::select;
 
 using char_t = Variable<char>;
 
