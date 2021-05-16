@@ -17,6 +17,7 @@
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/Transforms/IPO/PassManagerBuilder.h>
+#include <llvm/Transforms/IPO.h>
 
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -26,7 +27,7 @@
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 
-void PTXGenerator::generate(const ir::Program &prog)
+void PTXGenerator::generate(const ir::Program &prog, OptLevel opt)
 {
     LLVMInitializeNVPTXTargetInfo();
     LLVMInitializeNVPTXTarget();
@@ -50,7 +51,17 @@ void PTXGenerator::generate(const ir::Program &prog)
     llvm_module->setDataLayout(data_layout);
 
     llvm::PassManagerBuilder pass_mgr_builder;
+    switch(opt)
+    {
+    case OptLevel::O0: pass_mgr_builder.OptLevel = 0; break;
+    case OptLevel::O1: pass_mgr_builder.OptLevel = 1; break;
+    case OptLevel::O2: pass_mgr_builder.OptLevel = 2; break;
+    case OptLevel::O3: pass_mgr_builder.OptLevel = 3; break;
+    }
+    pass_mgr_builder.Inliner = llvm::createFunctionInliningPass(
+        pass_mgr_builder.OptLevel, 0, false);
     machine->adjustPassManager(pass_mgr_builder);
+
     llvm::legacy::PassManager passes;
     passes.add(
         createTargetTransformInfoWrapperPass(machine->getTargetIRAnalysis()));

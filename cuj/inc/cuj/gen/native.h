@@ -2,6 +2,7 @@
 
 #include <cuj/ast/func.h>
 #include <cuj/ir/prog.h>
+#include <cuj/gen/llvm.h>
 #include <cuj/util/uncopyable.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
@@ -9,15 +10,6 @@ CUJ_NAMESPACE_BEGIN(cuj::gen)
 class NativeJIT : public Uncopyable
 {
 public:
-
-    enum class OptLevel
-    {
-        O0,
-        O1,
-        O2,
-        O3,
-        Default = O2,
-    };
 
     NativeJIT() = default;
 

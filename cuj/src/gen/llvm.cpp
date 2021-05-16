@@ -21,6 +21,7 @@
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/Scalar/GVN.h>
 #include <llvm/Transforms/Utils.h>
+#include <llvm/LinkAllPasses.h>
 
 #if CUJ_ENABLE_CUDA
 #include <llvm/IR/IntrinsicsNVPTX.h>
@@ -162,9 +163,10 @@ struct LLVMIRGenerator::Data
     
     std::map<std::string, llvm::Function *> functions;
     std::map<std::string, llvm::Function *> external_functions;
-
-    std::map<std::string,                llvm::GlobalVariable *> global_string_consts;
-    std::map<std::vector<unsigned char>, llvm::GlobalVariable *> global_data_consts;
+    
+    std::map<
+        std::pair<llvm::Type*, std::vector<unsigned char>>,
+        llvm::GlobalVariable *> global_data_consts;
 
     // per function
 
@@ -212,18 +214,6 @@ void LLVMIRGenerator::generate(const ir::Program &prog, llvm::DataLayout *dl)
     if(dl_)
         data_->top_module->setDataLayout(*dl_);
 
-    // IMPROVE: func-level opt pipeline
-    llvm::legacy::FunctionPassManager fpm(data_->top_module.get());
-    fpm.add(llvm::createPromoteMemoryToRegisterPass());
-    fpm.add(llvm::createSROAPass());
-    fpm.add(llvm::createEarlyCSEPass());
-    fpm.add(llvm::createInstructionCombiningPass());
-    fpm.add(llvm::createReassociatePass());
-    fpm.add(llvm::createGVNPass());
-    fpm.add(llvm::createDeadCodeEliminationPass());
-    fpm.add(llvm::createCFGSimplificationPass());
-    fpm.doInitialization();
-
     for(auto &p : prog.types)
         find_llvm_type(p.second.get());
 
@@ -233,11 +223,27 @@ void LLVMIRGenerator::generate(const ir::Program &prog, llvm::DataLayout *dl)
     for(auto &f : prog.funcs)
         generate_func_decl(*f);
 
+    std::set<llvm::Function *> all_funcs;
     for(auto &f : prog.funcs)
     {
         auto llvm_func = generate_func(*f);
-        fpm.run(*llvm_func);
+        all_funcs.insert(llvm_func);
     }
+
+    llvm::legacy::FunctionPassManager fpm(data_->top_module.get());
+    fpm.add(llvm::createPromoteMemoryToRegisterPass());
+    fpm.add(llvm::createSROAPass());
+    fpm.add(llvm::createEarlyCSEPass());
+    fpm.add(llvm::createBasicAAWrapperPass());
+    fpm.add(llvm::createInstructionCombiningPass());
+    fpm.add(llvm::createReassociatePass());
+    fpm.add(llvm::createGVNPass());
+    fpm.add(llvm::createDeadCodeEliminationPass());
+    fpm.add(llvm::createCFGSimplificationPass());
+    fpm.doInitialization();
+
+    for(auto f : all_funcs)
+        fpm.run(*f);
 
     // IMPROVE: module-level opt pipeline
     llvm::ModuleAnalysisManager mam;
@@ -1144,7 +1150,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::ConstData &v)
     auto elem_type = find_llvm_type(v.elem_type);
 
     llvm::GlobalVariable *global_var;
-    if(auto it = data_->global_data_consts.find(v.bytes);
+    if(auto it = data_->global_data_consts.find({ elem_type, v.bytes });
        it == data_->global_data_consts.end())
     {
         auto arr_type = llvm::ArrayType::get(u8_type, v.bytes.size());
@@ -1168,6 +1174,8 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::ConstData &v)
             global_var->setAlignment(
                 llvm::MaybeAlign(llvm::Align(alignof(void *))));
         }
+
+        data_->global_data_consts[{ elem_type, v.bytes }] = global_var;
     }
     else
         global_var = it->second;

@@ -10,7 +10,7 @@ class PTXGenerator
 {
 public:
     
-    void generate(const ir::Program &prog);
+    void generate(const ir::Program &prog, OptLevel opt = OptLevel::Default);
 
     const std::string &get_result() const;
 

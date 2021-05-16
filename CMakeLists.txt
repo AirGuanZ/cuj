@@ -54,7 +54,8 @@ TARGET_INCLUDE_DIRECTORIES(cuj PUBLIC ${LLVM_INCLUDE_DIRS})
 
 llvm_map_components_to_libnames(
     LLVM_LIBS
-    Core ExecutionEngine Interpreter Support mcjit nativecodegen nvptxcodegen)
+    Core ExecutionEngine Interpreter Support objcarcopts
+    mcjit nativecodegen nvptxcodegen)
 TARGET_LINK_LIBRARIES(cuj PUBLIC ${LLVM_LIBS})
 
 ################ tests ################

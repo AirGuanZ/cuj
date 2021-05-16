@@ -19,6 +19,7 @@
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/Transforms/IPO/PassManagerBuilder.h>
+#include <llvm/Transforms/IPO.h>
 
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -113,6 +114,9 @@ void NativeJIT::generate(const ir::Program &prog, OptLevel opt)
     case OptLevel::O2: pass_mgr_builder.OptLevel = 2; break;
     case OptLevel::O3: pass_mgr_builder.OptLevel = 3; break;
     }
+    pass_mgr_builder.Inliner = llvm::createFunctionInliningPass(
+        pass_mgr_builder.OptLevel, 0, false);
+
     machine->adjustPassManager(pass_mgr_builder);
 
     llvm::legacy::PassManager passes;

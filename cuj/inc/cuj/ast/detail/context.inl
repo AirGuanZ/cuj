@@ -216,8 +216,7 @@ inline std::string Context::gen_ir_string() const
     return printer.get_string();
 }
 
-inline gen::NativeJIT Context::gen_native_jit(
-    gen::NativeJIT::OptLevel opt) const
+inline gen::NativeJIT Context::gen_native_jit(gen::OptLevel opt) const
 {
     gen::NativeJIT jit;
     jit.generate(gen_ir(), opt);
@@ -226,10 +225,10 @@ inline gen::NativeJIT Context::gen_native_jit(
 
 #if CUJ_ENABLE_CUDA
 
-inline std::string Context::gen_ptx() const
+inline std::string Context::gen_ptx(gen::OptLevel opt) const
 {
     gen::PTXGenerator generator;
-    generator.generate(gen_ir());
+    generator.generate(gen_ir(), opt);
     return generator.get_result();
 }
 

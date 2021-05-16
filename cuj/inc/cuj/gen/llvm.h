@@ -17,6 +17,15 @@ namespace llvm
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 
+enum class OptLevel
+{
+    O0,
+    O1,
+    O2,
+    O3,
+    Default = O2,
+};
+
 class LLVMIRGenerator : public Uncopyable
 {
 public:

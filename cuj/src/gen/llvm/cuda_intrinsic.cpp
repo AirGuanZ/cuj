@@ -86,6 +86,8 @@ llvm::Value *process_cuda_intrinsic_op(
                 builtin::math::IntrinsicBasicMathFunctionType::TYPE, IS_F32);   \
             auto func = top_module->getFunction(func_name);                     \
             CUJ_ASSERT(func);                                                   \
+            if(!func->hasFnAttribute(llvm::Attribute::ReadNone))                \
+                func->addFnAttr(llvm::Attribute::ReadNone);                     \
             return ir.CreateCall(func, args);                                   \
         }                                                                       \
     } while(false)

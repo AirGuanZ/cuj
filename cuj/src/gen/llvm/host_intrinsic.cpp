@@ -24,13 +24,17 @@ namespace
     llvm::Function *add_func_prototype(
         llvm::Module *top_module,
         const char   *name,
+        bool          readnone,
         llvm::Type   *ret,
         Args...       arg_types)
     {
         std::vector<llvm::Type *> args = { arg_types... };
         auto func_type = llvm::FunctionType::get(ret, args, false);
-        return llvm::Function::Create(
+        auto result = llvm::Function::Create(
             func_type, llvm::GlobalValue::ExternalLinkage, name, top_module);
+        if(readnone)
+            result->addFnAttr(llvm::Attribute::ReadNone);
+        return result;
     }
     
     llvm::Function *get_host_math_intrinsics(
@@ -45,61 +49,61 @@ namespace
         auto f32 = llvm::Type::getFloatTy(*context);
         auto f64 = llvm::Type::getDoubleTy(*context);
     
-#define TRY_REGISTER_FUNC(NAME, ...)                                            \
+#define TRY_REGISTER_FUNC(NAME, READNONE, ...)                                  \
     do {                                                                        \
         if(name == NAME)                                                        \
-            return add_func_prototype(top_module, NAME, __VA_ARGS__);           \
+            return add_func_prototype(top_module, NAME, READNONE, __VA_ARGS__); \
     } while(false)
         
-        TRY_REGISTER_FUNC("host.math.abs.f32",       f32, f32);
-        TRY_REGISTER_FUNC("host.math.mod.f32",       f32, f32, f32);
-        TRY_REGISTER_FUNC("host.math.remainder.f32", f32, f32, f32);
-        TRY_REGISTER_FUNC("host.math.exp.f32",       f32, f32);
-        TRY_REGISTER_FUNC("host.math.exp2.f32",      f32, f32);
-        TRY_REGISTER_FUNC("host.math.log.f32",       f32, f32);
-        TRY_REGISTER_FUNC("host.math.log2.f32",      f32, f32);
-        TRY_REGISTER_FUNC("host.math.log10.f32",     f32, f32);
-        TRY_REGISTER_FUNC("host.math.pow.f32",       f32, f32, f32);
-        TRY_REGISTER_FUNC("host.math.sqrt.f32",      f32, f32);
-        TRY_REGISTER_FUNC("host.math.sin.f32",       f32, f32);
-        TRY_REGISTER_FUNC("host.math.cos.f32",       f32, f32);
-        TRY_REGISTER_FUNC("host.math.tan.f32",       f32, f32);
-        TRY_REGISTER_FUNC("host.math.asin.f32",      f32, f32);
-        TRY_REGISTER_FUNC("host.math.acos.f32",      f32, f32);
-        TRY_REGISTER_FUNC("host.math.atan.f32",      f32, f32);
-        TRY_REGISTER_FUNC("host.math.atan2.f32",     f32, f32, f32);
-        TRY_REGISTER_FUNC("host.math.ceil.f32",      f32, f32);
-        TRY_REGISTER_FUNC("host.math.floor.f32",     f32, f32);
-        TRY_REGISTER_FUNC("host.math.trunc.f32",     f32, f32);
-        TRY_REGISTER_FUNC("host.math.round.f32",     f32, f32);
-        TRY_REGISTER_FUNC("host.math.isfinite.f32",  i32, f32);
-        TRY_REGISTER_FUNC("host.math.isinf.f32",     i32, f32);
-        TRY_REGISTER_FUNC("host.math.isnan.f32",     i32, f32);
+        TRY_REGISTER_FUNC("host.math.abs.f32",       true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.mod.f32",       true, f32, f32, f32);
+        TRY_REGISTER_FUNC("host.math.remainder.f32", true, f32, f32, f32);
+        TRY_REGISTER_FUNC("host.math.exp.f32",       true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.exp2.f32",      true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.log.f32",       true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.log2.f32",      true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.log10.f32",     true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.pow.f32",       true, f32, f32, f32);
+        TRY_REGISTER_FUNC("host.math.sqrt.f32",      true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.sin.f32",       true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.cos.f32",       true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.tan.f32",       true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.asin.f32",      true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.acos.f32",      true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.atan.f32",      true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.atan2.f32",     true, f32, f32, f32);
+        TRY_REGISTER_FUNC("host.math.ceil.f32",      true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.floor.f32",     true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.trunc.f32",     true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.round.f32",     true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.isfinite.f32",  true, i32, f32);
+        TRY_REGISTER_FUNC("host.math.isinf.f32",     true, i32, f32);
+        TRY_REGISTER_FUNC("host.math.isnan.f32",     true, i32, f32);
         
-        TRY_REGISTER_FUNC("host.math.abs.f64",       f64, f64);
-        TRY_REGISTER_FUNC("host.math.mod.f64",       f64, f64, f64);
-        TRY_REGISTER_FUNC("host.math.remainder.f64", f64, f64, f64);
-        TRY_REGISTER_FUNC("host.math.exp.f64",       f64, f64);
-        TRY_REGISTER_FUNC("host.math.exp2.f64",      f64, f64);
-        TRY_REGISTER_FUNC("host.math.log.f64",       f64, f64);
-        TRY_REGISTER_FUNC("host.math.log2.f64",      f64, f64);
-        TRY_REGISTER_FUNC("host.math.log10.f64",     f64, f64);
-        TRY_REGISTER_FUNC("host.math.pow.f64",       f64, f64, f64);
-        TRY_REGISTER_FUNC("host.math.sqrt.f64",      f64, f64);
-        TRY_REGISTER_FUNC("host.math.sin.f64",       f64, f64);
-        TRY_REGISTER_FUNC("host.math.cos.f64",       f64, f64);
-        TRY_REGISTER_FUNC("host.math.tan.f64",       f64, f64);
-        TRY_REGISTER_FUNC("host.math.asin.f64",      f64, f64);
-        TRY_REGISTER_FUNC("host.math.acos.f64",      f64, f64);
-        TRY_REGISTER_FUNC("host.math.atan.f64",      f64, f64);
-        TRY_REGISTER_FUNC("host.math.atan2.f64",     f64, f64, f64);
-        TRY_REGISTER_FUNC("host.math.ceil.f64",      f64, f64);
-        TRY_REGISTER_FUNC("host.math.floor.f64",     f64, f64);
-        TRY_REGISTER_FUNC("host.math.trunc.f64",     f64, f64);
-        TRY_REGISTER_FUNC("host.math.round.f64",     f64, f64);
-        TRY_REGISTER_FUNC("host.math.isfinite.f64",  i32, f64);
-        TRY_REGISTER_FUNC("host.math.isinf.f64",     i32, f64);
-        TRY_REGISTER_FUNC("host.math.isnan.f64",     i32, f64);
+        TRY_REGISTER_FUNC("host.math.abs.f64",       true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.mod.f64",       true, f64, f64, f64);
+        TRY_REGISTER_FUNC("host.math.remainder.f64", true, f64, f64, f64);
+        TRY_REGISTER_FUNC("host.math.exp.f64",       true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.exp2.f64",      true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.log.f64",       true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.log2.f64",      true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.log10.f64",     true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.pow.f64",       true, f64, f64, f64);
+        TRY_REGISTER_FUNC("host.math.sqrt.f64",      true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.sin.f64",       true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.cos.f64",       true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.tan.f64",       true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.asin.f64",      true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.acos.f64",      true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.atan.f64",      true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.atan2.f64",     true, f64, f64, f64);
+        TRY_REGISTER_FUNC("host.math.ceil.f64",      true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.floor.f64",     true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.trunc.f64",     true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.round.f64",     true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.isfinite.f64",  true, i32, f64);
+        TRY_REGISTER_FUNC("host.math.isinf.f64",     true, i32, f64);
+        TRY_REGISTER_FUNC("host.math.isnan.f64",     true, i32, f64);
     
         throw CUJException("unknown host math function: " + name);
     }
@@ -123,7 +127,7 @@ bool process_host_intrinsic_stat(
             auto pchar_type = llvm::PointerType::get(
                 llvm::Type::getInt8Ty(*context), 0);
             func = add_func_prototype(
-                top_module, func_name.c_str(), void_type, pchar_type);
+                top_module, func_name.c_str(), false, void_type, pchar_type);
         }
 
         ir.CreateCall(func, args);
@@ -140,7 +144,7 @@ bool process_host_intrinsic_stat(
             auto ptr_type = llvm::PointerType::get(
                 llvm::Type::getInt8Ty(*context), 0);
             func = add_func_prototype(
-                top_module, func_name.c_str(), void_type, ptr_type);
+                top_module, func_name.c_str(), false, void_type, ptr_type);
         }
 
         ir.CreateCall(func, args);
@@ -231,7 +235,8 @@ llvm::Value *process_host_intrinsic_op(
             auto f32_type = ir.getFloatTy();
             auto pf32_type = llvm::PointerType::get(f32_type, 0);
             func = add_func_prototype(
-                top_module, func_name.c_str(), f32_type, pf32_type, f32_type);
+                top_module, func_name.c_str(), false,
+                f32_type, pf32_type, f32_type);
         }
 
         return ir.CreateCall(func, args);
@@ -247,7 +252,8 @@ llvm::Value *process_host_intrinsic_op(
             auto f64_type = ir.getDoubleTy();
             auto pf64_type = llvm::PointerType::get(f64_type, 0);
             func = add_func_prototype(
-                top_module, func_name.c_str(), f64_type, pf64_type, f64_type);
+                top_module, func_name.c_str(), false,
+                f64_type, pf64_type, f64_type);
         }
 
         return ir.CreateCall(func, args);
@@ -269,7 +275,7 @@ llvm::Value *process_host_intrinsic_op(
                 size_type = llvm::Type::getInt64Ty(*context);
 
             func = add_func_prototype(
-                top_module, func_name.c_str(), ptr_type, size_type);
+                top_module, func_name.c_str(), false, ptr_type, size_type);
         }
 
         return ir.CreateCall(func, args);
