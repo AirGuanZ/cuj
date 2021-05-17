@@ -103,7 +103,7 @@ void CUDAModule::link()
         for(auto &ptx : impl_->ptx_data)
         {
             std::vector<char> data(
-                ptx.data(), ptx.data() + ptx.size());
+                ptx.data(), ptx.data() + ptx.size() + 1);
 
             check_cu(cuLinkAddData(
                 link_state, CU_JIT_INPUT_PTX,
