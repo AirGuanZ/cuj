@@ -246,6 +246,12 @@ public:
     RC<InternalPointerValue<T>> address;
     
     RC<InternalPointerValue<T>> get_address() const;
+
+    template<typename U>
+    auto subscript(U &&other) { return (*obj)[std::forward<U>(other)]; }
+
+    template<typename U>
+    auto subscript(U &&other) const { return (*obj)[std::forward<U>(other)]; }
 };
 
 template<typename T>

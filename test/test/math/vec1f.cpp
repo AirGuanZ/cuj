@@ -70,7 +70,26 @@ TEST_CASE("builtin.math.vec1f")
     SECTION("elem")
     {
         ADD_TEST_EXPR(
-            approx_eq_f(make_vec1f(2)->elem(0), 2));
+            approx_eq_f(make_vec1f(2)[0], 2));
+    }
+
+    SECTION("write elem")
+    {
+        ScopedContext ctx;
+
+        auto test = to_callable<bool>([]
+        {
+            Vec1f v = make_vec1f(2);
+            v[0] = 1;
+            $return(v[0] == 1);
+        });
+
+        auto jit = ctx.gen_native_jit();
+        auto test_func = jit.get_function(test);
+
+        REQUIRE(test_func);
+        if(test_func)
+            REQUIRE(test_func() == true);
     }
 
     SECTION("function")

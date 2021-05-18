@@ -92,7 +92,27 @@ TEST_CASE("builtin.math.vec4f")
     SECTION("elem")
     {
         ADD_TEST_EXPR(
-            approx_eq_f(make_vec4f(2, 3, 4, 5)->elem(3), 5));
+            approx_eq_f(make_vec4f(2, 3, 4, 5)[3], 5));
+    }
+
+    SECTION("write elem")
+    {
+        ScopedContext ctx;
+
+        auto test = to_callable<bool>([]
+        {
+            Vec4f v = make_vec4f(1, 2, 3, 4);
+            v[0] = 3;
+            v[2] = 1;
+            $return(v[0] == 3 && v[1] == 2 && v[2] == 1 && v[3] == 4);
+        });
+
+        auto jit = ctx.gen_native_jit();
+        auto test_func = jit.get_function(test);
+
+        REQUIRE(test_func);
+        if(test_func)
+            REQUIRE(test_func() == true);
     }
 
     SECTION("function")

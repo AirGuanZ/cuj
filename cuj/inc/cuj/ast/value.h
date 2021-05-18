@@ -87,6 +87,12 @@ public:
 
     T *operator->() const;
 
+    template<typename U>
+    auto operator[](U &&other) { return impl_->subscript(std::forward<U>(other)); }
+
+    template<typename U>
+    auto operator[](U &&other) const { return impl_->subscript(std::forward<U>(other)); }
+
     RC<InternalClassLeftValue<T>> get_impl() const;
 
     void set_impl(const ClassValue<T> &val);

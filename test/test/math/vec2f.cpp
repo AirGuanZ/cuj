@@ -84,7 +84,26 @@ TEST_CASE("builtin.math.vec2f")
     SECTION("elem")
     {
         ADD_TEST_EXPR(
-            approx_eq_f(make_vec2f(2, 3)->elem(1), 3));
+            approx_eq_f(make_vec2f(2, 3)[1], 3));
+    }
+
+    SECTION("write elem")
+    {
+        ScopedContext ctx;
+
+        auto test = to_callable<bool>([]
+        {
+            Vec2f v = make_vec2f(1, 2);
+            v[0] = 3;
+            $return(v[0] == 3 && v[1] == 2);
+        });
+
+        auto jit = ctx.gen_native_jit();
+        auto test_func = jit.get_function(test);
+
+        REQUIRE(test_func);
+        if(test_func)
+            REQUIRE(test_func() == true);
     }
 
     SECTION("function")

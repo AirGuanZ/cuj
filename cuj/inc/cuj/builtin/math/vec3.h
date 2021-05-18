@@ -39,9 +39,7 @@ public:
 
     ClassValue<Vec3Impl<T>> normalize() const;
 
-    Value<T> elem(const ArithmeticValue<size_t> &i) const;
-
-    Pointer<T> elem_addr(const ArithmeticValue<size_t> &i) const;
+    Value<T> operator[](const ArithmeticValue<size_t> &i) const;
 };
 
 template<typename T>
