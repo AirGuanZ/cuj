@@ -9,6 +9,9 @@ CUJ_NAMESPACE_BEGIN(cuj::gen)
 class PTXGenerator
 {
 public:
+
+    static std::string generate_llvm_ir(
+        const ir::Program &prog, OptLevel opt = OptLevel::Default);
     
     void generate(const ir::Program &prog, OptLevel opt = OptLevel::Default);
 

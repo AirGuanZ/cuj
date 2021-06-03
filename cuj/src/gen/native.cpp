@@ -31,10 +31,98 @@
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 
+namespace
+{
+
+    struct IntermediateModule
+    {
+        std::unique_ptr<llvm::Module> llvm_module;
+        llvm::TargetMachine          *machine;
+        llvm::CodeGenOpt::Level       codegen_opt;
+    };
+
+    IntermediateModule construct_llvm_module(
+        const ir::Program &prog, const NativeJIT::Options &opts)
+    {
+        llvm::InitializeNativeTarget();
+        llvm::InitializeNativeTargetAsmPrinter();
+        LLVMLinkInMCJIT();
+
+        llvm::CodeGenOpt::Level codegen_opt;
+        switch(opts.opt_level)
+        {
+        case OptLevel::O0: codegen_opt = llvm::CodeGenOpt::None;       break;
+        case OptLevel::O1: codegen_opt = llvm::CodeGenOpt::Less;       break;
+        case OptLevel::O2: codegen_opt = llvm::CodeGenOpt::Default;    break;
+        case OptLevel::O3: codegen_opt = llvm::CodeGenOpt::Aggressive; break;
+        }
+
+        auto target_triple = llvm::sys::getDefaultTargetTriple();
+
+        std::string err;
+        auto target = llvm::TargetRegistry::lookupTarget(target_triple, err);
+        if(!target)
+            throw CUJException(err);
+        err = {};
+
+        auto machine = target->createTargetMachine(
+            target_triple, "generic", {}, {}, {}, {}, codegen_opt, true);
+        auto data_layout = machine->createDataLayout();
+        
+        LLVMIRGenerator llvm_gen;
+        llvm_gen.set_target(LLVMIRGenerator::Target::Host);
+        llvm_gen.generate(prog, &data_layout);
+
+        llvm::PassManagerBuilder pass_mgr_builder;
+        switch(opts.opt_level)
+        {
+        case OptLevel::O0: pass_mgr_builder.OptLevel = 0; break;
+        case OptLevel::O1: pass_mgr_builder.OptLevel = 1; break;
+        case OptLevel::O2: pass_mgr_builder.OptLevel = 2; break;
+        case OptLevel::O3: pass_mgr_builder.OptLevel = 3; break;
+        }
+        pass_mgr_builder.Inliner = llvm::createFunctionInliningPass(
+            pass_mgr_builder.OptLevel, 0, false);
+        pass_mgr_builder.SLPVectorize = opts.enable_slp;
+
+        machine->adjustPassManager(pass_mgr_builder);
+
+        llvm::legacy::PassManager passes;
+        passes.add(
+            createTargetTransformInfoWrapperPass(machine->getTargetIRAnalysis()));
+        pass_mgr_builder.populateModulePassManager(passes);
+        passes.run(*llvm_gen.get_module());
+
+        IntermediateModule result;
+        result.llvm_module = llvm_gen.get_module_ownership();
+        result.codegen_opt = codegen_opt;
+        result.machine     = machine;
+
+        return result;
+    }
+
+} // namespace anonymous
+
 struct NativeJIT::Impl
 {
     std::unique_ptr<llvm::ExecutionEngine> exec_engine;
 };
+
+std::string NativeJIT::generate_llvm_ir(const ir::Program &prog, OptLevel opt)
+{
+    return generate_llvm_ir(prog, { opt, true });
+}
+
+std::string NativeJIT::generate_llvm_ir(
+    const ir::Program &prog, const Options &opts)
+{
+    auto im = construct_llvm_module(prog, opts);
+    std::string result;
+    llvm::raw_string_ostream ss(result);
+    ss << *im.llvm_module;
+    ss.flush();
+    return result;
+}
 
 NativeJIT::NativeJIT(NativeJIT &&rhs) noexcept
     : NativeJIT()
@@ -74,62 +162,23 @@ namespace
 
 void NativeJIT::generate(const ir::Program &prog, OptLevel opt)
 {
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmPrinter();
-    LLVMLinkInMCJIT();
+    generate(prog, { opt, true });
+}
 
-    CUJ_ASSERT(!impl_);
+void NativeJIT::generate(const ir::Program &prog, const Options &opts)
+{
+    if(impl_)
+        delete impl_;
     impl_ = new Impl;
 
-    auto target_triple = llvm::sys::getDefaultTargetTriple();
+    auto im = construct_llvm_module(prog, opts);
 
     std::string err;
-    auto target = llvm::TargetRegistry::lookupTarget(target_triple, err);
-    if(!target)
-        throw CUJException(err);
-    err = {};
-
-    llvm::CodeGenOpt::Level codegen_opt;
-    switch(opt)
-    {
-    case OptLevel::O0: codegen_opt = llvm::CodeGenOpt::None;       break;
-    case OptLevel::O1: codegen_opt = llvm::CodeGenOpt::Less;       break;
-    case OptLevel::O2: codegen_opt = llvm::CodeGenOpt::Default;    break;
-    case OptLevel::O3: codegen_opt = llvm::CodeGenOpt::Aggressive; break;
-    }
-
-    auto machine = target->createTargetMachine(
-        target_triple, "generic", {}, {}, {}, {}, codegen_opt, true);
-    auto data_layout = machine->createDataLayout();
-    
-    LLVMIRGenerator llvm_gen;
-    llvm_gen.set_target(LLVMIRGenerator::Target::Host);
-    llvm_gen.generate(prog, &data_layout);
-
-    llvm::PassManagerBuilder pass_mgr_builder;
-    switch(opt)
-    {
-    case OptLevel::O0: pass_mgr_builder.OptLevel = 0; break;
-    case OptLevel::O1: pass_mgr_builder.OptLevel = 1; break;
-    case OptLevel::O2: pass_mgr_builder.OptLevel = 2; break;
-    case OptLevel::O3: pass_mgr_builder.OptLevel = 3; break;
-    }
-    pass_mgr_builder.Inliner = llvm::createFunctionInliningPass(
-        pass_mgr_builder.OptLevel, 0, false);
-
-    machine->adjustPassManager(pass_mgr_builder);
-
-    llvm::legacy::PassManager passes;
-    passes.add(
-        createTargetTransformInfoWrapperPass(machine->getTargetIRAnalysis()));
-    pass_mgr_builder.populateModulePassManager(passes);
-    passes.run(*llvm_gen.get_module());
-    
-    llvm::EngineBuilder engine_builder(llvm_gen.get_module_ownership());
+    llvm::EngineBuilder engine_builder(std::move(im.llvm_module));
     engine_builder.setErrorStr(&err);
-    engine_builder.setOptLevel(codegen_opt);
+    engine_builder.setOptLevel(im.codegen_opt);
 
-    auto exec_engine = engine_builder.create(machine);
+    auto exec_engine = engine_builder.create(im.machine);
     if(!exec_engine)
         throw CUJException(err);
     impl_->exec_engine.reset(exec_engine);

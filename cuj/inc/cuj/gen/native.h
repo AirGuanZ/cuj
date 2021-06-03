@@ -11,6 +11,18 @@ class NativeJIT : public Uncopyable
 {
 public:
 
+    struct Options
+    {
+        OptLevel opt_level  = OptLevel::Default;
+        bool     enable_slp = true;
+    };
+
+    static std::string generate_llvm_ir(
+        const ir::Program &prog, OptLevel opt = OptLevel::Default);
+
+    static std::string generate_llvm_ir(
+        const ir::Program &prog, const Options &opts);
+
     NativeJIT() = default;
 
     NativeJIT(NativeJIT &&rhs) noexcept;
@@ -20,6 +32,8 @@ public:
     ~NativeJIT();
 
     void generate(const ir::Program &prog, OptLevel opt = OptLevel::Default);
+
+    void generate(const ir::Program &prog, const Options &opts);
 
     template<typename FuncType>
     FuncType *get_function_by_name(const std::string &name) const;

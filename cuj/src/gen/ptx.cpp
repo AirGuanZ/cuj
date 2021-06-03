@@ -27,53 +27,92 @@
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 
+namespace
+{
+
+    struct IntermediateModule
+    {
+        std::unique_ptr<llvm::Module> llvm_module;
+        llvm::TargetMachine          *machine;
+    };
+
+    IntermediateModule construct_intermediate_module(
+        const ir::Program &prog, OptLevel opt)
+    {
+        LLVMInitializeNVPTXTargetInfo();
+        LLVMInitializeNVPTXTarget();
+        LLVMInitializeNVPTXTargetMC();
+        LLVMInitializeNVPTXAsmPrinter();
+
+        std::string err;
+        const char *target_triple = "nvptx64-nvidia-cuda";
+        auto target = llvm::TargetRegistry::lookupTarget(target_triple, err);
+        if(!target)
+            throw CUJException(err);
+        
+        auto machine = target->createTargetMachine(target_triple, "", {}, {}, {});
+        auto data_layout = machine->createDataLayout();
+
+        LLVMIRGenerator ir_gen;
+        ir_gen.set_target(LLVMIRGenerator::Target::PTX);
+        ir_gen.generate(prog, &data_layout);
+
+        auto llvm_module = ir_gen.get_module();
+        llvm_module->setDataLayout(data_layout);
+
+        llvm::PassManagerBuilder pass_mgr_builder;
+        switch(opt)
+        {
+        case OptLevel::O0: pass_mgr_builder.OptLevel = 0; break;
+        case OptLevel::O1: pass_mgr_builder.OptLevel = 1; break;
+        case OptLevel::O2: pass_mgr_builder.OptLevel = 2; break;
+        case OptLevel::O3: pass_mgr_builder.OptLevel = 3; break;
+        }
+        pass_mgr_builder.Inliner = llvm::createFunctionInliningPass(
+            pass_mgr_builder.OptLevel, 0, false);
+        machine->adjustPassManager(pass_mgr_builder);
+
+        llvm::legacy::PassManager passes;
+        passes.add(
+            createTargetTransformInfoWrapperPass(machine->getTargetIRAnalysis()));
+        pass_mgr_builder.populateModulePassManager(passes);
+
+        passes.run(*llvm_module);
+
+        IntermediateModule result;
+        result.llvm_module = ir_gen.get_module_ownership();
+        result.machine     = machine;
+
+        return result;
+    }
+
+} // namespace anonymouos
+
+std::string PTXGenerator::generate_llvm_ir(
+    const ir::Program &prog, OptLevel opt)
+{
+    auto im = construct_intermediate_module(prog, opt);
+
+    std::string result;
+    llvm::raw_string_ostream ss(result);
+    ss << *im.llvm_module;
+    ss.flush();
+    return result;
+}
+
 void PTXGenerator::generate(const ir::Program &prog, OptLevel opt)
 {
-    LLVMInitializeNVPTXTargetInfo();
-    LLVMInitializeNVPTXTarget();
-    LLVMInitializeNVPTXTargetMC();
-    LLVMInitializeNVPTXAsmPrinter();
-
-    std::string err;
-    const char *target_triple = "nvptx64-nvidia-cuda";
-    auto target = llvm::TargetRegistry::lookupTarget(target_triple, err);
-    if(!target)
-        throw CUJException(err);
+    auto im = construct_intermediate_module(prog, opt);
     
-    auto machine = target->createTargetMachine(target_triple, "", {}, {}, {});
-    auto data_layout = machine->createDataLayout();
-
-    LLVMIRGenerator ir_gen;
-    ir_gen.set_target(LLVMIRGenerator::Target::PTX);
-    ir_gen.generate(prog, &data_layout);
-
-    auto llvm_module = ir_gen.get_module();
-    llvm_module->setDataLayout(data_layout);
-
-    llvm::PassManagerBuilder pass_mgr_builder;
-    switch(opt)
-    {
-    case OptLevel::O0: pass_mgr_builder.OptLevel = 0; break;
-    case OptLevel::O1: pass_mgr_builder.OptLevel = 1; break;
-    case OptLevel::O2: pass_mgr_builder.OptLevel = 2; break;
-    case OptLevel::O3: pass_mgr_builder.OptLevel = 3; break;
-    }
-    pass_mgr_builder.Inliner = llvm::createFunctionInliningPass(
-        pass_mgr_builder.OptLevel, 0, false);
-    machine->adjustPassManager(pass_mgr_builder);
-
     llvm::legacy::PassManager passes;
-    passes.add(
-        createTargetTransformInfoWrapperPass(machine->getTargetIRAnalysis()));
-    pass_mgr_builder.populateModulePassManager(passes);
 
     llvm::SmallString<8> output_buf;
     llvm::raw_svector_ostream output_stream(output_buf);
-    if(machine->addPassesToEmitFile(
+    if(im.machine->addPassesToEmitFile(
         passes, output_stream, nullptr, llvm::CGFT_AssemblyFile))
         throw CUJException("ptx file emission is not supported");
 
-    passes.run(*llvm_module);
+    passes.run(*im.llvm_module);
 
     result_.resize(output_buf.size());
     std::memcpy(result_.data(), output_buf.data(), output_buf.size());
