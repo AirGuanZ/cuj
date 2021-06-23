@@ -39,7 +39,7 @@ f32 atomic_add(const Pointer<f32> &dst, const f32 &val)
     impl->val = val.get_impl();
 
     // atomic_add is intrinsic op with side effects. use a redundant "=" to
-    // force it keeped even if the user doesn't use a var to receive the
+    // force it kept even if the user doesn't use a var to receive the
     // return value of atomic_add
     f32 old(std::move(impl));
     f32 ret = old;
