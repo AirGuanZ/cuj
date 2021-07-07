@@ -94,7 +94,7 @@ inline IfBuilder &IfBuilder::operator-(const std::function<void()> &else_body)
 }
 
 template<typename T>
-WhileBuilder::WhileBuilder(const ArithmeticValue<T> &cond)
+void WhileBuilder::init_cond(const ArithmeticValue<T> &cond)
 {
     if constexpr(std::is_same_v<T, bool>)
         cond_ = cond.get_impl();
@@ -107,22 +107,42 @@ WhileBuilder::WhileBuilder(const ArithmeticValue<T> &cond)
 }
 
 template<typename T>
-WhileBuilder::WhileBuilder(const PointerImpl<T> &cond)
-    : WhileBuilder(cond != nullptr)
+void WhileBuilder::init_cond(const PointerImpl<T> &cond)
 {
-    
+    this->init_cond(cond != nullptr);
+}
+
+template<typename T, typename>
+void WhileBuilder::init_cond(T cond)
+{
+    this->init_cond(create_literial(cond));
+}
+
+template<typename F>
+WhileBuilder::WhileBuilder(const F &calc_cond_func)
+{
+    auto func = get_current_function();
+    auto cond_block = newRC<Block>();
+
+    func->push_block(cond_block);
+    auto cond = calc_cond_func();
+    this->init_cond(std::move(cond));
+    func->pop_block();
+
+    calc_cond_ = std::move(cond_block);
 }
 
 inline WhileBuilder::~WhileBuilder()
 {
-    CUJ_ASSERT(cond_ && block_);
-    auto while_stat = newRC<While>(std::move(cond_), std::move(block_));
+    CUJ_ASSERT(calc_cond_ && cond_ && body_);
+    auto while_stat = newRC<While>(
+        std::move(calc_cond_), std::move(cond_), std::move(body_));
     get_current_function()->append_statement(std::move(while_stat));
 }
 
 inline void WhileBuilder::operator+(const std::function<void()> &body_func)
 {
-    CUJ_ASSERT(cond_ && !block_);
+    CUJ_ASSERT(calc_cond_ && cond_ && !body_);
 
     auto func = get_current_function();
     auto block = newRC<Block>();
@@ -131,7 +151,7 @@ inline void WhileBuilder::operator+(const std::function<void()> &body_func)
     body_func();
     func->pop_block();
 
-    block_ = std::move(block);
+    body_ = std::move(block);
 }
 
 inline ReturnBuilder::ReturnBuilder()

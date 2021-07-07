@@ -107,7 +107,7 @@ CUJ_NAMESPACE_END(cuj)
 #define $elif(COND) +(COND)+[&]
 #define $else       -[&]
 
-#define $while(COND) ::cuj::ast::WhileBuilder(COND)+[&]
+#define $while(COND) ::cuj::ast::WhileBuilder([&]{return(COND);})+[&]
 
 #define $break                                                                  \
     ::cuj::ast::get_current_function()->append_statement(                       \

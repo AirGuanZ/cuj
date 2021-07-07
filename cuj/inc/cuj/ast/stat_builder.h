@@ -35,16 +35,23 @@ public:
 
 class WhileBuilder : public Uncopyable
 {
+    RC<Block>                         calc_cond_;
     RC<InternalArithmeticValue<bool>> cond_;
-    RC<Block>                         block_;
+    RC<Block>                         body_;
+
+    template<typename T>
+    void init_cond(const ArithmeticValue<T> &cond);
+
+    template<typename T>
+    void init_cond(const PointerImpl<T> &cond);
+
+    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    void init_cond(T cond);
 
 public:
 
-    template<typename T>
-    explicit WhileBuilder(const ArithmeticValue<T> &cond);
-
-    template<typename T>
-    explicit WhileBuilder(const PointerImpl<T> &cond);
+    template<typename F>
+    explicit WhileBuilder(const F &calc_cond_func);
 
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     explicit WhileBuilder(T cond) : WhileBuilder(create_literial(cond)) { }

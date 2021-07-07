@@ -64,12 +64,18 @@ public:
 
 class While : public Statement
 {
+    RC<Block>                         cond_block_;
     RC<InternalArithmeticValue<bool>> cond_;
     RC<Block>                         body_;
 
 public:
 
-    While(RC<InternalArithmeticValue<bool>> cond, RC<Block> body);
+    While(
+        RC<Block>                         cond_block,
+        RC<InternalArithmeticValue<bool>> cond,
+        RC<Block>                         body);
+
+    //While(RC<InternalArithmeticValue<bool>> cond, RC<Block> body);
 
     void gen_ir(ir::IRBuilder &builder) const override;
 };

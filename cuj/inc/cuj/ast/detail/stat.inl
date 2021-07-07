@@ -93,8 +93,13 @@ inline void If::gen_ir(ir::IRBuilder &builder) const
     builder.append_statment(newRC<ir::Statement>(std::move(stat)));
 }
 
-inline While::While(RC<InternalArithmeticValue<bool>> cond, RC<Block> body)
-    : cond_(std::move(cond)), body_(std::move(body))
+inline While::While(
+    RC<Block>                         cond_block,
+    RC<InternalArithmeticValue<bool>> cond,
+    RC<Block>                         body)
+    : cond_block_(std::move(cond_block)),
+      cond_(std::move(cond)),
+      body_(std::move(body))
 {
     
 }
@@ -105,6 +110,7 @@ inline void While::gen_ir(ir::IRBuilder &builder) const
 
     auto calc_cond_block = newRC<ir::Block>();
     builder.push_block(calc_cond_block);
+    cond_block_->gen_ir(builder);
     auto cond = cond_->gen_ir(builder);
     builder.pop_block();
 
