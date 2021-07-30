@@ -20,8 +20,7 @@ TEST_CASE("cuda")
     {
         ScopedContext context;
 
-        auto kernel = to_callable<void>(
-            ir::Function::Type::Kernel,
+        auto kernel = to_kernel(
             [](Pointer<int> output_thread_idx, Pointer<int> output_block_idx)
         {
             i32 thread_idx = cuda::thread_index_x();

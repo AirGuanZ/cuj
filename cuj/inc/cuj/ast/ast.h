@@ -40,6 +40,7 @@ using ast::Value;
 using ast::Variable;
 
 using ast::to_callable;
+using ast::to_kernel;
 
 using ast::get_current_context;
 using ast::get_current_function;

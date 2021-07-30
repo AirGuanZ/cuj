@@ -136,6 +136,22 @@ auto to_callable(std::string name, ir::Function::Type type, Callable &&callable)
         std::move(name), type, std::forward<Callable>(callable));
 }
 
+template<typename Callable>
+auto to_kernel(Callable &&callable)
+{
+    return to_callable<void>(
+        ir::Function::Type::Kernel, std::forward<Callable>(callable));
+}
+
+template<typename Callable>
+auto to_kernel(std::string name, Callable &&callable)
+{
+    return to_callable<void>(
+        std::move(name),
+        ir::Function::Type::Kernel,
+        std::forward<Callable>(callable));
+}
+
 #define CUJ_SCOPED_CONTEXT(CTX_PTR)                                             \
     ::cuj::ast::push_context(CTX_PTR);                                          \
     CUJ_SCOPE_GUARD({ ::cuj::ast::pop_context(); })

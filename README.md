@@ -176,8 +176,10 @@ All variables, operators and statements contained in the defined CUJ function ar
 There are some variants of `to_callable`:
 
 * `to_callable<ReturnType>(Functor)` omits the function name. CUJ will automaticly assign an unique name to it.
-* `to_callable<ReturnType>(Type, Functor)` specifies the function type (see `cuj::ir::FunctionType`). This can be used for defining special functions like device functions in NVIDIA PTX.
+* `to_callable<ReturnType>(Type, Functor)` specifies the function type (see `cuj::ir::Function::Type`). This can be used for defining special functions like device functions in NVIDIA PTX.
 * `to_callable<ReturnType>(Name, Type, Functor)` specifies both of the name and type.
+* `to_kernel(Functor)` alias of `to_callable<void>(ir::Function::Type::Kernel, Functor)`
+* `to_kernel(Name, Functor)` alias of `to_callable<void>(Name, ir::Function::Type::Kernel, Functor)`
 
 We can also define a CUJ function by explicitly calling `Context::begin_function` and `Context::end_function`. For example:
 
@@ -423,6 +425,17 @@ namespace cuj::builtin::cuda
     Dim3 thread_index();
     Dim3 block_index();
     Dim3 block_dim();
+	void sync_block_threads();
+    
+    math::Vec1f sample_texture2d_1f(TextureObject tex, f32 u, f32 v);
+    math::Vec2f sample_texture2d_2f(TextureObject tex, f32 u, f32 v);
+    math::Vec3f sample_texture2d_3f(TextureObject tex, f32 u, f32 v);
+    math::Vec4f sample_texture2d_4f(TextureObject tex, f32 u, f32 v);
+
+    math::Vec1i sample_texture2d_1i(TextureObject tex, f32 u, f32 v);
+    math::Vec2i sample_texture2d_2i(TextureObject tex, f32 u, f32 v);
+    math::Vec3i sample_texture2d_3i(TextureObject tex, f32 u, f32 v);
+    math::Vec4i sample_texture2d_4i(TextureObject tex, f32 u, f32 v);
 }
 ```
 
