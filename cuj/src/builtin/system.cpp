@@ -15,7 +15,7 @@ namespace
         {
             auto msg_ptr = msg->gen_ir(builder);
             auto call = ir::IntrinsicCall{ { "system.print", { msg_ptr } } };
-            builder.append_statment(newRC<ir::Statement>(call));
+            builder.append_statement(newRC<ir::Statement>(call));
         }
     };
 
@@ -49,7 +49,7 @@ namespace
         {
             auto ptr_val = ptr->gen_ir(builder);
             auto call = ir::IntrinsicCall{ { "system.free", { ptr_val } } };
-            builder.append_statment(newRC<ir::Statement>(call));
+            builder.append_statement(newRC<ir::Statement>(call));
         }
     };
 

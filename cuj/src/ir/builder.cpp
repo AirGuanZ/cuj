@@ -75,7 +75,7 @@ void IRBuilder::pop_block()
     blocks_.pop();
 }
 
-void IRBuilder::append_statment(RC<Statement> stat)
+void IRBuilder::append_statement(RC<Statement> stat)
 {
     CUJ_ASSERT(cur_func_);
     CUJ_ASSERT(!blocks_.empty());
@@ -85,7 +85,7 @@ void IRBuilder::append_statment(RC<Statement> stat)
 void IRBuilder::append_assign(BasicTempValue lhs, Value rhs)
 {
     auto stat = newRC<Statement>(Assign{ lhs, rhs });
-    append_statment(std::move(stat));
+    append_statement(std::move(stat));
 }
 
 BasicTempValue IRBuilder::gen_temp_value(const Type *type)

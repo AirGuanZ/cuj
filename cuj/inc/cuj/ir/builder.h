@@ -38,7 +38,7 @@ public:
 
     void pop_block();
 
-    void append_statment(RC<Statement> stat);
+    void append_statement(RC<Statement> stat);
 
     void append_assign(BasicTempValue lhs, Value rhs);
 

@@ -125,8 +125,7 @@ WhileBuilder::WhileBuilder(const F &calc_cond_func)
     auto cond_block = newRC<Block>();
 
     func->push_block(cond_block);
-    auto cond = calc_cond_func();
-    this->init_cond(std::move(cond));
+    this->init_cond(calc_cond_func());
     func->pop_block();
 
     calc_cond_ = std::move(cond_block);

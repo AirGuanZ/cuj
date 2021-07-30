@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include <cuj/ast/ast.h>
 #include <cuj/util/uncopyable.h>
 
 CUJ_NAMESPACE_BEGIN(cuj)
@@ -32,6 +33,13 @@ public:
         const Dim3        &block_cnt,
         const Dim3        &block_size,
         Args            ...kernel_args);
+
+    template<typename T, typename...Args>
+    void launch(
+        const ast::Function<T> &func,
+        const Dim3             &block_cnt,
+        const Dim3             &block_size,
+        Args                 ...kernel_args);
 
 private:
 
@@ -70,6 +78,17 @@ void CUDAModule::launch(
     }
     else
         this->launch_impl(entry_name, block_cnt, block_size, nullptr);
+}
+
+template<typename T, typename...Args>
+void CUDAModule::launch(
+    const ast::Function<T> &func,
+    const Dim3             &block_cnt, 
+    const Dim3             &block_size,
+    Args                 ...kernel_args)
+{
+    this->launch(
+        func.get_name(), block_cnt, block_size, std::move(kernel_args)...);
 }
 
 template<typename Arg0>

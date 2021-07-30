@@ -123,7 +123,9 @@ namespace
         switch(target)
         {
         case LLVMIRGenerator::Target::Host: return "host";
+#if CUJ_ENABLE_CUDA
         case LLVMIRGenerator::Target::PTX:  return "ptx";
+#endif
         }
         unreachable();
     }
@@ -134,11 +136,19 @@ void link_with_libdevice(
     llvm::LLVMContext *context,
     llvm::Module      *dest_module);
 
+#if CUJ_ENABLE_CUDA
+bool process_cuda_intrinsic_stat(
+    llvm::LLVMContext              &ctx,
+    llvm::IRBuilder<>              &ir,
+    const std::string               name,
+    const std::vector<llvm::Value*> args);
+
 llvm::Value *process_cuda_intrinsic_op(
     llvm::Module                     *top_module,
     llvm::IRBuilder<>                &ir,
     const std::string                &name,
     const std::vector<llvm::Value *> &args);
+#endif
 
 bool process_host_intrinsic_stat(
     llvm::LLVMContext               *context,
@@ -205,11 +215,13 @@ void LLVMIRGenerator::generate(const ir::Program &prog, llvm::DataLayout *dl)
     data_->ir_builder = newBox<llvm::IRBuilder<>>(*llvm_ctx);
     data_->top_module = newBox<llvm::Module>("cuj", *llvm_ctx);
 
+#if CUJ_ENABLE_CUDA
     if(target_ == Target::PTX)
     {
         data_->top_module->setTargetTriple("nvptx64-nvidia-cuda");
         link_with_libdevice(llvm_ctx.get(), data_->top_module.get());
     }
+#endif
 
     if(dl_)
         data_->top_module->setDataLayout(*dl_);
@@ -731,6 +743,15 @@ void LLVMIRGenerator::generate(const ir::IntrinsicCall &call)
     for(auto &a : call.op.args)
         args.push_back(get_value(a));
 
+#if CUJ_ENABLE_CUDA
+    if(target_ == Target::PTX)
+    {
+        if(process_cuda_intrinsic_stat(
+            *llvm_ctx, *data_->ir_builder, call.op.name, args))
+            return;
+    }
+#endif
+
     if(target_ == Target::Host)
     {
         if(process_host_intrinsic_stat(
@@ -1031,6 +1052,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::IntrinsicOp &v)
             return ret;
     }
 
+#if CUJ_ENABLE_CUDA
     if(target_ == Target::PTX)
     {
         auto ret = process_cuda_intrinsic_op(
@@ -1038,6 +1060,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::IntrinsicOp &v)
         if(ret)
             return ret;
     }
+#endif
 
     throw CUJException(
         "unknown intrinsic " + v.name +
@@ -1049,7 +1072,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::MemberPtrOp &v)
     auto struct_ptr = get_value(v.ptr);
     auto struct_type = find_llvm_type(v.ptr_type);
     
-    std::vector<llvm::Value *> indices(2);
+    std::array<llvm::Value *, 2> indices;
     indices[0] = llvm::ConstantInt::get(
         *llvm_ctx, llvm::APInt(32, 0));
     indices[1] = llvm::ConstantInt::get(
@@ -1144,7 +1167,11 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::AllocAddress &v)
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::ConstData &v)
 {
+#if CUJ_ENABLE_CUDA
     const int GLOBAL_ADDR_SPACE = target_ == Target::PTX ? 1 : 0;
+#else
+    const int GLOBAL_ADDR_SPACE = 0;
+#endif
 
     auto u8_type   = llvm::Type::getInt8Ty(*llvm_ctx);
     auto elem_type = find_llvm_type(v.elem_type);
@@ -1187,6 +1214,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::ConstData &v)
         *llvm_ctx, llvm::APInt(32, 0, false));
 
     auto val = data_->ir_builder->CreateGEP(global_var, indices);
+#if CUJ_ENABLE_CUDA
     if(target_ == Target::PTX)
     {
         auto src_type = llvm::PointerType::get(u8_type, GLOBAL_ADDR_SPACE);
@@ -1196,6 +1224,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::ConstData &v)
             llvm::Intrinsic::nvvm_ptr_global_to_gen,
             { dst_type, src_type }, { val });
     }
+#endif
 
     val = data_->ir_builder->CreatePointerCast(
         val, llvm::PointerType::get(elem_type, 0));

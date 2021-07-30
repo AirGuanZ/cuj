@@ -51,6 +51,8 @@ Dim3 thread_index();
 Dim3 block_index();
 Dim3 block_dim();
 
+void sync_block_threads();
+
 CUJ_NAMESPACE_END(cuj::builtin::cuda)
 
 #endif // #if CUJ_ENABLE_CUDA

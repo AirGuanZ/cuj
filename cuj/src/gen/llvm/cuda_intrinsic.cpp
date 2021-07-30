@@ -23,6 +23,59 @@
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 
+namespace
+{
+
+    void create_sample_texture_intrinsic(
+        llvm::LLVMContext               &ctx,
+        llvm::IRBuilder<>               &ir,
+        const std::vector<llvm::Value*> &args,
+        llvm::Intrinsic::ID              id)
+    {
+        CUJ_ASSERT(args.size() == 1 + 2 + 4);
+        auto tex     = args[0];
+        auto u       = args[1];
+        auto v       = args[2];
+        auto r       = args[3];
+        auto g       = args[4];
+        auto b       = args[5];
+        auto a       = args[6];
+
+        auto call = ir.CreateIntrinsic(id, { }, { tex, u, v });
+
+        auto raw_type = call->getType();
+        CUJ_ASSERT(raw_type->isStructTy());
+        auto type = static_cast<llvm::StructType*>(call->getType());
+
+        auto alloc = ir.CreateAlloca(type);
+        ir.CreateStore(call, alloc);
+
+        std::array<llvm::Value *, 2> indices = {};
+        indices[0] = llvm::ConstantInt::get(ctx, llvm::APInt(32, 0));
+
+        indices[1] = llvm::ConstantInt::get(ctx, llvm::APInt(32, 0));
+        auto member_addr = ir.CreateGEP(type, alloc, indices);
+        auto member = ir.CreateLoad(member_addr);
+        ir.CreateStore(member, r);
+
+        indices[1] = llvm::ConstantInt::get(ctx, llvm::APInt(32, 1));
+        member_addr = ir.CreateGEP(type, alloc, indices);
+        member = ir.CreateLoad(member_addr);
+        ir.CreateStore(member, g);
+
+        indices[1] = llvm::ConstantInt::get(ctx, llvm::APInt(32, 2));
+        member_addr = ir.CreateGEP(type, alloc, indices);
+        member = ir.CreateLoad(member_addr);
+        ir.CreateStore(member, b);
+
+        indices[1] = llvm::ConstantInt::get(ctx, llvm::APInt(32, 3));
+        member_addr = ir.CreateGEP(type, alloc, indices);
+        member = ir.CreateLoad(member_addr);
+        ir.CreateStore(member, a);
+    }
+
+} // namespace anonymous
+
 void link_with_libdevice(
     llvm::LLVMContext *context,
     llvm::Module      *dest_module)
@@ -48,6 +101,36 @@ void link_with_libdevice(
         CUJ_ASSERT(func);
         func->setLinkage(llvm::GlobalValue::InternalLinkage);
     }
+}
+
+bool process_cuda_intrinsic_stat(
+    llvm::LLVMContext              &ctx,
+    llvm::IRBuilder<>              &ir,
+    const std::string               name,
+    const std::vector<llvm::Value*> args)
+{
+    if(name == "cuda.thread_block_barrier")
+    {
+        CUJ_ASSERT(args.empty());
+        ir.CreateIntrinsic(llvm::Intrinsic::nvvm_barrier0, {}, {});
+        return true;
+    }
+
+    if(name == "cuda.sample.2d.f32")
+    {
+        create_sample_texture_intrinsic(
+            ctx, ir, args, llvm::Intrinsic::nvvm_tex_unified_2d_v4f32_f32);
+        return true;
+    }
+
+    if(name == "cuda.sample.2d.i32")
+    {
+        create_sample_texture_intrinsic(
+            ctx, ir, args, llvm::Intrinsic::nvvm_tex_unified_2d_v4s32_f32);
+        return true;
+    }
+
+    return false;
 }
 
 llvm::Value *process_cuda_intrinsic_op(

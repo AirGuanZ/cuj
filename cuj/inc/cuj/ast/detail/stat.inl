@@ -34,7 +34,7 @@ void Store<L, R>::gen_ir(ir::IRBuilder &builder) const
     if constexpr(std::is_same_v<L, R>)
     {
         auto rhs_val = rhs_->gen_ir(builder);
-        builder.append_statment(
+        builder.append_statement(
             newRC<ir::Statement>(ir::Store{ lhs_val, rhs_val }));
     }
     else
@@ -47,7 +47,7 @@ void Store<L, R>::gen_ir(ir::IRBuilder &builder) const
 
         builder.append_assign(rhs_val, cast_op);
 
-        builder.append_statment(
+        builder.append_statement(
             newRC<ir::Statement>(ir::Store{ lhs_val, rhs_val }));
     }
 }
@@ -90,7 +90,7 @@ inline void If::gen_ir(ir::IRBuilder &builder) const
         stat.else_block = std::move(else_block);
     }
 
-    builder.append_statment(newRC<ir::Statement>(std::move(stat)));
+    builder.append_statement(newRC<ir::Statement>(std::move(stat)));
 }
 
 inline While::While(
@@ -123,17 +123,17 @@ inline void While::gen_ir(ir::IRBuilder &builder) const
     result.cond           = cond;
     result.body           = std::move(body_block);
 
-    builder.append_statment(newRC<ir::Statement>(std::move(result)));
+    builder.append_statement(newRC<ir::Statement>(std::move(result)));
 }
 
 inline void Break::gen_ir(ir::IRBuilder &builder) const
 {
-    builder.append_statment(newRC<ir::Statement>(ir::Break{}));
+    builder.append_statement(newRC<ir::Statement>(ir::Break{}));
 }
 
 inline void Continue::gen_ir(ir::IRBuilder &builder) const
 {
-    builder.append_statment(newRC<ir::Statement>(ir::Continue{}));
+    builder.append_statement(newRC<ir::Statement>(ir::Continue{}));
 }
 
 template<typename T>
@@ -159,13 +159,13 @@ void ReturnArithmetic<T>::gen_ir(ir::IRBuilder &builder) const
 {
     if(!value_)
     {
-        builder.append_statment(
+        builder.append_statement(
             newRC<ir::Statement>(ir::Return{ std::nullopt }));
     }
     else
     {
         auto val = value_->gen_ir(builder);
-        builder.append_statment(newRC<ir::Statement>(ir::Return{ val }));
+        builder.append_statement(newRC<ir::Statement>(ir::Return{ val }));
     }
 }
 
@@ -180,7 +180,7 @@ template<typename T>
 void ReturnPointer<T>::gen_ir(ir::IRBuilder &builder) const
 {
     auto val = pointer_->gen_ir(builder);
-    builder.append_statment(newRC<ir::Statement>(ir::Return{ val }));
+    builder.append_statement(newRC<ir::Statement>(ir::Return{ val }));
 }
 
 template<typename T>
@@ -195,7 +195,7 @@ void ReturnClass<T>::gen_ir(ir::IRBuilder &builder) const
 {
     auto class_ptr = pointer_->gen_ir(builder);
     auto ret_stat = ir::ReturnClass{ class_ptr };
-    builder.append_statment(newRC<ir::Statement>(ret_stat));
+    builder.append_statement(newRC<ir::Statement>(ret_stat));
 }
 
 template<typename T>
@@ -210,7 +210,7 @@ void ReturnArray<T>::gen_ir(ir::IRBuilder &builder) const
 {
     auto class_ptr = pointer_->gen_ir(builder);
     auto ret_stat = ir::ReturnArray{ class_ptr };
-    builder.append_statment(newRC<ir::Statement>(ret_stat));
+    builder.append_statement(newRC<ir::Statement>(ret_stat));
 }
 
 template<typename...Args>
@@ -239,7 +239,7 @@ void CallVoid<Args...>::gen_ir(ir::IRBuilder &builder) const
                 builder, arg, arg_vals), ...);
     }, args_);
 
-    builder.append_statment(newRC<ir::Statement>(ir::Call{
+    builder.append_statement(newRC<ir::Statement>(ir::Call{
         ir::CallOp{
             func->get_name(), std::move(arg_vals), ret_type
         }
@@ -276,7 +276,7 @@ void CallClass<Ret, Args...>::gen_ir(ir::IRBuilder &builder) const
                 builder, arg, arg_vals), ...);
     }, args_);
 
-    builder.append_statment(newRC<ir::Statement>(ir::Call{
+    builder.append_statement(newRC<ir::Statement>(ir::Call{
         ir::CallOp{
             func->get_name(), std::move(arg_vals), ret_type
         }
@@ -313,7 +313,7 @@ void CallArray<Ret, Args...>::gen_ir(ir::IRBuilder &builder) const
                 builder, arg, arg_vals), ...);
     }, args_);
 
-    builder.append_statment(newRC<ir::Statement>(ir::Call{
+    builder.append_statement(newRC<ir::Statement>(ir::Call{
         ir::CallOp{
             func->get_name(), std::move(arg_vals), ret_type
         }

@@ -36,6 +36,17 @@ namespace
         return Value<int>(std::move(impl));
     }
 
+    class ThreadBlockBarrierStatement : public ast::Statement
+    {
+    public:
+
+        void gen_ir(ir::IRBuilder &builder) const override
+        {
+            auto call = ir::IntrinsicCall{ { "cuda.thread_block_barrier" } };
+            builder.append_statement(newRC<ir::Statement>(call));
+        }
+    };
+
 } // namespace anonymous
 
 ir::BasicValue detail::InternalIntrinsicIntValue::gen_ir(
@@ -108,6 +119,12 @@ Dim3 block_index()
 Dim3 block_dim()
 {
     return Dim3(block_dim_x(), block_dim_y(), block_dim_z());
+}
+
+void sync_block_threads()
+{
+    auto stat = newRC<ThreadBlockBarrierStatement>();
+    get_current_function()->append_statement(std::move(stat));
 }
 
 CUJ_NAMESPACE_END(cuj::builtin::cuda)
