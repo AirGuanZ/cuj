@@ -66,9 +66,13 @@ private:
 
     void generate_func_decl(const ir::Function &func);
 
+    void generate_func_decl(const ir::ImportedHostFunction &func);
+
     llvm::Function *generate_func(const ir::Function &func);
 
     llvm::FunctionType *generate_func_type(const ir::Function &func);
+
+    llvm::FunctionType *generate_func_type(const ir::ImportedHostFunction &func);
 
     void mark_func_type(const ir::Function &func, llvm::Function *llvm_func);
 

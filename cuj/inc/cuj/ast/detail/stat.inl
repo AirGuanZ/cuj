@@ -225,7 +225,7 @@ template<typename...Args>
 void CallVoid<Args...>::gen_ir(ir::IRBuilder &builder) const
 {
     auto context = get_current_context();
-    auto func = context->get_function_context(func_index_);
+    auto func_name = context->get_function_name(func_index_);
 
     auto ret_type = context->get_type<void>();
 
@@ -240,10 +240,7 @@ void CallVoid<Args...>::gen_ir(ir::IRBuilder &builder) const
     }, args_);
 
     builder.append_statement(newRC<ir::Statement>(ir::Call{
-        ir::CallOp{
-            func->get_name(), std::move(arg_vals), ret_type
-        }
-    }));
+        ir::CallOp{ func_name, std::move(arg_vals), ret_type }}));
 }
 
 template<typename Ret, typename ... Args>
@@ -259,7 +256,7 @@ template<typename Ret, typename ... Args>
 void CallClass<Ret, Args...>::gen_ir(ir::IRBuilder &builder) const
 {
     auto context = get_current_context();
-    auto func = context->get_function_context(func_index_);
+    auto func_name = context->get_function_name(func_index_);
 
     auto ret_type = context->get_type<void>();
 
@@ -277,10 +274,7 @@ void CallClass<Ret, Args...>::gen_ir(ir::IRBuilder &builder) const
     }, args_);
 
     builder.append_statement(newRC<ir::Statement>(ir::Call{
-        ir::CallOp{
-            func->get_name(), std::move(arg_vals), ret_type
-        }
-    }));
+        ir::CallOp{ func_name, std::move(arg_vals), ret_type }}));
 }
 
 template<typename Ret, typename ... Args>
@@ -296,7 +290,7 @@ template<typename Ret, typename ... Args>
 void CallArray<Ret, Args...>::gen_ir(ir::IRBuilder &builder) const
 {
     auto context = get_current_context();
-    auto func = context->get_function_context(func_index_);
+    auto func_name = context->get_function_name(func_index_);
 
     auto ret_type = context->get_type<void>();
 
@@ -314,10 +308,7 @@ void CallArray<Ret, Args...>::gen_ir(ir::IRBuilder &builder) const
     }, args_);
 
     builder.append_statement(newRC<ir::Statement>(ir::Call{
-        ir::CallOp{
-            func->get_name(), std::move(arg_vals), ret_type
-        }
-    }));
+        ir::CallOp{ func_name, std::move(arg_vals), ret_type }}));
 }
 
 CUJ_NAMESPACE_END(cuj::ast)

@@ -49,7 +49,7 @@ public:
 
     void pop_block();
 
-    const std::string &get_name() const;
+    std::string get_name() const;
 
     int get_arg_count() const;
 

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <cuj/ir/stat.h>
+#include <cuj/util/untyped_owner.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::ir)
 
@@ -30,6 +31,18 @@ struct Function
     std::map<int, RC<Allocation>> index_to_allocs;
 
     RC<Block> body;
+};
+
+struct ImportedHostFunction
+{
+    RC<UntypedOwner> context_data;
+    
+    uint64_t    address;
+    bool        is_external;
+    std::string symbol_name;
+
+    std::vector<const Type *> arg_types;
+    const Type               *ret_type;
 };
 
 CUJ_NAMESPACE_END(cuj::ir)

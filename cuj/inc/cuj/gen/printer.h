@@ -19,6 +19,8 @@ public:
 
 private:
 
+    void print(const ir::ImportedHostFunction &func);
+
     void print(const ir::Function &func);
 
     void print(const ir::StructType *type);

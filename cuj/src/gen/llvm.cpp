@@ -178,6 +178,8 @@ struct LLVMIRGenerator::Data
         std::pair<llvm::Type*, std::vector<unsigned char>>,
         llvm::GlobalVariable *> global_data_consts;
 
+    std::map<std::string, RC<UntypedOwner>> function_ctx_data;
+
     // per function
 
     llvm::Value *func_ret_class_ptr_arg = nullptr;
@@ -233,13 +235,26 @@ void LLVMIRGenerator::generate(const ir::Program &prog, llvm::DataLayout *dl)
         construct_struct_type_body(p.second.get());
 
     for(auto &f : prog.funcs)
-        generate_func_decl(*f);
+    {
+        f.match(
+            [this](const RC<ir::Function> &func)
+        {
+            generate_func_decl(*func);
+        },
+            [this](const RC<ir::ImportedHostFunction> &func)
+        {
+            generate_func_decl(*func);
+        });
+    }
 
     std::set<llvm::Function *> all_funcs;
     for(auto &f : prog.funcs)
     {
-        auto llvm_func = generate_func(*f);
-        all_funcs.insert(llvm_func);
+        if(auto func = f.as_if<RC<ir::Function>>())
+        {
+            auto llvm_func = generate_func(**func);
+            all_funcs.insert(llvm_func);
+        }
     }
 
     llvm::legacy::FunctionPassManager fpm(data_->top_module.get());
@@ -391,6 +406,28 @@ void LLVMIRGenerator::generate_func_decl(const ir::Function &func)
     data_->functions[func.name] = llvm_func;
 }
 
+void LLVMIRGenerator::generate_func_decl(const ir::ImportedHostFunction &func)
+{
+    if(target_ != Target::Host)
+    {
+        throw CUJException(
+            "imported function is only available for 'host' target");
+    }
+
+    auto func_type = generate_func_type(func);
+
+    const auto linkage = func.is_external ?
+        llvm::Function::ExternalLinkage : llvm::Function::InternalLinkage;
+
+    auto llvm_func = llvm::Function::Create(
+        func_type, linkage, func.symbol_name, data_->top_module.get());
+
+    data_->functions[func.symbol_name] = llvm_func;
+
+    if(func.context_data)
+        data_->function_ctx_data[func.symbol_name] = func.context_data;
+}
+
 llvm::Function *LLVMIRGenerator::generate_func(const ir::Function &func)
 {
     CUJ_ASSERT(data_);
@@ -455,7 +492,8 @@ llvm::Function *LLVMIRGenerator::generate_func(const ir::Function &func)
     return ret;
 }
 
-llvm::FunctionType *LLVMIRGenerator::generate_func_type(const ir::Function &func)
+llvm::FunctionType *LLVMIRGenerator::generate_func_type(
+    const ir::Function &func)
 {
     const bool is_ret_struct_or_arr =
         func.ret_type->is<ir::StructType>() ||
@@ -485,6 +523,42 @@ llvm::FunctionType *LLVMIRGenerator::generate_func_type(const ir::Function &func
         else
         {
             auto llvm_arg_type = find_llvm_type(alloc_type);
+            arg_types.push_back(llvm_arg_type);
+        }
+    }
+
+    auto ret_type = is_ret_struct_or_arr ? data_->ir_builder->getVoidTy()
+                                         : find_llvm_type(func.ret_type);
+    return llvm::FunctionType::get(ret_type, arg_types, false);
+}
+
+llvm::FunctionType *LLVMIRGenerator::generate_func_type(
+    const ir::ImportedHostFunction &func)
+{
+    const bool is_ret_struct_or_arr =
+        func.ret_type->is<ir::StructType>() ||
+        func.ret_type->is<ir::ArrayType>();
+
+    std::vector<llvm::Type *> arg_types;
+
+    if(is_ret_struct_or_arr)
+    {
+        auto llvm_ret_type = find_llvm_type(func.ret_type);
+        auto arg_type = llvm::PointerType::get(llvm_ret_type, 0);
+        arg_types.push_back(arg_type);
+    }
+
+    for(auto arg_type : func.arg_types)
+    {
+        if(arg_type->is<ir::StructType>() || arg_type->is<ir::ArrayType>())
+        {
+            auto llvm_deref_type = find_llvm_type(arg_type);
+            auto llvm_type = llvm::PointerType::get(llvm_deref_type, 0);
+            arg_types.push_back(llvm_type);
+        }
+        else
+        {
+            auto llvm_arg_type = find_llvm_type(arg_type);
             arg_types.push_back(llvm_arg_type);
         }
     }
@@ -730,6 +804,16 @@ void LLVMIRGenerator::generate(const ir::ReturnArray &return_array)
 void LLVMIRGenerator::generate(const ir::Call &call)
 {
     std::vector<llvm::Value *> args;
+
+    if(auto it = data_->function_ctx_data.find(call.op.name);
+       it != data_->function_ctx_data.end())
+    {
+        args.push_back(
+            llvm::ConstantInt::get(
+                llvm::IntegerType::get(*llvm_ctx, 64),
+                reinterpret_cast<uint64_t>(it->second->get<void>())));
+    }
+
     for(auto &a : call.op.args)
         args.push_back(get_value(a));
 
@@ -973,8 +1057,19 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::LoadOp &v)
 llvm::Value *LLVMIRGenerator::get_value(const ir::CallOp &v)
 {
     std::vector<llvm::Value *> args;
+
+    if(auto it = data_->function_ctx_data.find(v.name);
+       it != data_->function_ctx_data.end())
+    {
+        args.push_back(
+            llvm::ConstantInt::get(
+                llvm::IntegerType::get(*llvm_ctx, 64),
+                reinterpret_cast<uint64_t>(it->second->get<void>())));
+    }
+
     for(auto &a : v.args)
         args.push_back(get_value(a));
+
     auto func = data_->top_module->getFunction(v.name);
     return data_->ir_builder->CreateCall(func, args);
 }

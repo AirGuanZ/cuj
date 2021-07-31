@@ -1,6 +1,6 @@
 #include <test/test.h>
 
-TEST_CASE("math.atomic.add")
+TEST_CASE("builtin.math.atomic")
 {
     SECTION("f32")
     {

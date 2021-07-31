@@ -152,7 +152,7 @@ template<typename Ret, typename Callable>
 Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
     Callable &&callable)
 {
-    const std::string name =
+    std::string name =
         "_cuj_auto_named_func_" + std::to_string(funcs_.size());
     return this->add_function<Ret>(
         std::move(name), std::forward<Callable>(callable));
@@ -162,10 +162,48 @@ template<typename Ret, typename Callable>
 Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
     ir::Function::Type type, Callable &&callable)
 {
-    const std::string name =
+    std::string name =
         "_cuj_auto_named_func_" + std::to_string(funcs_.size());
     return this->add_function<Ret>(
         std::move(name), type, std::forward<Callable>(callable));
+}
+
+template<typename FuncType>
+Function<FuncType> Context::import_host_function(
+    std::string name, uint64_t func_ptr, RC<UntypedOwner> ctx_data)
+{
+    if(func_name_to_index_.count(name))
+        throw CUJException("repeated function name");
+
+    auto ret_type = get_type<typename Function<FuncType>::ReturnType>();
+
+    std::vector<const ir::Type *> arg_types;
+    Function<FuncType>::get_arg_types(arg_types);
+
+    funcs_.push_back(newRC<ir::ImportedHostFunction>());
+    auto &func = *funcs_.back().as<RC<ir::ImportedHostFunction>>();
+
+    const int index = static_cast<int>(funcs_.size() - 1);
+    func_name_to_index_[name] = index;
+
+    func.context_data = ctx_data;
+    func.address      = func_ptr;
+    func.is_external  = true;
+    func.symbol_name  = std::move(name);
+    func.arg_types    = std::move(arg_types);
+    func.ret_type     = ret_type;
+
+    return Function<FuncType>(index);
+}
+
+template<typename FuncType>
+Function<FuncType> Context::import_host_function(
+    uint64_t func_ptr, RC<UntypedOwner> ctx_data)
+{
+    std::string name =
+        "_cuj_auto_named_func_" + std::to_string(funcs_.size());
+    return this->import_host_function<FuncType>(
+        std::move(name), func_ptr, ctx_data);
 }
 
 template<typename FuncType>
@@ -190,7 +228,7 @@ Function<FuncType> Context::begin_function(
 
     funcs_.push_back(
         newBox<FunctionContext>(std::move(name), type, ret_type, arg_types));
-    func_stack_.push(funcs_.back().get());
+    func_stack_.push(funcs_.back().as<Box<FunctionContext>>().get());
 
     const int index = static_cast<int>(funcs_.size() - 1);
     func_name_to_index_[name] = index;
@@ -274,7 +312,17 @@ inline void Context::gen_ir_impl(ir::IRBuilder &builder) const
         builder.add_type(p.first, p.second);
 
     for(auto &f : funcs_)
-        f->gen_ir(builder);
+    {
+        f.match(
+            [&](const Box<FunctionContext> &func)
+        {
+            func->gen_ir(builder);
+        },
+            [&](const RC<ir::ImportedHostFunction> &func)
+        {
+            builder.add_host_imported_function(func);
+        });
+    }
 }
 
 inline std::map<std::type_index, RC<ir::Type>> &Context::all_types()
@@ -289,11 +337,26 @@ inline FunctionContext *Context::get_current_function()
     return func_stack_.top();
 }
 
-inline FunctionContext *Context::get_function_context(int func_index)
+inline const Variant<Box<FunctionContext>, RC<ir::ImportedHostFunction>> &
+    Context::get_function_context(int func_index)
 {
     CUJ_ASSERT(0 <= func_index);
     CUJ_ASSERT(func_index < static_cast<int>(funcs_.size()));
-    return funcs_[func_index].get();
+    return funcs_[func_index];
+}
+
+inline std::string Context::get_function_name(int func_index)
+{
+    auto &ctx = get_function_context(func_index);
+    return ctx.match(
+        [](const Box<FunctionContext> &c)
+    {
+        return c->get_name();
+    },
+        [](const RC<ir::ImportedHostFunction> &c)
+    {
+        return c->symbol_name;
+    });
 }
 
 inline void push_context(Context *context)

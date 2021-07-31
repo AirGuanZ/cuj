@@ -106,6 +106,8 @@ namespace
 struct NativeJIT::Impl
 {
     std::unique_ptr<llvm::ExecutionEngine> exec_engine;
+
+    std::vector<RC<UntypedOwner>> func_contexts;
 };
 
 std::string NativeJIT::generate_llvm_ir(const ir::Program &prog, OptLevel opt)
@@ -188,6 +190,15 @@ void NativeJIT::generate(const ir::Program &prog, const Options &opts)
             NAME, reinterpret_cast<uint64_t>(FUNC));                            \
     } while(false)
 
+    for(auto &f : prog.funcs)
+    {
+        if(auto func = f.as_if<RC<ir::ImportedHostFunction>>())
+        {
+            auto &hf = **func;
+            impl_->exec_engine->addGlobalMapping(hf.symbol_name, hf.address);
+        }
+    }
+
     ADD_HOST_FUNC("host.math.abs.f32",       &::fabsf);
     ADD_HOST_FUNC("host.math.mod.f32",       &::fmodf);
     ADD_HOST_FUNC("host.math.remainder.f32", &::remainderf);
@@ -251,6 +262,15 @@ void NativeJIT::generate(const ir::Program &prog, const Options &opts)
 #undef ADD_HOST_FUNC
 
     impl_->exec_engine->finalizeObject();
+
+    for(auto &f : prog.funcs)
+    {
+        if(auto func = f.as_if<RC<ir::ImportedHostFunction>>())
+        {
+            if(auto &c = func->get()->context_data)
+                impl_->func_contexts.push_back(c);
+        }
+    }
 }
 
 void *NativeJIT::get_symbol_impl(const std::string &name) const

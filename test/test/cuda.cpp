@@ -14,7 +14,7 @@ namespace
     }
 }
 
-TEST_CASE("cuda")
+TEST_CASE("builtin.cuda")
 {
     SECTION("special registers")
     {

@@ -24,8 +24,11 @@ public:
     const ir::Type *get_type();
 
     FunctionContext *get_current_function();
+    
+    const Variant<Box<FunctionContext>, RC<ir::ImportedHostFunction>> &
+        get_function_context(int func_index);
 
-    FunctionContext *get_function_context(int func_index);
+    std::string get_function_name(int func_index);
 
     template<typename FuncType>
     Function<FuncType> get_function(std::string_view name) const;
@@ -50,6 +53,14 @@ public:
     template<typename Ret, typename Callable>
     Function<FunctionType<RawToCUJType<Ret>, Callable>> add_function(
         ir::Function::Type type, Callable &&callable);
+
+    template<typename FuncType>
+    Function<FuncType> import_host_function(
+        std::string name, uint64_t func_ptr, RC<UntypedOwner> ctx_data = {});
+
+    template<typename FuncType>
+    Function<FuncType> import_host_function(
+        uint64_t func_ptr, RC<UntypedOwner> ctx_data = {});
 
     template<typename FuncType>
     Function<FuncType> begin_function(
@@ -97,8 +108,10 @@ private:
 
     std::map<std::type_index, RC<ir::Type>> used_types_;
 
-    std::vector<Box<FunctionContext>> funcs_;
-    std::stack<FunctionContext*>      func_stack_;
+    using ContextFunc = Variant<Box<FunctionContext>, RC<ir::ImportedHostFunction>>;
+
+    std::vector<ContextFunc>     funcs_;
+    std::stack<FunctionContext*> func_stack_;
 
     std::map<std::string, int, std::less<>> func_name_to_index_;
 };

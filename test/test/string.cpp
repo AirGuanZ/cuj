@@ -119,9 +119,8 @@ TEST_CASE("string")
     {
         ScopedContext ctx;
 
-        to_callable<void>(
-            "test", ir::Function::Type::Kernel,
-            [](const Pointer<char> &output)
+        to_kernel(
+            "test", [](const Pointer<char> &output)
         {
             i32 i = cuda::block_dim_x() * cuda::block_index_x()
                   + cuda::thread_index_x();

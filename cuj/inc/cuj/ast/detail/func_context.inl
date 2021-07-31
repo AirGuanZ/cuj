@@ -112,7 +112,7 @@ inline void FunctionContext::pop_block()
     blocks_.pop();
 }
 
-inline const std::string &FunctionContext::get_name() const
+inline std::string FunctionContext::get_name() const
 {
     return name_;
 }

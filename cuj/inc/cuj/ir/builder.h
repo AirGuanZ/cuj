@@ -26,6 +26,8 @@ public:
 
     void add_function_arg(int alloc_index);
 
+    void add_host_imported_function(RC<ImportedHostFunction> func);
+
     // local allocation
 
     void add_alloc(int alloc_index, const Type *type);

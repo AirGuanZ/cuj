@@ -46,6 +46,11 @@ void IRBuilder::add_function_arg(int alloc_index)
     cur_func_->args.push_back({ alloc_index });
 }
 
+void IRBuilder::add_host_imported_function(RC<ImportedHostFunction> func)
+{
+    prog_.funcs.push_back(std::move(func));
+}
+
 void IRBuilder::add_alloc(int alloc_index, const Type *type)
 {
     CUJ_ASSERT(cur_func_);

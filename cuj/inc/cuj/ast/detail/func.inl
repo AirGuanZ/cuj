@@ -109,9 +109,9 @@ typename detail::FuncRetType<Ret>::Type
 }
 
 template<typename Ret, typename ... Args>
-const std::string &FunctionImpl<Ret, Args...>::get_name() const
+std::string FunctionImpl<Ret, Args...>::get_name() const
 {
-    return get_current_context()->get_function_context(index_)->get_name();
+    return get_current_context()->get_function_name(index_);
 }
 
 template<typename Ret, typename...Args>
@@ -128,17 +128,35 @@ template<typename Ret, typename...Args>
 bool FunctionImpl<Ret, Args...>::check_return_type() const
 {
     auto ctx = get_current_context();
-    auto func = ctx->get_function_context(index_);
-    return ctx->get_type<Ret>() == func->get_return_type();
+    
+    return ctx->get_function_context(index_).match(
+        [&](const Box<FunctionContext> &c)
+    {
+        return ctx->get_type<Ret>() == c->get_return_type();
+    },
+        [&](const RC<ir::ImportedHostFunction> &c)
+    {
+        return ctx->get_type<Ret>() == c->ret_type;
+    });
 }
 
 template<typename Ret, typename...Args>
 bool FunctionImpl<Ret, Args...>::check_param_types() const
 {
     auto ctx = get_current_context();
-    auto func = ctx->get_function_context(index_);
-    if(sizeof...(Args) != func->get_arg_count())
+    
+    const int arg_cnt = ctx->get_function_context(index_).match(
+        [&](const Box<FunctionContext> &c)
+    {
+        return c->get_arg_count();
+    },
+        [&](const RC<ir::ImportedHostFunction> &c)
+    {
+        return static_cast<int>(c->arg_types.size());
+    });
+    if(sizeof...(Args) != arg_cnt)
         return false;
+
     return check_param_types_aux(std::make_index_sequence<sizeof...(Args)>());
 }
 
@@ -148,9 +166,18 @@ bool FunctionImpl<Ret, Args...>::check_param_types_aux(std::index_sequence<Is...
 {
     using ArgTypes = std::tuple<Args...>;
     auto ctx = get_current_context();
-    auto func = ctx->get_function_context(index_);
-    return ((func->get_arg_type(static_cast<int>(Is)) ==
-            ctx->get_type<std::tuple_element_t<Is, ArgTypes>>()) && ...);
+
+    return ctx->get_function_context(index_).match(
+        [&](const Box<FunctionContext> &c)
+    {
+        return ((c->get_arg_type(static_cast<int>(Is)) ==
+                ctx->get_type<std::tuple_element_t<Is, ArgTypes>>()) && ...);
+    },
+        [&](const RC<ir::ImportedHostFunction> &c)
+    {
+        return ((c->arg_types[static_cast<int>(Is)] ==
+                ctx->get_type<std::tuple_element_t<Is, ArgTypes>>()) && ...);
+    });
 }
 
 template<typename Ret, typename ... Args>
@@ -162,7 +189,7 @@ typename detail::FuncRetType<typename Function<Ret(Args ...)>::ReturnType>::Type
 }
 
 template<typename Ret, typename ... Args>
-const std::string &Function<Ret(Args ...)>::get_name() const
+std::string Function<Ret(Args ...)>::get_name() const
 {
     return impl_->get_name();
 }

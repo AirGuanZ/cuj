@@ -247,7 +247,7 @@ ir::BasicValue InternalArithmeticFunctionCall<R, Args...>::gen_ir(
     ir::IRBuilder &builder) const
 {
     auto context = get_current_context();
-    auto func = context->get_function_context(func_index);
+    auto func_name = context->get_function_name(func_index);
     
     auto ret_type = context->get_type<R>();
 
@@ -262,7 +262,7 @@ ir::BasicValue InternalArithmeticFunctionCall<R, Args...>::gen_ir(
     
     auto ret = builder.gen_temp_value(ret_type);
     builder.append_assign(
-        ret, ir::CallOp{ func->get_name(), std::move(arg_vals), ret_type });
+        ret, ir::CallOp{ func_name, std::move(arg_vals), ret_type });
 
     return ret;
 }

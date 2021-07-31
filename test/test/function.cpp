@@ -1,3 +1,4 @@
+#include <iostream>
 #include <numeric>
 
 #include <test/test.h>
@@ -146,6 +147,31 @@ TEST_CASE("function")
         REQUIRE(test_make_arr4_func);
         if(test_make_arr4_func)
             REQUIRE(test_make_arr4_func(1, 2, 3, 4) == 10);
+    }
+
+    SECTION("import host func")
+    {
+        ScopedContext ctx;
+
+        void (*ptr1)();
+        ptr1 = [] { std::cout << "output of 'import host printf' test" << std::endl; };
+        auto func1 = ctx.import_host_function<void()>(reinterpret_cast<uint64_t>(ptr1));
+
+        int (*ptr2)(int);
+        ptr2 = [](int x) { return x * x * x; };
+        auto func2 = ctx.import_host_function<int(int)>(reinterpret_cast<uint64_t>(ptr2));
+
+        auto jit = ctx.gen_native_jit();
+
+        auto test_func1 = jit.get_function(func1);
+        REQUIRE(test_func1);
+        if(test_func1)
+            test_func1();
+
+        auto test_func2 = jit.get_function(func2);
+        REQUIRE(test_func2);
+        if(test_func2)
+            REQUIRE(test_func2(5) == 5 * 5 * 5);
     }
 
     SECTION("while cond")

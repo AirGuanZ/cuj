@@ -85,13 +85,34 @@ void IRPrinter::print(const ir::Program &prog)
     {
         if(i > 0)
             str_.new_line();
-        print(*prog.funcs[i]);
+        auto func = prog.funcs[i];
+        if(func.is<RC<ir::Function>>())
+            print(*func.as<RC<ir::Function>>());
+        else
+        {
+            CUJ_ASSERT(func.is<RC<ir::ImportedHostFunction>>());
+            print(*func.as<RC<ir::ImportedHostFunction>>());
+        }
     }
 }
 
 std::string IRPrinter::get_string() const
 {
     return str_.get_result();
+}
+
+void IRPrinter::print(const ir::ImportedHostFunction &func)
+{
+    str_.append("declare ", func.symbol_name);
+    str_.append(" : (");
+    for(size_t i = 0; i < func.arg_types.size(); ++i)
+    {
+        if(i > 0)
+            str_.append(", ");
+        str_.append(get_typename(func.arg_types[i]));
+    }
+    str_.append(") -> ", get_typename(func.ret_type));
+    str_.new_line();
 }
 
 void IRPrinter::print(const ir::Function &func)

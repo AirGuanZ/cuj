@@ -118,7 +118,7 @@ public:
     typename detail::FuncRetType<Ret>::Type
         operator()(const CallArgs &...args) const;
 
-    const std::string &get_name() const;
+    std::string get_name() const;
 
 private:
     
@@ -171,7 +171,7 @@ public:
     typename detail::FuncRetType<ReturnType>::Type
         operator()(const CallArgs &...args) const;
 
-    const std::string &get_name() const;
+    std::string get_name() const;
 
 private:
 
