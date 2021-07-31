@@ -147,4 +147,44 @@ TEST_CASE("function")
         if(test_make_arr4_func)
             REQUIRE(test_make_arr4_func(1, 2, 3, 4) == 10);
     }
+
+    SECTION("while cond")
+    {
+        ScopedContext ctx;
+
+        auto func = to_callable<int>([](i32 n)
+        {
+            i32 c = 0, i = 0;
+
+            auto cond = [&]
+            {
+                c = c + 1;
+                boolean ret;
+                $if(i < n)
+                {
+                    i = i + 1;
+                    ret = true;
+                }
+                $else
+                {
+                    ret = false;
+                };
+                return ret;
+            };
+
+            $while(cond())
+            {
+
+            };
+
+            $return(c);
+        });
+        
+        auto jit = ctx.gen_native_jit();
+        auto test_func = jit.get_function(func);
+
+        REQUIRE(test_func);
+        if(test_func)
+            REQUIRE(test_func(10) == 11);
+    }
 }

@@ -154,8 +154,7 @@ namespace detail
 } // namespace detail
 
 template<typename Ret, typename...Args>
-class Function<Ret(Args...)> : FunctionImpl<
-    typename detail::DeValueType<RawToCUJType<Ret>>::Type, RawToCUJType<Args>...>
+class Function<Ret(Args...)>
 {
 public:
 
@@ -172,15 +171,21 @@ public:
     typename detail::FuncRetType<ReturnType>::Type
         operator()(const CallArgs &...args) const;
 
-    using FunctionImpl<ReturnType, RawToCUJType<Args>...>::get_name;
+    const std::string &get_name() const;
 
 private:
+
+    using Impl = FunctionImpl<
+        typename detail::DeValueType<RawToCUJType<Ret>>::Type,
+        RawToCUJType<Args>...>;
+
+    std::unique_ptr<Impl> impl_;
 
     friend class Context;
 
     static void get_arg_types(std::vector<const ir::Type *> &output);
 
-    using FunctionImpl<ReturnType, RawToCUJType<Args>...>::FunctionImpl;
+    explicit Function(int func_index);
 };
 
 CUJ_NAMESPACE_END(cuj::ast)

@@ -138,8 +138,7 @@ NativeJIT &NativeJIT::operator=(NativeJIT &&rhs) noexcept
 
 NativeJIT::~NativeJIT()
 {
-    if(impl_)
-        delete impl_;
+    delete impl_;
 }
 
 namespace

@@ -67,6 +67,9 @@ public:
     ir::Program gen_ir() const;
 
     std::string gen_ir_string() const;
+
+    std::string gen_llvm_string(
+        gen::LLVMIRGenerator::Target target) const;
     
     gen::NativeJIT gen_native_jit(
         gen::OptLevel opt = gen::OptLevel::Default) const;

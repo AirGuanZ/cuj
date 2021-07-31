@@ -107,32 +107,14 @@ template<typename T>
 ArithmeticValue<T> min(
     const ArithmeticValue<T> &lhs, const ArithmeticValue<T> &rhs)
 {
-    ArithmeticValue<T> ret;
-    $if(lhs < rhs)
-    {
-        ret = lhs;
-    }
-    $else
-    {
-        ret = rhs;
-    };
-    return ret;
+    return select(lhs < rhs, lhs, rhs);
 }
 
 template<typename T>
 ArithmeticValue<T> max(
     const ArithmeticValue<T> &lhs, const ArithmeticValue<T> &rhs)
 {
-    ArithmeticValue<T> ret;
-    $if(lhs > rhs)
-    {
-        ret = lhs;
-    }
-    $else
-    {
-        ret = rhs;
-    };
-    return ret;
+    return select(lhs > rhs, lhs, rhs);
 }
 
 template<typename T>

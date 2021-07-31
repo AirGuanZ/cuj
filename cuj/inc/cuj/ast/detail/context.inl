@@ -2,6 +2,7 @@
 
 #include <cuj/ast/context.h>
 
+#include <cuj/gen/llvm.h>
 #include <cuj/gen/printer.h>
 
 #if CUJ_ENABLE_CUDA
@@ -214,6 +215,15 @@ inline std::string Context::gen_ir_string() const
     gen::IRPrinter printer;
     printer.print(gen_ir());
     return printer.get_string();
+}
+
+inline std::string Context::gen_llvm_string(
+    gen::LLVMIRGenerator::Target target) const
+{
+    gen::LLVMIRGenerator llvm_gen;
+    llvm_gen.set_target(target);
+    llvm_gen.generate(gen_ir());
+    return llvm_gen.get_string();
 }
 
 inline gen::NativeJIT Context::gen_native_jit(gen::OptLevel opt) const
