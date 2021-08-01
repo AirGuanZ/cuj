@@ -38,9 +38,9 @@ public:
     template<typename FuncType>
     FuncType *get_function_by_name(const std::string &name) const;
 
-    template<typename FuncType>
-    typename ast::Function<FuncType>::CFunctionPointer
-        get_function(const ast::Function<FuncType> &func) const;
+    template<typename ForcedCFunction, typename FuncType>
+    typename ast::Function<ForcedCFunction, FuncType>::CFunctionPointer
+        get_function(const ast::Function<ForcedCFunction, FuncType> &func) const;
 
 private:
 
@@ -57,11 +57,11 @@ FuncType *NativeJIT::get_function_by_name(const std::string &name) const
     return reinterpret_cast<FuncType *>(get_symbol_impl(name));
 }
 
-template<typename FuncType>
-typename ast::Function<FuncType>::CFunctionPointer
-    NativeJIT::get_function(const ast::Function<FuncType> &func) const
+template<typename ForcedCFunction, typename FuncType>
+typename ast::Function<ForcedCFunction, FuncType>::CFunctionPointer
+    NativeJIT::get_function(const ast::Function<ForcedCFunction, FuncType> &func) const
 {
-    return reinterpret_cast<typename ast::Function<FuncType>::CFunctionPointer>(
+    return reinterpret_cast<typename ast::Function<ForcedCFunction, FuncType>::CFunctionPointer>(
         this->get_symbol_impl(func.get_name()));
 }
 

@@ -110,24 +110,8 @@ const ir::Type *Context::get_type()
     }
 }
 
-template<typename FuncType>
-Function<FuncType> Context::get_function(std::string_view name) const
-{
-    const auto it = func_name_to_index_.find(name);
-    if(it == func_name_to_index_.end())
-        throw CUJException("unknown function name: " + std::string(name));
-    return get_function<FuncType>(it->second);
-}
-
-template<typename FuncType>
-Function<FuncType> Context::get_function(int index) const
-{
-    CUJ_ASSERT(0 <= index && index < static_cast<int>(funcs_.size()));
-    return Function<FuncType>(index);
-}
-
 template<typename Ret, typename Callable>
-Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
+Function<void, FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
     std::string name, Callable &&callable)
 {
     return add_function<Ret>(
@@ -137,7 +121,7 @@ Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
 }
 
 template<typename Ret, typename Callable>
-Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
+Function<void, FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
     std::string name, ir::Function::Type type, Callable &&callable)
 {
     return add_function_impl<Ret>(
@@ -149,7 +133,7 @@ Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
 }
 
 template<typename Ret, typename Callable>
-Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
+Function<void, FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
     Callable &&callable)
 {
     std::string name =
@@ -159,7 +143,7 @@ Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
 }
 
 template<typename Ret, typename Callable>
-Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
+Function<void, FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
     ir::Function::Type type, Callable &&callable)
 {
     std::string name =
@@ -169,16 +153,16 @@ Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
 }
 
 template<typename FuncType>
-Function<FuncType> Context::import_host_function(
+Function<FuncType, FuncType> Context::import_raw_host_function(
     std::string name, uint64_t func_ptr, RC<UntypedOwner> ctx_data)
 {
     if(func_name_to_index_.count(name))
         throw CUJException("repeated function name");
 
-    auto ret_type = get_type<typename Function<FuncType>::ReturnType>();
+    auto ret_type = get_type<typename Function<FuncType, FuncType>::ReturnType>();
 
     std::vector<const ir::Type *> arg_types;
-    Function<FuncType>::get_arg_types(arg_types);
+    Function<FuncType, FuncType>::get_arg_types(arg_types);
 
     funcs_.push_back(newRC<ir::ImportedHostFunction>());
     auto &func = *funcs_.back().as<RC<ir::ImportedHostFunction>>();
@@ -193,21 +177,44 @@ Function<FuncType> Context::import_host_function(
     func.arg_types    = std::move(arg_types);
     func.ret_type     = ret_type;
 
-    return Function<FuncType>(index);
+    return Function<FuncType, FuncType>(index);
 }
 
 template<typename FuncType>
-Function<FuncType> Context::import_host_function(
+Function<FuncType, FuncType> Context::import_raw_host_function(
     uint64_t func_ptr, RC<UntypedOwner> ctx_data)
 {
     std::string name =
         "_cuj_auto_named_func_" + std::to_string(funcs_.size());
-    return this->import_host_function<FuncType>(
+    return this->import_raw_host_function<FuncType>(
         std::move(name), func_ptr, ctx_data);
 }
 
+template<typename Ret, typename ... Args>
+Function<Ret(Args...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
+    Context::import_host_function(Ret (*func_ptr)(Args ...))
+{
+    using namespace func_trait_detail;
+    static_assert((std::is_same_v<rm_cvref_t<Args>, Args> && ...));
+    using FuncType = CPPArgToCUJArgType<Ret>(CPPArgToCUJArgType<Args>...);
+    auto f = import_raw_host_function<FuncType>(reinterpret_cast<uint64_t>(func_ptr));
+    return Function<Ret(Args...), CPPFuncToCUJFuncType<Ret, Args...>>(f.get_index());
+}
+
+template<typename Ret, typename ... Args>
+Function<Ret(Args...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
+    Context::import_host_function(std::string name, Ret (*func_ptr)(Args ...))
+{
+    using namespace func_trait_detail;
+    static_assert((std::is_same_v<rm_cvref_t<Args>, Args> && ...));
+    using FuncType = CPPArgToCUJArgType<Ret>(CPPArgToCUJArgType<Args>...);
+    auto f =  import_raw_host_function<FuncType>(
+                std::move(name), reinterpret_cast<uint64_t>(func_ptr));
+    return Function<Ret(Args...), CPPFuncToCUJFuncType<Ret, Args...>>(f.get_index());
+}
+
 template<typename FuncType>
-Function<FuncType> Context::begin_function(ir::Function::Type type)
+Function<void, FuncType> Context::begin_function(ir::Function::Type type)
 {
     const std::string name =
         "_cuj_auto_named_func_" + std::to_string(funcs_.size());
@@ -215,16 +222,16 @@ Function<FuncType> Context::begin_function(ir::Function::Type type)
 }
 
 template<typename FuncType>
-Function<FuncType> Context::begin_function(
+Function<void, FuncType> Context::begin_function(
     std::string name, ir::Function::Type type)
 {
     if(func_name_to_index_.count(name))
         throw CUJException("repeated function name");
 
-    auto ret_type = get_type<typename Function<FuncType>::ReturnType>();
+    auto ret_type = get_type<typename Function<void, FuncType>::ReturnType>();
 
     std::vector<const ir::Type*> arg_types;
-    Function<FuncType>::get_arg_types(arg_types);
+    Function<void, FuncType>::get_arg_types(arg_types);
 
     funcs_.push_back(
         newBox<FunctionContext>(std::move(name), type, ret_type, arg_types));
@@ -233,7 +240,7 @@ Function<FuncType> Context::begin_function(
     const int index = static_cast<int>(funcs_.size() - 1);
     func_name_to_index_[name] = index;
 
-    return Function<FuncType>(index);
+    return Function<void, FuncType>(index);
 }
 
 inline void Context::end_function()
@@ -282,8 +289,24 @@ inline std::string Context::gen_ptx(gen::OptLevel opt) const
 
 #endif // #if CUJ_ENABLE_CUDA
 
+template<typename FuncType>
+Function<void, FuncType> Context::get_function(std::string_view name) const
+{
+    const auto it = func_name_to_index_.find(name);
+    if(it == func_name_to_index_.end())
+        throw CUJException("unknown function name: " + std::string(name));
+    return get_function<FuncType>(it->second);
+}
+
+template<typename FuncType>
+Function<void, FuncType> Context::get_function(int index) const
+{
+    CUJ_ASSERT(0 <= index && index < static_cast<int>(funcs_.size()));
+    return Function<void, FuncType>(index);
+}
+
 template<typename Ret, typename Callable, typename...Args, size_t...Is>
-Function<FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function_impl(
+Function<void, FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function_impl(
     std::string        name,
     ir::Function::Type type,
     Callable         &&callable,

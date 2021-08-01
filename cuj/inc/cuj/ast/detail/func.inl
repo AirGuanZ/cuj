@@ -114,6 +114,12 @@ std::string FunctionImpl<Ret, Args...>::get_name() const
     return get_current_context()->get_function_name(index_);
 }
 
+template<typename Ret, typename ... Args>
+int FunctionImpl<Ret, Args...>::get_index() const
+{
+    return index_;
+}
+
 template<typename Ret, typename...Args>
 FunctionImpl<Ret, Args...>::FunctionImpl(int func_index)
     : index_(func_index)
@@ -180,29 +186,35 @@ bool FunctionImpl<Ret, Args...>::check_param_types_aux(std::index_sequence<Is...
     });
 }
 
-template<typename Ret, typename ... Args>
+template<typename ForcedCFunctionType, typename Ret, typename ... Args>
 template<typename ... CallArgs>
-typename detail::FuncRetType<typename Function<Ret(Args ...)>::ReturnType>::Type
-    Function<Ret(Args ...)>::operator()(const CallArgs &... args) const
+typename detail::FuncRetType<typename Function<ForcedCFunctionType, Ret(Args ...)>::ReturnType>::Type
+    Function<ForcedCFunctionType, Ret(Args ...)>::operator()(const CallArgs &... args) const
 {
     return (*impl_)(detail::MakeArgValue<CallArgs>::process(args)...);
 }
 
-template<typename Ret, typename ... Args>
-std::string Function<Ret(Args ...)>::get_name() const
+template<typename ForcedCFunctionType, typename Ret, typename ... Args>
+std::string Function<ForcedCFunctionType, Ret(Args ...)>::get_name() const
 {
     return impl_->get_name();
 }
 
-template<typename Ret, typename...Args>
-void Function<Ret(Args...)>::get_arg_types(std::vector<const ir::Type*> &output)
+template<typename ForcedCFunctionType, typename Ret, typename ... Args>
+int Function<ForcedCFunctionType, Ret(Args ...)>::get_index() const
+{
+    return impl_->get_index();
+}
+
+template<typename ForcedCFunctionType, typename Ret, typename...Args>
+void Function<ForcedCFunctionType, Ret(Args...)>::get_arg_types(std::vector<const ir::Type*> &output)
 {
     auto ctx = get_current_context();
     (output.push_back(ctx->get_type<RawToCUJType<Args>>()), ...);
 }
 
-template<typename Ret, typename ... Args>
-Function<Ret(Args ...)>::Function(int func_index)
+template<typename ForcedCFunctionType, typename Ret, typename ... Args>
+Function<ForcedCFunctionType, Ret(Args ...)>::Function(int func_index)
 {
     impl_ = std::make_unique<Impl>(func_index);
 }

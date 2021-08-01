@@ -31,6 +31,37 @@ namespace func_trait_detail
         using FuncType =
             RetType(typename detail::DeValueType<rm_cvref_t<Args>>::Type...);
     };
+    
+    template<typename T>
+    auto cpp_arg_to_cuj_arg_type_aux()
+    {
+        using T1 = rm_cvref_t<T>;
+        static_assert(std::is_arithmetic_v<T1> || std::is_pointer_v<T1>);
+        if constexpr(std::is_arithmetic_v<T1>)
+            return reinterpret_cast<T *>(0);
+        else
+            return reinterpret_cast<void **>(0);
+    }
+
+    template<typename T>
+    struct CPPArgToCUJArgTypeAux
+    {
+        using Type =
+            std::remove_reference_t<decltype(*cpp_arg_to_cuj_arg_type_aux<T>())>;
+    };
+
+    template<>
+    struct CPPArgToCUJArgTypeAux<void>
+    {
+        using Type = void;
+    };
+
+    template<typename T>
+    using CPPArgToCUJArgType = typename CPPArgToCUJArgTypeAux<T>::Type;
+
+    template<typename Ret, typename...Args>
+    using CPPFuncToCUJFuncType =
+        RawToCUJType<CPPArgToCUJArgType<Ret>>(CPPArgToCUJArgType<Args>...);
 
 } // namespace func_trait_detail
 

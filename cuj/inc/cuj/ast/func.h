@@ -118,6 +118,8 @@ public:
     typename detail::FuncRetType<Ret>::Type
         operator()(const CallArgs &...args) const;
 
+    int get_index() const;
+
     std::string get_name() const;
 
 private:
@@ -132,7 +134,7 @@ private:
     int index_;
 };
 
-template<typename T>
+template<typename ForcedCFunction, typename T>
 class Function;
 
 namespace detail
@@ -153,17 +155,21 @@ namespace detail
 
 } // namespace detail
 
-template<typename Ret, typename...Args>
-class Function<Ret(Args...)>
+template<typename ForcedCFunctionType, typename Ret, typename...Args>
+class Function<ForcedCFunctionType, Ret(Args...)>
 {
 public:
 
     using ReturnType = typename detail::DeValueType<RawToCUJType<Ret>>::Type;
 
     using CFunctionType = std::conditional_t<
-        is_cuj_class<ReturnType> || is_array<ReturnType>,
-        void(void *, detail::CFunctionArgType<RawToCUJType<Args>>...),
-        RawToCUJType<ReturnType>(detail::CFunctionArgType<RawToCUJType<Args>>...)>;
+        std::is_function_v<ForcedCFunctionType>,
+        ForcedCFunctionType,
+        std::conditional_t<
+            is_cuj_class<ReturnType> || is_array<ReturnType>,
+            void(void *, detail::CFunctionArgType<RawToCUJType<Args>>...),
+            RawToCUJType<ReturnType>(
+                detail::CFunctionArgType<RawToCUJType<Args>>...)>>;
 
     using CFunctionPointer = CFunctionType*;
 
@@ -172,6 +178,8 @@ public:
         operator()(const CallArgs &...args) const;
 
     std::string get_name() const;
+
+    int get_index() const;
 
 private:
 

@@ -30,44 +30,46 @@ public:
 
     std::string get_function_name(int func_index);
 
-    template<typename FuncType>
-    Function<FuncType> get_function(std::string_view name) const;
-
-    template<typename FuncType>
-    Function<FuncType> get_function(int index) const;
-
     // function definition
 
     template<typename Ret, typename Callable>
-    Function<FunctionType<RawToCUJType<Ret>, Callable>> add_function(
+    Function<void, FunctionType<RawToCUJType<Ret>, Callable>> add_function(
         std::string name, Callable &&callable);
 
     template<typename Ret, typename Callable>
-    Function<FunctionType<RawToCUJType<Ret>, Callable>> add_function(
+    Function<void, FunctionType<RawToCUJType<Ret>, Callable>> add_function(
         std::string name, ir::Function::Type type, Callable &&callable);
 
     template<typename Ret, typename Callable>
-    Function<FunctionType<RawToCUJType<Ret>, Callable>> add_function(
+    Function<void, FunctionType<RawToCUJType<Ret>, Callable>> add_function(
         Callable &&callable);
 
     template<typename Ret, typename Callable>
-    Function<FunctionType<RawToCUJType<Ret>, Callable>> add_function(
+    Function<void, FunctionType<RawToCUJType<Ret>, Callable>> add_function(
         ir::Function::Type type, Callable &&callable);
 
     template<typename FuncType>
-    Function<FuncType> import_host_function(
+    Function<FuncType, FuncType> import_raw_host_function(
         std::string name, uint64_t func_ptr, RC<UntypedOwner> ctx_data = {});
 
     template<typename FuncType>
-    Function<FuncType> import_host_function(
+    Function<FuncType, FuncType> import_raw_host_function(
         uint64_t func_ptr, RC<UntypedOwner> ctx_data = {});
 
+    template<typename Ret, typename...Args>
+    Function<Ret(Args...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
+        import_host_function(Ret(*func_ptr)(Args...));
+
+    template<typename Ret, typename...Args>
+    Function<Ret(Args...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
+        import_host_function(std::string name, Ret(*func_ptr)(Args...));
+
     template<typename FuncType>
-    Function<FuncType> begin_function(
+    Function<void, FuncType> begin_function(
         ir::Function::Type type = ir::Function::Type::Default);
 
     template<typename FuncType>
-    Function<FuncType> begin_function(
+    Function<void, FuncType> begin_function(
         std::string        name,
         ir::Function::Type type = ir::Function::Type::Default);
 
@@ -94,8 +96,14 @@ public:
 
 private:
 
+    template<typename FuncType>
+    Function<void, FuncType> get_function(std::string_view name) const;
+
+    template<typename FuncType>
+    Function<void, FuncType> get_function(int index) const;
+
     template<typename Ret, typename Callable, typename...Args, size_t...Is>
-    Function<FunctionType<RawToCUJType<Ret>, Callable>> add_function_impl(
+    Function<void, FunctionType<RawToCUJType<Ret>, Callable>> add_function_impl(
         std::string        name,
         ir::Function::Type type,
         Callable         &&callable,

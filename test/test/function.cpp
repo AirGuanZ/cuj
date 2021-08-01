@@ -155,11 +155,11 @@ TEST_CASE("function")
 
         void (*ptr1)();
         ptr1 = [] { std::cout << "output of 'import host printf' test" << std::endl; };
-        auto func1 = ctx.import_host_function<void()>(reinterpret_cast<uint64_t>(ptr1));
+        auto func1 = ctx.import_host_function(ptr1);
 
-        int (*ptr2)(int);
-        ptr2 = [](int x) { return x * x * x; };
-        auto func2 = ctx.import_host_function<int(int)>(reinterpret_cast<uint64_t>(ptr2));
+        int (*ptr2)(const int*);
+        ptr2 = [](const int *x) { return *x * *x * *x; };
+        auto func2 = ctx.import_host_function(ptr2);
 
         auto jit = ctx.gen_native_jit();
 
@@ -171,7 +171,10 @@ TEST_CASE("function")
         auto test_func2 = jit.get_function(func2);
         REQUIRE(test_func2);
         if(test_func2)
-            REQUIRE(test_func2(5) == 5 * 5 * 5);
+        {
+            int x = 5;
+            REQUIRE(test_func2(&x) == 5 * 5 * 5);
+        }
     }
 
     SECTION("while cond")
