@@ -161,8 +161,8 @@ TEST_CASE("function")
         ptr2 = [](const int *x) { return *x * *x * *x; };
         auto func2 = import_function(ptr2);
 
-        int func3_ret_val = 5;
-        auto func3 = import_function([=] { return func3_ret_val; });
+        int func3_add_val = 5;
+        auto func3 = import_function([=](const int *pi) { return func3_add_val + *pi; });
 
         auto jit = ctx.gen_native_jit();
         
@@ -183,7 +183,10 @@ TEST_CASE("function")
         auto test_func3 = jit.get_function(func3);
         REQUIRE(test_func3);
         if(test_func3)
-            REQUIRE(test_func3() == func3_ret_val);
+        {
+            int x = 3;
+            REQUIRE(test_func3(&x) == func3_add_val + x);
+        }
     }
 
     SECTION("while cond")

@@ -530,10 +530,7 @@ llvm::Function *LLVMIRGenerator::generate_func(
             reinterpret_cast<uint64_t>(func.context_data->get<void>())));
 
     for(auto &arg : data_->function->args())
-    {
-        auto load_inst = data_->ir_builder->CreateLoad(&arg);
-        call_args.push_back(load_inst);
-    }
+        call_args.push_back(&arg);
 
     auto callee = data_->top_module->getFunction(
         "_cuj_host_contexted_func_" + func.symbol_name);
