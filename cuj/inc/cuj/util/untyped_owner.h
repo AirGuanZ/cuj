@@ -10,7 +10,7 @@ public:
 
     UntypedOwner() = default;
 
-    template<typename T, std::enable_if_t<
+    template<typename T, typename = std::enable_if_t<
                             std::is_class_v<T> &&
                            !std::is_same_v<rm_cvref_t<T>, UntypedOwner>>>
     explicit UntypedOwner(T &&value)
@@ -61,7 +61,7 @@ public:
     template<typename T = void>
     T *get()
     {
-        return static_cast<T *>(deleter_.get());
+        return static_cast<T *>(deleter_->get());
     }
 
 private:
@@ -70,9 +70,9 @@ private:
     {
         virtual ~Deleter() = default;
 
-        virtual const void *get() const;
+        virtual const void *get() const = 0;
 
-        virtual void *get();
+        virtual void *get() = 0;
     };
 
     template<typename T>

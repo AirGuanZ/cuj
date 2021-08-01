@@ -58,11 +58,32 @@ public:
 
     template<typename Ret, typename...Args>
     Function<Ret(Args...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
+        import_host_functor(std::function<Ret(Args...)> func);
+
+    template<typename Ret, typename...Args>
+    Function<Ret(Args...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
+        import_host_functor(std::string name, std::function<Ret(Args...)> func);
+
+    template<typename Ret, typename...Args>
+    Function<Ret(Args...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
         import_host_function(Ret(*func_ptr)(Args...));
 
     template<typename Ret, typename...Args>
     Function<Ret(Args...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
         import_host_function(std::string name, Ret(*func_ptr)(Args...));
+
+    template<typename T, typename = std::enable_if_t<!std::is_pointer_v<T>>>
+    auto import_host_function(T func)
+    {
+        return this->import_host_functor(std::function{ std::move(func) });
+    }
+
+    template<typename T, typename = std::enable_if_t<!std::is_pointer_v<T>>>
+    auto import_host_function(std::string name, T func)
+    {
+        return this->import_host_functor(
+            std::move(name), std::function{ std::move(func) });
+    }
 
     template<typename FuncType>
     Function<void, FuncType> begin_function(
@@ -158,6 +179,19 @@ auto to_callable(std::string name, ir::Function::Type type, Callable &&callable)
 {
     return get_current_context()->add_function<Ret>(
         std::move(name), type, std::forward<Callable>(callable));
+}
+
+template<typename T>
+auto import_function(T func)
+{
+    return get_current_context()->import_host_function(std::move(func));
+}
+
+template<typename T>
+auto import_function(std::string name, T func)
+{
+    return get_current_context()->import_host_function(
+            std::move(name), std::move(func));
 }
 
 template<typename Callable>

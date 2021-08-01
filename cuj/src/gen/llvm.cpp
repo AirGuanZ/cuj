@@ -178,8 +178,6 @@ struct LLVMIRGenerator::Data
         std::pair<llvm::Type*, std::vector<unsigned char>>,
         llvm::GlobalVariable *> global_data_consts;
 
-    std::map<std::string, RC<UntypedOwner>> function_ctx_data;
-
     // per function
 
     llvm::Value *func_ret_class_ptr_arg = nullptr;
@@ -250,11 +248,20 @@ void LLVMIRGenerator::generate(const ir::Program &prog, llvm::DataLayout *dl)
     std::set<llvm::Function *> all_funcs;
     for(auto &f : prog.funcs)
     {
-        if(auto func = f.as_if<RC<ir::Function>>())
+        f.match(
+            [&](const RC<ir::Function> &func)
         {
-            auto llvm_func = generate_func(**func);
+            auto llvm_func = generate_func(*func);
             all_funcs.insert(llvm_func);
-        }
+        },
+            [&](const RC<ir::ImportedHostFunction> &func)
+        {
+            if(func->context_data)
+            {
+                auto llvm_func = generate_func(*func);
+                all_funcs.insert(llvm_func);
+            }
+        });
     }
 
     llvm::legacy::FunctionPassManager fpm(data_->top_module.get());
@@ -414,18 +421,29 @@ void LLVMIRGenerator::generate_func_decl(const ir::ImportedHostFunction &func)
             "imported function is only available for 'host' target");
     }
 
-    auto func_type = generate_func_type(func);
+    {
+        auto func_type = generate_func_type(func, true);
+        
+        auto host_func_symbol_name = func.context_data ?
+            ("_cuj_host_contexted_func_" + func.symbol_name) : func.symbol_name;
 
-    const auto linkage = func.is_external ?
-        llvm::Function::ExternalLinkage : llvm::Function::InternalLinkage;
+        auto llvm_func = llvm::Function::Create(
+            func_type, llvm::Function::ExternalLinkage,
+            host_func_symbol_name, data_->top_module.get());
 
-    auto llvm_func = llvm::Function::Create(
-        func_type, linkage, func.symbol_name, data_->top_module.get());
-
-    data_->functions[func.symbol_name] = llvm_func;
+        data_->functions[host_func_symbol_name] = llvm_func;
+    }
 
     if(func.context_data)
-        data_->function_ctx_data[func.symbol_name] = func.context_data;
+    {
+        auto func_type = generate_func_type(func, false);
+        
+        auto llvm_func = llvm::Function::Create(
+            func_type, llvm::Function::ExternalLinkage,
+            func.symbol_name, data_->top_module.get());
+
+        data_->functions[func.symbol_name] = llvm_func;
+    }
 }
 
 llvm::Function *LLVMIRGenerator::generate_func(const ir::Function &func)
@@ -492,6 +510,55 @@ llvm::Function *LLVMIRGenerator::generate_func(const ir::Function &func)
     return ret;
 }
 
+llvm::Function *LLVMIRGenerator::generate_func(
+    const ir::ImportedHostFunction &func)
+{
+    CUJ_ASSERT(func.context_data);
+
+    auto func_it = data_->functions.find(func.symbol_name);
+    CUJ_ASSERT(func_it != data_->functions.end());
+    data_->function = func_it->second;
+
+    auto entry_block =
+        llvm::BasicBlock::Create(*llvm_ctx, "entry", data_->function);
+    data_->ir_builder->SetInsertPoint(entry_block);
+
+    std::vector<llvm::Value*> call_args;
+    call_args.push_back(
+        llvm::ConstantInt::get(
+            llvm::IntegerType::getInt64Ty(*llvm_ctx),
+            reinterpret_cast<uint64_t>(func.context_data->get<void>())));
+
+    for(auto &arg : data_->function->args())
+    {
+        auto load_inst = data_->ir_builder->CreateLoad(&arg);
+        call_args.push_back(load_inst);
+    }
+
+    auto callee = data_->top_module->getFunction(
+        "_cuj_host_contexted_func_" + func.symbol_name);
+    auto call_inst = data_->ir_builder->CreateCall(callee, call_args);
+
+    if(callee->getReturnType() != llvm::Type::getVoidTy(*llvm_ctx))
+        data_->ir_builder->CreateRet(call_inst);
+    else
+        data_->ir_builder->CreateRetVoid();
+
+    std::string err_msg;
+    llvm::raw_string_ostream err_stream(err_msg);
+    if(verifyFunction(*data_->function, &err_stream))
+        throw CUJException(err_msg);
+
+    auto ret = data_->function;
+
+    data_->function = nullptr;
+    CUJ_ASSERT(data_->func_ret_class_ptr_arg == nullptr);
+    CUJ_ASSERT(data_->index_to_allocas.empty());
+    CUJ_ASSERT(data_->temp_values_.empty());
+
+    return ret;
+}
+
 llvm::FunctionType *LLVMIRGenerator::generate_func_type(
     const ir::Function &func)
 {
@@ -533,7 +600,7 @@ llvm::FunctionType *LLVMIRGenerator::generate_func_type(
 }
 
 llvm::FunctionType *LLVMIRGenerator::generate_func_type(
-    const ir::ImportedHostFunction &func)
+    const ir::ImportedHostFunction &func, bool consider_context)
 {
     const bool is_ret_struct_or_arr =
         func.ret_type->is<ir::StructType>() ||
@@ -547,6 +614,9 @@ llvm::FunctionType *LLVMIRGenerator::generate_func_type(
         auto arg_type = llvm::PointerType::get(llvm_ret_type, 0);
         arg_types.push_back(arg_type);
     }
+
+    if(consider_context && func.context_data)
+        arg_types.push_back(llvm::IntegerType::getInt64Ty(*llvm_ctx));
 
     for(auto arg_type : func.arg_types)
     {
@@ -804,16 +874,6 @@ void LLVMIRGenerator::generate(const ir::ReturnArray &return_array)
 void LLVMIRGenerator::generate(const ir::Call &call)
 {
     std::vector<llvm::Value *> args;
-
-    if(auto it = data_->function_ctx_data.find(call.op.name);
-       it != data_->function_ctx_data.end())
-    {
-        args.push_back(
-            llvm::ConstantInt::get(
-                llvm::IntegerType::get(*llvm_ctx, 64),
-                reinterpret_cast<uint64_t>(it->second->get<void>())));
-    }
-
     for(auto &a : call.op.args)
         args.push_back(get_value(a));
 
@@ -1057,16 +1117,6 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::LoadOp &v)
 llvm::Value *LLVMIRGenerator::get_value(const ir::CallOp &v)
 {
     std::vector<llvm::Value *> args;
-
-    if(auto it = data_->function_ctx_data.find(v.name);
-       it != data_->function_ctx_data.end())
-    {
-        args.push_back(
-            llvm::ConstantInt::get(
-                llvm::IntegerType::get(*llvm_ctx, 64),
-                reinterpret_cast<uint64_t>(it->second->get<void>())));
-    }
-
     for(auto &a : v.args)
         args.push_back(get_value(a));
 

@@ -195,7 +195,10 @@ void NativeJIT::generate(const ir::Program &prog, const Options &opts)
         if(auto func = f.as_if<RC<ir::ImportedHostFunction>>())
         {
             auto &hf = **func;
-            impl_->exec_engine->addGlobalMapping(hf.symbol_name, hf.address);
+            auto host_func_symbol_name = hf.context_data ?
+                ("_cuj_host_contexted_func_" + hf.symbol_name) : hf.symbol_name;
+            impl_->exec_engine->addGlobalMapping(
+                host_func_symbol_name, hf.address);
         }
     }
 

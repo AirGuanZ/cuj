@@ -39,6 +39,7 @@ using ast::Pointer;
 using ast::Value;
 using ast::Variable;
 
+using ast::import_function;
 using ast::to_callable;
 using ast::to_kernel;
 

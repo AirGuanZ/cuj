@@ -70,9 +70,12 @@ private:
 
     llvm::Function *generate_func(const ir::Function &func);
 
+    llvm::Function *generate_func(const ir::ImportedHostFunction &func);
+
     llvm::FunctionType *generate_func_type(const ir::Function &func);
 
-    llvm::FunctionType *generate_func_type(const ir::ImportedHostFunction &func);
+    llvm::FunctionType *generate_func_type(
+        const ir::ImportedHostFunction &func, bool consider_context);
 
     void mark_func_type(const ir::Function &func, llvm::Function *llvm_func);
 

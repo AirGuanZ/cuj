@@ -155,26 +155,35 @@ TEST_CASE("function")
 
         void (*ptr1)();
         ptr1 = [] { std::cout << "output of 'import host printf' test" << std::endl; };
-        auto func1 = ctx.import_host_function(ptr1);
+        auto func1 = import_function(ptr1);
 
         int (*ptr2)(const int*);
         ptr2 = [](const int *x) { return *x * *x * *x; };
-        auto func2 = ctx.import_host_function(ptr2);
+        auto func2 = import_function(ptr2);
+
+        int func3_ret_val = 5;
+        auto func3 = import_function([=] { return func3_ret_val; });
 
         auto jit = ctx.gen_native_jit();
-
+        
         auto test_func1 = jit.get_function(func1);
         REQUIRE(test_func1);
         if(test_func1)
             test_func1();
 
         auto test_func2 = jit.get_function(func2);
+        static_assert(std::is_same_v<decltype(test_func2), decltype(ptr2)>);
         REQUIRE(test_func2);
         if(test_func2)
         {
             int x = 5;
             REQUIRE(test_func2(&x) == 5 * 5 * 5);
         }
+
+        auto test_func3 = jit.get_function(func3);
+        REQUIRE(test_func3);
+        if(test_func3)
+            REQUIRE(test_func3() == func3_ret_val);
     }
 
     SECTION("while cond")
