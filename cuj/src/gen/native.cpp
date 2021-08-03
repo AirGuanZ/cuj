@@ -156,7 +156,7 @@ namespace
 
     void print(const char *msg)
     {
-        std::cout << msg << std::endl;
+        std::cout << msg;
     }
 
 } // namespace anonymous

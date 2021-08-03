@@ -74,6 +74,81 @@ namespace
         ir.CreateStore(member, a);
     }
 
+    llvm::Function *get_print_function(
+        llvm::LLVMContext &ctx,
+        llvm::Module      *top_module)
+    {
+        if(auto f = top_module->getFunction("cuda_system_print"))
+            return f;
+
+        auto b64_type = llvm::IntegerType::getInt64Ty(ctx);
+        auto s32_type = llvm::IntegerType::getInt32Ty(ctx);
+        auto char_type = llvm::IntegerType::getInt8Ty(ctx);
+        auto pchar_type = llvm::PointerType::get(char_type, 0);
+        auto void_type = llvm::Type::getVoidTy(ctx);
+
+        auto raw_func_type = llvm::FunctionType::get(
+            s32_type, { b64_type, b64_type }, true);
+        auto raw_func = llvm::Function::Create(
+            raw_func_type, llvm::GlobalValue::ExternalLinkage,
+            "vprintf", top_module);
+
+        auto func_type = llvm::FunctionType::get(
+            void_type, { pchar_type }, false);
+        auto func = llvm::Function::Create(
+            func_type, llvm::GlobalValue::ExternalLinkage,
+            "cuda_system_print", top_module);
+
+        auto entry_block = llvm::BasicBlock::Create(ctx, "entry", func);
+
+        llvm::IRBuilder<> ir(ctx);
+        ir.SetInsertPoint(entry_block);
+
+        // const string: "cuda.system.print.fmt"
+        // "%s"
+        llvm::Value *fmt_str;
+        {
+            constexpr int GLOBAL_ADDR_SPACE = 1;
+
+            std::vector<llvm::Constant *> fmt_consts;
+            fmt_consts.push_back(llvm::ConstantInt::get(char_type, '%'));
+            fmt_consts.push_back(llvm::ConstantInt::get(char_type, 's'));
+            fmt_consts.push_back(llvm::ConstantInt::get(char_type, '\0'));
+
+            auto arr_type = llvm::ArrayType::get(char_type, 3);
+            auto init_const = llvm::ConstantArray::get(arr_type, fmt_consts);
+
+            auto global_var = new llvm::GlobalVariable(
+                *top_module, arr_type, true,
+                llvm::GlobalValue::InternalLinkage, init_const,
+                "cuda.system.print.fmt", nullptr,
+                llvm::GlobalValue::NotThreadLocal, GLOBAL_ADDR_SPACE);
+
+            std::array<llvm::Value *, 2> indices;
+            indices[0] = llvm::ConstantInt::get(ctx, llvm::APInt(32, 0, false));
+            indices[1] = llvm::ConstantInt::get(ctx, llvm::APInt(32, 0, false));
+            auto val = ir.CreateGEP(global_var, indices);
+
+            auto src_type = llvm::PointerType::get(char_type, GLOBAL_ADDR_SPACE);
+            auto dst_type = llvm::PointerType::get(char_type, 0);
+
+            fmt_str = ir.CreateIntrinsic(
+                llvm::Intrinsic::nvvm_ptr_global_to_gen,
+                { dst_type, src_type }, { val });
+        }
+
+        auto var_buffer = ir.CreateAlloca(b64_type);
+        ir.CreateStore(ir.CreatePtrToInt(&*func->arg_begin(), b64_type), var_buffer);
+
+        auto arg1 = ir.CreatePtrToInt(fmt_str, b64_type);
+        auto arg2 = ir.CreatePtrToInt(var_buffer, b64_type);
+        ir.CreateCall(raw_func, { arg1, arg2 });
+
+        ir.CreateRetVoid();
+
+        return func;
+    }
+
 } // namespace anonymous
 
 void link_with_libdevice(
@@ -105,10 +180,19 @@ void link_with_libdevice(
 
 bool process_cuda_intrinsic_stat(
     llvm::LLVMContext              &ctx,
+    llvm::Module                   *top_module,
     llvm::IRBuilder<>              &ir,
     const std::string               name,
     const std::vector<llvm::Value*> args)
 {
+    if(name == "system.print")
+    {
+        CUJ_ASSERT(args.size() == 1);
+        auto func = get_print_function(ctx, top_module);
+        ir.CreateCall(func, args);
+        return true;
+    }
+
     if(name == "cuda.thread_block_barrier")
     {
         CUJ_ASSERT(args.empty());

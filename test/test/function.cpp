@@ -154,7 +154,7 @@ TEST_CASE("function")
         ScopedContext ctx;
 
         void (*ptr1)();
-        ptr1 = [] { std::cout << "output of 'import host printf' test" << std::endl; };
+        ptr1 = [] { std::cout << "output of 'import host printf' test\n"; };
         auto func1 = import_function(ptr1);
 
         int (*ptr2)(const int*);
@@ -162,7 +162,8 @@ TEST_CASE("function")
         auto func2 = import_function(ptr2);
 
         int func3_add_val = 5;
-        auto func3 = import_function([=](const int *pi) { return func3_add_val + *pi; });
+        auto func3 = import_function(
+            [=](const int *pi) { return func3_add_val + *pi; });
 
         auto jit = ctx.gen_native_jit();
         
@@ -181,6 +182,7 @@ TEST_CASE("function")
         }
 
         auto test_func3 = jit.get_function(func3);
+        static_assert(std::is_same_v<decltype(test_func3), int(*)(const int *)>);
         REQUIRE(test_func3);
         if(test_func3)
         {

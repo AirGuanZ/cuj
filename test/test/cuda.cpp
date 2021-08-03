@@ -88,6 +88,31 @@ TEST_CASE("builtin.cuda")
             }
         }
     }
+
+    SECTION("print")
+    {
+        ScopedContext ctx;
+
+        auto kernel = to_kernel([]
+        {
+            system::print("hello, cuda.system.print!\n"_cuj);
+        });
+
+        auto ptx = ctx.gen_ptx();
+
+        CUdevice cu_device;
+        CUcontext cu_context;
+        cuDeviceGet(&cu_device, 0);
+        cuCtxCreate(&cu_context, 0, cu_device);
+        CUJ_SCOPE_GUARD({ cuCtxDestroy(cu_context); });
+
+        CUDAModule cu_module;
+        cu_module.load_ptx_from_memory(ptx.data(), ptx.size());
+
+        cu_module.launch(kernel, { 2 }, { 1 });
+
+        check_cuda_error(cudaDeviceSynchronize());
+    }
 }
 
 #endif // #if CUJ_ENABLE_CUDA

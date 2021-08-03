@@ -8,7 +8,7 @@ TEST_CASE("builtin.system")
 
         auto test = to_callable<void>([]
         {
-            system::print("output of 'host.system.print' test"_cuj);
+            system::print("output of 'host.system.print' test\n"_cuj);
         });
 
         auto jit = ctx.gen_native_jit();

@@ -139,6 +139,7 @@ void link_with_libdevice(
 #if CUJ_ENABLE_CUDA
 bool process_cuda_intrinsic_stat(
     llvm::LLVMContext              &ctx,
+    llvm::Module                   *top_module,
     llvm::IRBuilder<>              &ir,
     const std::string               name,
     const std::vector<llvm::Value*> args);
@@ -888,7 +889,8 @@ void LLVMIRGenerator::generate(const ir::IntrinsicCall &call)
     if(target_ == Target::PTX)
     {
         if(process_cuda_intrinsic_stat(
-            *llvm_ctx, *data_->ir_builder, call.op.name, args))
+            *llvm_ctx, data_->top_module.get(),
+            *data_->ir_builder, call.op.name, args))
             return;
     }
 #endif
@@ -1349,11 +1351,9 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::ConstData &v)
     else
         global_var = it->second;
 
-    std::vector<llvm::Value *> indices(2);
-    indices[0] = llvm::ConstantInt::get(
-        *llvm_ctx, llvm::APInt(32, 0, false));
-    indices[1] = llvm::ConstantInt::get(
-        *llvm_ctx, llvm::APInt(32, 0, false));
+    std::array<llvm::Value *, 2> indices;
+    indices[0] = llvm::ConstantInt::get(*llvm_ctx, llvm::APInt(32, 0, false));
+    indices[1] = llvm::ConstantInt::get(*llvm_ctx, llvm::APInt(32, 0, false));
 
     auto val = data_->ir_builder->CreateGEP(global_var, indices);
 #if CUJ_ENABLE_CUDA

@@ -194,17 +194,18 @@ template<typename Ret, typename ... Args>
 Function<Ret(Args ...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
     Context::import_host_functor(std::function<Ret(Args ...)> func)
 {
+    using namespace func_trait_detail;
+
     RC<UntypedOwner> owner = newRC<UntypedOwner>(std::move(func));
-    auto imported_func = [](uint64_t raw_func, Args...args)
+    auto imported_func = [](void* raw_func, Args...args)
     {
         auto pfunc = reinterpret_cast<std::function<Ret(Args...)>*>(raw_func);
         return (*pfunc)(args...);
     };
 
-    Ret(*p_imported_func)(uint64_t, Args...);
+    Ret(*p_imported_func)(void*, Args...);
     p_imported_func = imported_func;
 
-    using namespace func_trait_detail;
     static_assert((std::is_same_v<rm_cvref_t<Args>, Args> && ...));
     using FuncType = CPPArgToCUJArgType<Ret>(CPPArgToCUJArgType<Args>...);
     auto f = import_raw_host_function<FuncType>(
@@ -217,6 +218,8 @@ template<typename Ret, typename ... Args>
 Function<Ret(Args ...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
     Context::import_host_functor(std::string name, std::function<Ret(Args ...)> func)
 {
+    using namespace func_trait_detail;
+
     RC<UntypedOwner> owner = newRC<UntypedOwner>(std::move(func));
     auto imported_func = [](uint64_t raw_func, Args...args)
     {
@@ -227,7 +230,6 @@ Function<Ret(Args ...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
     Ret(*p_imported_func)(uint64_t, Args...);
     p_imported_func = imported_func;
 
-    using namespace func_trait_detail;
     static_assert((std::is_same_v<rm_cvref_t<Args>, Args> && ...));
     using FuncType = CPPArgToCUJArgType<Ret>(CPPArgToCUJArgType<Args>...);
     auto f = import_raw_host_function<FuncType>(
