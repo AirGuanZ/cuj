@@ -282,7 +282,7 @@ ir::BasicValue InternalPointerFunctionCall<R, Args...>::gen_ir(
     static_assert(is_pointer<R>);
 
     auto context = get_current_context();
-    auto func = context->get_function_context(func_index);
+    auto func_name = context->get_function_name(func_index);
 
     auto ret_type = context->get_type<R>();
 
@@ -297,7 +297,7 @@ ir::BasicValue InternalPointerFunctionCall<R, Args...>::gen_ir(
 
     auto ret = builder.gen_temp_value(ret_type);
     builder.append_assign(
-        ret, ir::CallOp{ func->get_name(), std::move(arg_vals), ret_type });
+        ret, ir::CallOp{ func_name, std::move(arg_vals), ret_type });
 
     return ret;
 }
@@ -321,7 +321,7 @@ ir::BasicValue InternalBinaryOperator<T, L, R>::gen_ir(ir::IRBuilder &builder) c
        type == ir::BinaryOp::Type::BitwiseOr  ||
        type == ir::BinaryOp::Type::BitwiseXOr)
     {
-        CUJ_ASSERT(std::is_arithmetic_v<L> && std::is_arithmetic_v<R>);
+        CUJ_INTERNAL_ASSERT(std::is_arithmetic_v<L> && std::is_arithmetic_v<R>);
 
         // arithmetic operators are available only to arithmetic types
         if constexpr(std::is_arithmetic_v<L> && std::is_arithmetic_v<R>)
@@ -353,7 +353,7 @@ ir::BasicValue InternalBinaryOperator<T, L, R>::gen_ir(ir::IRBuilder &builder) c
     }
     else if constexpr(!std::is_same_v<L, bool> || !std::is_same_v<R, bool>)
     {
-        CUJ_ASSERT(
+        CUJ_INTERNAL_ASSERT(
             type == ir::BinaryOp::Type::Equal     ||
             type == ir::BinaryOp::Type::NotEqual  ||
             type == ir::BinaryOp::Type::Less      ||
@@ -363,14 +363,14 @@ ir::BasicValue InternalBinaryOperator<T, L, R>::gen_ir(ir::IRBuilder &builder) c
 
         if constexpr(std::is_arithmetic_v<L>)
         {
-            CUJ_ASSERT(std::is_arithmetic_v<R>);
+            CUJ_INTERNAL_ASSERT(std::is_arithmetic_v<R>);
             using AT = decltype(std::declval<L>() + std::declval<R>());
             lhs_val = detail::gen_arithmetic_cast<L, AT>(lhs_val, builder);
             rhs_val = detail::gen_arithmetic_cast<R, AT>(rhs_val, builder);
         }
         else
         {
-            CUJ_ASSERT(is_pointer<L> && is_pointer<R>);
+            CUJ_INTERNAL_ASSERT(is_pointer<L> && is_pointer<R>);
             lhs_val = detail::gen_pointer_to_uint<L>(lhs_val, builder);
             rhs_val = detail::gen_pointer_to_uint<L>(rhs_val, builder);
         }

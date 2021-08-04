@@ -12,7 +12,7 @@ CUJ_NAMESPACE_BEGIN(cuj::ast)
 template<typename T>
 void ArithmeticValue<T>::init_as_stack_var()
 {
-    CUJ_ASSERT(!impl_);
+    CUJ_INTERNAL_ASSERT(!impl_);
     impl_ = get_current_function()->create_stack_var<T>();
 }
 
@@ -118,7 +118,7 @@ template<typename T>
 template<typename...Args>
 void ClassValue<T>::init_as_stack_var(const Args &...args)
 {
-    CUJ_ASSERT(!impl_);
+    CUJ_INTERNAL_ASSERT(!impl_);
     impl_ = get_current_function()->create_stack_var<T>(args...);
 }
 
@@ -215,7 +215,7 @@ void ClassValue<T>::swap_impl(ClassValue<T> &other) noexcept
 template<typename T, size_t N>
 void ArrayImpl<T, N>::init_as_stack_var()
 {
-    CUJ_ASSERT(!impl_);
+    CUJ_INTERNAL_ASSERT(!impl_);
     impl_ = get_current_function()->create_stack_var<ArrayImpl<T, N>>();
 }
 
@@ -325,7 +325,7 @@ void ArrayImpl<T, N>::swap_impl(ArrayImpl<T, N> &other) noexcept
 template<typename T>
 void PointerImpl<T>::init_as_stack_var()
 {
-    CUJ_ASSERT(!impl_);
+    CUJ_INTERNAL_ASSERT(!impl_);
     impl_ = get_current_function()->create_stack_var<PointerImpl<T>>();
 }
 

@@ -67,7 +67,7 @@ void IRPrinter::print(const ir::Program &prog)
         if(auto struct_type = p.second->as_if<ir::StructType>())
         {
             has_struct = true;
-            CUJ_ASSERT(!struct_names_.count(struct_type));
+            CUJ_INTERNAL_ASSERT(!struct_names_.count(struct_type));
             struct_names_.insert({ struct_type, struct_type->name });
         }
     }
@@ -90,7 +90,7 @@ void IRPrinter::print(const ir::Program &prog)
             print(*func.as<RC<ir::Function>>());
         else
         {
-            CUJ_ASSERT(func.is<RC<ir::ImportedHostFunction>>());
+            CUJ_INTERNAL_ASSERT(func.is<RC<ir::ImportedHostFunction>>());
             print(*func.as<RC<ir::ImportedHostFunction>>());
         }
     }
@@ -370,7 +370,7 @@ std::string IRPrinter::get_typename(const ir::PointerType &type) const
 std::string IRPrinter::get_typename(const ir::StructType &type) const
 {
     auto it = struct_names_.find(&type);
-    CUJ_ASSERT(it != struct_names_.end());
+    CUJ_INTERNAL_ASSERT(it != struct_names_.end());
     return it->second;
 }
 
@@ -471,7 +471,7 @@ std::string IRPrinter::to_string(const ir::BasicValue &val) const
         [this](const ir::AllocAddress &v)
     {
         auto it = alloc_names_.find(v.alloc_index);
-        CUJ_ASSERT(it != alloc_names_.end());
+        CUJ_INTERNAL_ASSERT(it != alloc_names_.end());
         return it->second;
     },
         [this](const ir::ConstData &v)

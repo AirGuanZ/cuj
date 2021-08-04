@@ -24,7 +24,7 @@ public:
 
     void pop_indent()
     {
-        CUJ_ASSERT(indent_count_ > 0);
+        CUJ_INTERNAL_ASSERT(indent_count_ > 0);
         --indent_count_;
         update_full_indent();
     }

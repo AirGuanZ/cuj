@@ -349,7 +349,7 @@ Function<void, FuncType> Context::get_function(std::string_view name) const
 template<typename FuncType>
 Function<void, FuncType> Context::get_function(int index) const
 {
-    CUJ_ASSERT(0 <= index && index < static_cast<int>(funcs_.size()));
+    CUJ_INTERNAL_ASSERT(0 <= index && index < static_cast<int>(funcs_.size()));
     return Function<void, FuncType>(index);
 }
 
@@ -377,7 +377,7 @@ Function<void, FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function_
 
 inline void Context::gen_ir_impl(ir::IRBuilder &builder) const
 {
-    CUJ_ASSERT(func_stack_.empty());
+    CUJ_INTERNAL_ASSERT(func_stack_.empty());
 
     for(auto &p : used_types_)
         builder.add_type(p.first, p.second);
@@ -404,15 +404,15 @@ inline std::map<std::type_index, RC<ir::Type>> &Context::all_types()
 
 inline FunctionContext *Context::get_current_function()
 {
-    CUJ_ASSERT(!func_stack_.empty());
+    CUJ_INTERNAL_ASSERT(!func_stack_.empty());
     return func_stack_.top();
 }
 
 inline const Variant<Box<FunctionContext>, RC<ir::ImportedHostFunction>> &
     Context::get_function_context(int func_index)
 {
-    CUJ_ASSERT(0 <= func_index);
-    CUJ_ASSERT(func_index < static_cast<int>(funcs_.size()));
+    CUJ_INTERNAL_ASSERT(0 <= func_index);
+    CUJ_INTERNAL_ASSERT(func_index < static_cast<int>(funcs_.size()));
     return funcs_[func_index];
 }
 
@@ -432,19 +432,19 @@ inline std::string Context::get_function_name(int func_index)
 
 inline void push_context(Context *context)
 {
-    CUJ_ASSERT(context);
+    CUJ_INTERNAL_ASSERT(context);
     detail::get_context_stack().push(context);
 }
 
 inline void pop_context()
 {
-    CUJ_ASSERT(!detail::get_context_stack().empty());
+    CUJ_INTERNAL_ASSERT(!detail::get_context_stack().empty());
     detail::get_context_stack().pop();
 }
 
 inline Context *get_current_context()
 {
-    CUJ_ASSERT(!detail::get_context_stack().empty());
+    CUJ_INTERNAL_ASSERT(!detail::get_context_stack().empty());
     return detail::get_context_stack().top();
 }
 

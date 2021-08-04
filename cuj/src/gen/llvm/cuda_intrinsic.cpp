@@ -32,19 +32,19 @@ namespace
         const std::vector<llvm::Value*> &args,
         llvm::Intrinsic::ID              id)
     {
-        CUJ_ASSERT(args.size() == 1 + 2 + 4);
-        auto tex     = args[0];
-        auto u       = args[1];
-        auto v       = args[2];
-        auto r       = args[3];
-        auto g       = args[4];
-        auto b       = args[5];
-        auto a       = args[6];
+        CUJ_INTERNAL_ASSERT(args.size() == 1 + 2 + 4);
+        auto tex = args[0];
+        auto u   = args[1];
+        auto v   = args[2];
+        auto r   = args[3];
+        auto g   = args[4];
+        auto b   = args[5];
+        auto a   = args[6];
 
         auto call = ir.CreateIntrinsic(id, { }, { tex, u, v });
 
         auto raw_type = call->getType();
-        CUJ_ASSERT(raw_type->isStructTy());
+        CUJ_INTERNAL_ASSERT(raw_type->isStructTy());
         auto type = static_cast<llvm::StructType*>(call->getType());
 
         auto alloc = ir.CreateAlloca(type);
@@ -81,14 +81,19 @@ namespace
         if(auto f = top_module->getFunction("cuda_system_print"))
             return f;
 
-        auto b64_type = llvm::IntegerType::getInt64Ty(ctx);
+        llvm::Type *tp_type;
+        if constexpr(sizeof(void *) == 8)
+            tp_type = llvm::IntegerType::getInt64Ty(ctx);
+        else
+            tp_type = llvm::IntegerType::getInt32Ty(ctx);
+
         auto s32_type = llvm::IntegerType::getInt32Ty(ctx);
         auto char_type = llvm::IntegerType::getInt8Ty(ctx);
         auto pchar_type = llvm::PointerType::get(char_type, 0);
         auto void_type = llvm::Type::getVoidTy(ctx);
 
         auto raw_func_type = llvm::FunctionType::get(
-            s32_type, { b64_type, b64_type }, true);
+            s32_type, { tp_type, tp_type }, true);
         auto raw_func = llvm::Function::Create(
             raw_func_type, llvm::GlobalValue::ExternalLinkage,
             "vprintf", top_module);
@@ -137,14 +142,40 @@ namespace
                 { dst_type, src_type }, { val });
         }
 
-        auto var_buffer = ir.CreateAlloca(b64_type);
-        ir.CreateStore(ir.CreatePtrToInt(&*func->arg_begin(), b64_type), var_buffer);
+        auto var_buffer = ir.CreateAlloca(tp_type);
+        ir.CreateStore(ir.CreatePtrToInt(&*func->arg_begin(), tp_type), var_buffer);
 
-        auto arg1 = ir.CreatePtrToInt(fmt_str, b64_type);
-        auto arg2 = ir.CreatePtrToInt(var_buffer, b64_type);
+        auto arg1 = ir.CreatePtrToInt(fmt_str, tp_type);
+        auto arg2 = ir.CreatePtrToInt(var_buffer, tp_type);
         ir.CreateCall(raw_func, { arg1, arg2 });
 
         ir.CreateRetVoid();
+
+        func->addFnAttr(llvm::Attribute::AlwaysInline);
+        return func;
+    }
+
+    llvm::Function *get_assertfail_function(
+        llvm::LLVMContext &ctx,
+        llvm::Module      *top_module)
+    {
+        if(auto f = top_module->getFunction("__assertfail"))
+            return f;
+
+        llvm::Type *tp_type;
+        if constexpr(sizeof(void *) == 8)
+            tp_type = llvm::IntegerType::getInt64Ty(ctx);
+        else
+            tp_type = llvm::IntegerType::getInt32Ty(ctx);
+
+        auto b32_type = llvm::IntegerType::getInt32Ty(ctx);
+        auto void_type = llvm::Type::getVoidTy(ctx);
+
+        auto func_type = llvm::FunctionType::get(
+            void_type, { tp_type, tp_type, b32_type, tp_type, tp_type }, false);
+        auto func = llvm::Function::Create(
+            func_type, llvm::GlobalValue::ExternalLinkage,
+            "__assertfail", top_module);
 
         return func;
     }
@@ -173,7 +204,7 @@ void link_with_libdevice(
     for(auto &name : libdev_func_names)
     {
         auto func = dest_module->getFunction(name);
-        CUJ_ASSERT(func);
+        CUJ_INTERNAL_ASSERT(func);
         func->setLinkage(llvm::GlobalValue::InternalLinkage);
     }
 }
@@ -185,9 +216,32 @@ bool process_cuda_intrinsic_stat(
     const std::string               name,
     const std::vector<llvm::Value*> args)
 {
+    if(name == "system.assertfail")
+    {
+        CUJ_INTERNAL_ASSERT(args.size() == 4);
+
+        auto message   = args[0];
+        auto file      = args[1];
+        auto line      = args[2];
+        auto func_name = args[3];
+
+        auto tp_type = sizeof(void *) == 8 ?
+            llvm::IntegerType::getInt64Ty(ctx) :
+            llvm::IntegerType::getInt32Ty(ctx);
+
+        message   = ir.CreatePtrToInt(message, tp_type);
+        file      = ir.CreatePtrToInt(file, tp_type);
+        func_name = ir.CreatePtrToInt(func_name, tp_type);
+        auto char_size = llvm::ConstantInt::get(tp_type, 1);
+
+        auto func = get_assertfail_function(ctx, top_module);
+        ir.CreateCall(func, { message, file, line, func_name, char_size });
+        return true;
+    }
+
     if(name == "system.print")
     {
-        CUJ_ASSERT(args.size() == 1);
+        CUJ_INTERNAL_ASSERT(args.size() == 1);
         auto func = get_print_function(ctx, top_module);
         ir.CreateCall(func, args);
         return true;
@@ -195,7 +249,7 @@ bool process_cuda_intrinsic_stat(
 
     if(name == "cuda.thread_block_barrier")
     {
-        CUJ_ASSERT(args.empty());
+        CUJ_INTERNAL_ASSERT(args.empty());
         ir.CreateIntrinsic(llvm::Intrinsic::nvvm_barrier0, {}, {});
         return true;
     }
@@ -227,7 +281,7 @@ llvm::Value *process_cuda_intrinsic_op(
     do {                                                                        \
         if(name == NAME)                                                        \
         {                                                                       \
-            CUJ_ASSERT(args.empty());                                           \
+            CUJ_INTERNAL_ASSERT(args.empty());                                  \
             return ir.CreateIntrinsic(                                          \
                 llvm::Intrinsic::nvvm_read_ptx_sreg_##ID, {}, {});              \
         }                                                                       \
@@ -252,7 +306,7 @@ llvm::Value *process_cuda_intrinsic_op(
             auto func_name = libdev::get_libdevice_function_name(               \
                 builtin::math::IntrinsicBasicMathFunctionType::TYPE, IS_F32);   \
             auto func = top_module->getFunction(func_name);                     \
-            CUJ_ASSERT(func);                                                   \
+            CUJ_INTERNAL_ASSERT(func);                                          \
             if(!func->hasFnAttribute(llvm::Attribute::ReadNone))                \
                 func->addFnAttr(llvm::Attribute::ReadNone);                     \
             return ir.CreateCall(func, args);                                   \

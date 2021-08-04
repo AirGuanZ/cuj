@@ -159,6 +159,16 @@ namespace
         std::cout << msg;
     }
 
+    [[noreturn]] void assert_fail(
+        const char *msg, const char *file, uint32_t line, const char *func)
+    {
+        (void)func;
+        std::cerr << "Assertion failed: " << msg
+                  << ", file " << file
+                  << ", line " << line;
+        std::abort();
+    }
+
 } // namespace anonymous
 
 void NativeJIT::generate(const ir::Program &prog, OptLevel opt)
@@ -261,6 +271,8 @@ void NativeJIT::generate(const ir::Program &prog, const Options &opts)
     ADD_HOST_FUNC("host.system.print",  &print);
     ADD_HOST_FUNC("host.system.malloc", &::malloc);
     ADD_HOST_FUNC("host.system.free",   &::free);
+
+    ADD_HOST_FUNC("host.system.assertfail", &assert_fail);
 
 #undef ADD_HOST_FUNC
 

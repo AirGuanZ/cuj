@@ -91,7 +91,7 @@ namespace
 
     llvm::Value *get_builtin_zero(ir::BuiltinType type, llvm::IRBuilder<> &ir)
     {
-        CUJ_ASSERT(type != ir::BuiltinType::Void);
+        CUJ_INTERNAL_ASSERT(type != ir::BuiltinType::Void);
         switch(type)
         {
         case ir::BuiltinType::Void:
@@ -207,10 +207,10 @@ void LLVMIRGenerator::generate(const ir::Program &prog, llvm::DataLayout *dl)
     if(!llvm_ctx)
         llvm_ctx = newBox<llvm::LLVMContext>();
 
-    CUJ_ASSERT(!data_);
+    CUJ_INTERNAL_ASSERT(!data_);
     data_ = new Data;
 
-    CUJ_ASSERT(!dl_);
+    CUJ_INTERNAL_ASSERT(!dl_);
     dl_ = dl;
     
     data_->ir_builder = newBox<llvm::IRBuilder<>>(*llvm_ctx);
@@ -319,7 +319,7 @@ llvm::Type *LLVMIRGenerator::find_llvm_type(const ir::Type *type)
         [](const ir::PointerType   &t) { return create_llvm_type_record(t); },
         [](const ir::StructType    &t) { return create_llvm_type_record(t); });
 
-    CUJ_ASSERT(!llvm_types.count(type));
+    CUJ_INTERNAL_ASSERT(!llvm_types.count(type));
     llvm_types.insert({ type, result });
 
     return result;
@@ -449,11 +449,11 @@ void LLVMIRGenerator::generate_func_decl(const ir::ImportedHostFunction &func)
 
 llvm::Function *LLVMIRGenerator::generate_func(const ir::Function &func)
 {
-    CUJ_ASSERT(data_);
-    CUJ_ASSERT(!data_->function);
+    CUJ_INTERNAL_ASSERT(data_);
+    CUJ_INTERNAL_ASSERT(!data_->function);
 
     auto func_it = data_->functions.find(func.name);
-    CUJ_ASSERT(func_it != data_->functions.end());
+    CUJ_INTERNAL_ASSERT(func_it != data_->functions.end());
     data_->function = func_it->second;
 
     if(func.ret_type->is<ir::StructType>() || func.ret_type->is<ir::ArrayType>())
@@ -487,7 +487,7 @@ llvm::Function *LLVMIRGenerator::generate_func(const ir::Function &func)
     }
     else
     {
-        CUJ_ASSERT(func.ret_type->is<ir::StructType>() ||
+        CUJ_INTERNAL_ASSERT(func.ret_type->is<ir::StructType>() ||
                    func.ret_type->is<ir::ArrayType>());
         data_->ir_builder->CreateRetVoid();
     }
@@ -505,8 +505,8 @@ llvm::Function *LLVMIRGenerator::generate_func(const ir::Function &func)
     data_->index_to_allocas.clear();
     data_->temp_values_.clear();
 
-    CUJ_ASSERT(data_->break_dests.empty());
-    CUJ_ASSERT(data_->continue_dests.empty());
+    CUJ_INTERNAL_ASSERT(data_->break_dests.empty());
+    CUJ_INTERNAL_ASSERT(data_->continue_dests.empty());
 
     return ret;
 }
@@ -514,10 +514,10 @@ llvm::Function *LLVMIRGenerator::generate_func(const ir::Function &func)
 llvm::Function *LLVMIRGenerator::generate_func(
     const ir::ImportedHostFunction &func)
 {
-    CUJ_ASSERT(func.context_data);
+    CUJ_INTERNAL_ASSERT(func.context_data);
 
     auto func_it = data_->functions.find(func.symbol_name);
-    CUJ_ASSERT(func_it != data_->functions.end());
+    CUJ_INTERNAL_ASSERT(func_it != data_->functions.end());
     data_->function = func_it->second;
 
     auto entry_block =
@@ -550,9 +550,9 @@ llvm::Function *LLVMIRGenerator::generate_func(
     auto ret = data_->function;
 
     data_->function = nullptr;
-    CUJ_ASSERT(data_->func_ret_class_ptr_arg == nullptr);
-    CUJ_ASSERT(data_->index_to_allocas.empty());
-    CUJ_ASSERT(data_->temp_values_.empty());
+    CUJ_INTERNAL_ASSERT(data_->func_ret_class_ptr_arg == nullptr);
+    CUJ_INTERNAL_ASSERT(data_->index_to_allocas.empty());
+    CUJ_INTERNAL_ASSERT(data_->temp_values_.empty());
 
     return ret;
 }
@@ -576,7 +576,7 @@ llvm::FunctionType *LLVMIRGenerator::generate_func_type(
     for(auto &arg : func.args)
     {
         auto it = func.index_to_allocs.find(arg.alloc_index);
-        CUJ_ASSERT(it != func.index_to_allocs.end());
+        CUJ_INTERNAL_ASSERT(it != func.index_to_allocs.end());
         auto alloc_type = it->second->type;
 
         if(alloc_type->is<ir::StructType>() || alloc_type->is<ir::ArrayType>())
@@ -705,7 +705,7 @@ void LLVMIRGenerator::copy_func_args(const ir::Function &func)
         auto alloc = data_->index_to_allocas[alloc_index];
 
         auto alloc_it = func.index_to_allocs.find(alloc_index);
-        CUJ_ASSERT(alloc_it != func.index_to_allocs.end());
+        CUJ_INTERNAL_ASSERT(alloc_it != func.index_to_allocs.end());
         auto alloc_type = alloc_it->second->type;
 
         if(alloc_type->is<ir::StructType>() || alloc_type->is<ir::ArrayType>())
@@ -744,7 +744,7 @@ void LLVMIRGenerator::generate(const ir::Store &store)
 
 void LLVMIRGenerator::generate(const ir::Assign &assign)
 {
-    CUJ_ASSERT(!data_->temp_values_.count(assign.lhs));
+    CUJ_INTERNAL_ASSERT(!data_->temp_values_.count(assign.lhs));
     llvm::Value *rhs_val = get_value(assign.rhs);
     data_->temp_values_[assign.lhs] = rhs_val;
 }
@@ -942,7 +942,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::BinaryOp &v)
     auto rhs = get_value(v.rhs);
     
     const ir::BuiltinType operand_type = get_arithmetic_type(v.lhs);
-    CUJ_ASSERT(operand_type == get_arithmetic_type(v.rhs));
+    CUJ_INTERNAL_ASSERT(operand_type == get_arithmetic_type(v.rhs));
 
     const bool is_integral = is_builtin_integral(operand_type);
     const bool is_signed   = is_builtin_signed  (operand_type);
@@ -951,28 +951,28 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::BinaryOp &v)
     {
     case ir::BinaryOp::Type::Add:
     {
-        CUJ_ASSERT(operand_type != ir::BuiltinType::Bool);
+        CUJ_INTERNAL_ASSERT(operand_type != ir::BuiltinType::Bool);
         if(is_integral)
             return data_->ir_builder->CreateAdd(lhs, rhs);
         return data_->ir_builder->CreateFAdd(lhs, rhs);
     }
     case ir::BinaryOp::Type::Sub:
     {
-        CUJ_ASSERT(operand_type != ir::BuiltinType::Bool);
+        CUJ_INTERNAL_ASSERT(operand_type != ir::BuiltinType::Bool);
         if(is_integral)
             return data_->ir_builder->CreateSub(lhs, rhs);
         return data_->ir_builder->CreateFSub(lhs, rhs);
     }
     case ir::BinaryOp::Type::Mul:
     {
-        CUJ_ASSERT(operand_type != ir::BuiltinType::Bool);
+        CUJ_INTERNAL_ASSERT(operand_type != ir::BuiltinType::Bool);
         if(is_integral)
             return data_->ir_builder->CreateMul(lhs, rhs);
         return data_->ir_builder->CreateFMul(lhs, rhs);
     }
     case ir::BinaryOp::Type::Div:
     {
-        CUJ_ASSERT(operand_type != ir::BuiltinType::Bool);
+        CUJ_INTERNAL_ASSERT(operand_type != ir::BuiltinType::Bool);
         if(is_integral)
         {
             if(is_signed)
@@ -983,34 +983,34 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::BinaryOp &v)
     }
     case ir::BinaryOp::Type::Mod:
     {
-        CUJ_ASSERT(is_integral);
+        CUJ_INTERNAL_ASSERT(is_integral);
         if(is_signed)
             return data_->ir_builder->CreateSRem(lhs, rhs);
         return data_->ir_builder->CreateURem(lhs, rhs);
     }
     case ir::BinaryOp::Type::And:
     {
-        CUJ_ASSERT(operand_type == ir::BuiltinType::Bool);
+        CUJ_INTERNAL_ASSERT(operand_type == ir::BuiltinType::Bool);
         return i1_to_bool(data_->ir_builder->CreateAnd(lhs, rhs));
     }
     case ir::BinaryOp::Type::Or:
     {
-        CUJ_ASSERT(operand_type == ir::BuiltinType::Bool);
+        CUJ_INTERNAL_ASSERT(operand_type == ir::BuiltinType::Bool);
         return i1_to_bool(data_->ir_builder->CreateOr(lhs, rhs));
     }
     case ir::BinaryOp::Type::BitwiseAnd:
     {
-        CUJ_ASSERT(is_integral);
+        CUJ_INTERNAL_ASSERT(is_integral);
         return data_->ir_builder->CreateAnd(lhs, rhs);
     }
     case ir::BinaryOp::Type::BitwiseOr:
     {
-        CUJ_ASSERT(is_integral);
+        CUJ_INTERNAL_ASSERT(is_integral);
         return data_->ir_builder->CreateOr(lhs, rhs);
     }
     case ir::BinaryOp::Type::BitwiseXOr:
     {
-        CUJ_ASSERT(is_integral);
+        CUJ_INTERNAL_ASSERT(is_integral);
         return data_->ir_builder->CreateXor(lhs, rhs);
     }
     case ir::BinaryOp::Type::Equal:
@@ -1099,7 +1099,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::UnaryOp &v)
             unreachable();
         }
     case ir::UnaryOp::Type::Not:
-        CUJ_ASSERT(input_type == ir::BuiltinType::Bool);
+        CUJ_INTERNAL_ASSERT(input_type == ir::BuiltinType::Bool);
         return data_->ir_builder->CreateNot(input);
     }
 
@@ -1229,14 +1229,14 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::PointerOffsetOp &v)
 {
     auto ptr = get_value(v.ptr);
     auto idx = get_value(v.index);
-    std::vector<llvm::Value *> indices = { idx };
+    llvm::Value * indices[1] = { idx };
     return data_->ir_builder->CreateGEP(ptr, indices);
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::EmptyPointerOp &v)
 {
     auto type = find_llvm_type(v.ptr_type);
-    CUJ_ASSERT(type->isPointerTy());
+    CUJ_INTERNAL_ASSERT(type->isPointerTy());
     return llvm::ConstantPointerNull::get(static_cast<llvm::PointerType*>(type));
 }
 
@@ -1244,7 +1244,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::PointerToUIntOp &v)
 {
     auto ptr = get_value(v.ptr_val);
     llvm::Type *to_type;
-    if constexpr(sizeof(size_t) == 4)
+    if constexpr(sizeof(void*) == 4)
         to_type = data_->ir_builder->getInt32Ty();
     else
         to_type = data_->ir_builder->getInt64Ty();
@@ -1260,7 +1260,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::PointerDiffOp &v)
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::BasicTempValue &v)
 {
-    CUJ_ASSERT(data_->temp_values_.count(v));
+    CUJ_INTERNAL_ASSERT(data_->temp_values_.count(v));
     return data_->temp_values_[v];
 }
 
@@ -1305,7 +1305,7 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::BasicImmediateValue &v)
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::AllocAddress &v)
 {
-    CUJ_ASSERT(data_->index_to_allocas.count(v.alloc_index));
+    CUJ_INTERNAL_ASSERT(data_->index_to_allocas.count(v.alloc_index));
     return data_->index_to_allocas[v.alloc_index];
 }
 
@@ -1402,8 +1402,8 @@ llvm::Value *LLVMIRGenerator::convert_to_bool(
 llvm::Value *LLVMIRGenerator::convert_from_bool(
     llvm::Value *from, ir::BuiltinType to_type)
 {
-    CUJ_ASSERT(to_type != ir::BuiltinType::Void);
-    CUJ_ASSERT(from->getType() == data_->ir_builder->getInt8Ty());
+    CUJ_INTERNAL_ASSERT(to_type != ir::BuiltinType::Void);
+    CUJ_INTERNAL_ASSERT(from->getType() == data_->ir_builder->getInt8Ty());
 
     if(to_type == ir::BuiltinType::Bool)
         return from;
@@ -1429,8 +1429,8 @@ llvm::Value *LLVMIRGenerator::convert_from_bool(
 llvm::Value *LLVMIRGenerator::convert_arithmetic(
     llvm::Value *from, ir::BuiltinType from_type, ir::BuiltinType to_type)
 {
-    CUJ_ASSERT(from_type != ir::BuiltinType::Void);
-    CUJ_ASSERT(to_type != ir::BuiltinType::Void);
+    CUJ_INTERNAL_ASSERT(from_type != ir::BuiltinType::Void);
+    CUJ_INTERNAL_ASSERT(to_type != ir::BuiltinType::Void);
 
     if(from_type == to_type)
         return from;

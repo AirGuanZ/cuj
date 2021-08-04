@@ -3,6 +3,7 @@
 #include <cuj/ast/ast.h>
 #include <cuj/builtin/cuda/cuda.h>
 #include <cuj/builtin/math/math.h>
+#include <cuj/builtin/assert.h>
 #include <cuj/builtin/string.h>
 #include <cuj/builtin/system.h>
 #include <cuj/gen/llvm.h>

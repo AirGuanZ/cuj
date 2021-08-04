@@ -8,7 +8,7 @@
 #define CUJ_NAMESPACE_BEGIN(NAME) namespace NAME {
 #define CUJ_NAMESPACE_END(NAME)   }
 
-#define CUJ_ASSERT(...) assert(__VA_ARGS__)
+#define CUJ_INTERNAL_ASSERT(...) assert(__VA_ARGS__)
 
 CUJ_NAMESPACE_BEGIN(cuj)
 

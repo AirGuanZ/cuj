@@ -59,7 +59,7 @@ RC<typename Value<T>::ImplType> FunctionContext::alloc_stack_var(
         impl->address = address;
         if(is_arg)
         {
-            CUJ_ASSERT(!sizeof...(Args));
+            CUJ_INTERNAL_ASSERT(!sizeof...(Args));
             impl->obj = newBox<T>(std::move(address), UNINIT);
         }
         else
@@ -108,7 +108,7 @@ inline void FunctionContext::push_block(RC<Block> block)
 
 inline void FunctionContext::pop_block()
 {
-    CUJ_ASSERT(blocks_.size() >= 2);
+    CUJ_INTERNAL_ASSERT(blocks_.size() >= 2);
     blocks_.pop();
 }
 
@@ -160,7 +160,7 @@ RC<typename Value<T>::ImplType> FunctionContext::create_arg()
 
 inline void FunctionContext::gen_ir(ir::IRBuilder &builder) const
 {
-    CUJ_ASSERT(blocks_.size() == 1);
+    CUJ_INTERNAL_ASSERT(blocks_.size() == 1);
 
     if(arg_indices_.size() != arg_types_.size())
     {

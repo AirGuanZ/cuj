@@ -85,7 +85,7 @@ void CUDAModule::load_ptx_from_file(const std::string &filename)
 
 void CUDAModule::link()
 {
-    CUJ_ASSERT(!impl_->cu_module && !impl_->ptx_data.empty());
+    CUJ_INTERNAL_ASSERT(!impl_->cu_module && !impl_->ptx_data.empty());
 
     CUlinkState link_state = nullptr;
     CUJ_SCOPE_GUARD({ if(link_state) cuLinkDestroy(link_state); });
@@ -127,12 +127,12 @@ void CUDAModule::launch_impl(
 {
     if(!impl_->cu_module)
         link();
-    CUJ_ASSERT(impl_->cu_module);
+    CUJ_INTERNAL_ASSERT(impl_->cu_module);
 
     CUfunction entry_func = nullptr;
     check_cu(cuModuleGetFunction(
         &entry_func, impl_->cu_module, entry_name.c_str()));
-    CUJ_ASSERT(entry_func);
+    CUJ_INTERNAL_ASSERT(entry_func);
 
     check_cu(cuLaunchKernel(
         entry_func,

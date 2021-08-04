@@ -14,13 +14,13 @@ RC<typename Value<T_>::ImplType> ClassBase<C>::new_member(Args &&...args)
 
     if(type_recorder_)
     {
-        CUJ_ASSERT(!ref_pointer_);
+        CUJ_INTERNAL_ASSERT(!ref_pointer_);
         auto context = get_current_context();
         type_recorder_->add_member(context->get_type<T>());
         return nullptr;
     }
 
-    CUJ_ASSERT(ref_pointer_);
+    CUJ_INTERNAL_ASSERT(ref_pointer_);
 
     auto address = create_member_pointer_offset<C, T>(
         ref_pointer_, member_count_++);

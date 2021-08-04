@@ -8,7 +8,7 @@ CUJ_NAMESPACE_BEGIN(cuj::ast)
 
 inline IfBuilder::~IfBuilder()
 {
-    CUJ_ASSERT(!then_units_.empty());
+    CUJ_INTERNAL_ASSERT(!then_units_.empty());
 
     auto entry = newRC<If>();
 
@@ -38,8 +38,8 @@ inline IfBuilder::~IfBuilder()
 template<typename T>
 IfBuilder &IfBuilder::operator+(const ArithmeticValue<T> &cond)
 {
-    CUJ_ASSERT(then_units_.empty() || then_units_.back().block);
-    CUJ_ASSERT(!else_block_);
+    CUJ_INTERNAL_ASSERT(then_units_.empty() || then_units_.back().block);
+    CUJ_INTERNAL_ASSERT(!else_block_);
 
     if constexpr(std::is_same_v<T, bool>)
         then_units_.push_back({ cond.get_impl(), nullptr });
@@ -61,8 +61,8 @@ IfBuilder &IfBuilder::operator+(const PointerImpl<T> &cond)
 
 inline IfBuilder &IfBuilder::operator+(const std::function<void()> &then_body)
 {
-    CUJ_ASSERT(!then_units_.empty() && !then_units_.back().block);
-    CUJ_ASSERT(!else_block_);
+    CUJ_INTERNAL_ASSERT(!then_units_.empty() && !then_units_.back().block);
+    CUJ_INTERNAL_ASSERT(!else_block_);
 
     auto func = get_current_function();
     auto block = newRC<Block>();
@@ -78,8 +78,8 @@ inline IfBuilder &IfBuilder::operator+(const std::function<void()> &then_body)
 
 inline IfBuilder &IfBuilder::operator-(const std::function<void()> &else_body)
 {
-    CUJ_ASSERT(!then_units_.empty() && then_units_.back().block);
-    CUJ_ASSERT(!else_block_);
+    CUJ_INTERNAL_ASSERT(!then_units_.empty() && then_units_.back().block);
+    CUJ_INTERNAL_ASSERT(!else_block_);
 
     auto func = get_current_function();
     auto block = newRC<Block>();
@@ -133,7 +133,7 @@ WhileBuilder::WhileBuilder(const F &calc_cond_func)
 
 inline WhileBuilder::~WhileBuilder()
 {
-    CUJ_ASSERT(calc_cond_ && cond_ && body_);
+    CUJ_INTERNAL_ASSERT(calc_cond_ && cond_ && body_);
     auto while_stat = newRC<While>(
         std::move(calc_cond_), std::move(cond_), std::move(body_));
     get_current_function()->append_statement(std::move(while_stat));
@@ -141,7 +141,7 @@ inline WhileBuilder::~WhileBuilder()
 
 inline void WhileBuilder::operator+(const std::function<void()> &body_func)
 {
-    CUJ_ASSERT(calc_cond_ && cond_ && !body_);
+    CUJ_INTERNAL_ASSERT(calc_cond_ && cond_ && !body_);
 
     auto func = get_current_function();
     auto block = newRC<Block>();

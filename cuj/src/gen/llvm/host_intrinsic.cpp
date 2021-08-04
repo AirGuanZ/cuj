@@ -151,6 +151,26 @@ bool process_host_intrinsic_stat(
         return true;
     }
 
+    if(name == "system.assertfail")
+    {
+        const std::string func_name = "host." + name;
+        auto func = top_module->getFunction(func_name);
+        if(!func)
+        {
+            auto void_type  = llvm::Type::getVoidTy(*context);
+            auto i8_type    = llvm::IntegerType::getInt8Ty(*context);
+            auto pchar_type = llvm::PointerType::get(i8_type, 0);
+            auto u32_type   = llvm::IntegerType::getInt32Ty(*context);
+
+            func = add_func_prototype(
+                top_module, func_name.c_str(), false, void_type,
+                pchar_type, pchar_type, u32_type, pchar_type);
+        }
+
+        ir.CreateCall(func, args);
+        return true;
+    }
+
     return false;
 }
 
@@ -168,7 +188,7 @@ llvm::Value *process_host_intrinsic_op(
             auto func_name = "host." NAME;                                      \
             auto func = get_host_math_intrinsics(                               \
                 func_name, context, top_module);                                \
-            CUJ_ASSERT(func);                                                   \
+            CUJ_INTERNAL_ASSERT(func);                                          \
             return ir.CreateCall(func, args);                                   \
         }                                                                       \
     } while(false)

@@ -11,6 +11,10 @@ class IRBuilder
 {
 public:
 
+    void set_assertion(bool enabled);
+
+    bool is_assertion_enabled() const;
+
     const Program &get_prog() const;
 
     // type desc
@@ -54,6 +58,12 @@ private:
     std::stack<RC<Block>> blocks_;
 
     int next_temp_value_ = 0;
+    
+#if defined(_DEBUG) || defined(DEBUG)
+    bool enable_assertion_ = true;
+#else
+    bool enable_assertion_ = false;
+#endif
 };
 
 CUJ_NAMESPACE_END(cuj::ir)
