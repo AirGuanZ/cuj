@@ -10,7 +10,7 @@ template<typename C>
 template<typename T_, typename...Args>
 RC<typename Value<T_>::ImplType> ClassBase<C>::new_member(Args &&...args)
 {
-    using T = typename detail::DeValueType<T_>::Type;
+    using T = deval_t<T_>;
 
     if(type_recorder_)
     {

@@ -151,7 +151,7 @@ public:
 };
 
 template<typename T, size_t N>
-using ArrayValue = ArrayImpl<typename detail::DeValueType<T>::Type, N>;
+using ArrayValue = ArrayImpl<deval_t<T>, N>;
 
 template<typename T, size_t N>
 using Array = typename ArrayValue<T, N>::VariableType;
@@ -224,7 +224,7 @@ public:
 };
 
 template<typename T>
-using PointerValue = PointerImpl<typename detail::DeValueType<T>::Type>;
+using PointerValue = PointerImpl<deval_t<T>>;
 
 template<typename T>
 using Pointer = typename PointerValue<T>::VariableType;

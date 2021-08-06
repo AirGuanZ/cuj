@@ -183,11 +183,14 @@ namespace detail
 } // namespace detail
 
 template<typename T>
-using RawToCUJType = typename detail::RawToCUJType<T>::Type;
+using to_cuj_t = typename detail::RawToCUJType<T>::Type;
+
+template<typename T>
+using deval_t = typename detail::DeValueType<T>::Type;
 
 template<typename T>
 using Value = std::remove_pointer_t<
-    decltype(detail::CUJValueTypeAux<RawToCUJType<T>>())>;
+    decltype(detail::CUJValueTypeAux<to_cuj_t<T>>())>;
 
 template<typename T>
 using Variable = typename Value<T>::VariableType;

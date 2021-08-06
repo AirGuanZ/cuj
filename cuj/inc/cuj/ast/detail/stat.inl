@@ -235,7 +235,7 @@ void CallVoid<Args...>::gen_ir(ir::IRBuilder &builder) const
         [&](const auto &...arg)
     {
         (call_detail::prepare_arg<
-            typename detail::DeValueType<rm_cvref_t<Args>>::Type>(
+            deval_t<rm_cvref_t<Args>>>(
                 builder, arg, arg_vals), ...);
     }, args_);
 
@@ -269,7 +269,7 @@ void CallClass<Ret, Args...>::gen_ir(ir::IRBuilder &builder) const
         [&](const auto &...arg)
     {
         (call_detail::prepare_arg<
-            typename detail::DeValueType<rm_cvref_t<Args>>::Type>(
+            deval_t<rm_cvref_t<Args>>>(
                 builder, arg, arg_vals), ...);
     }, args_);
 
@@ -303,7 +303,7 @@ void CallArray<Ret, Args...>::gen_ir(ir::IRBuilder &builder) const
         [&](const auto &...arg)
     {
         (call_detail::prepare_arg<
-            typename detail::DeValueType<rm_cvref_t<Args>>::Type>(
+            deval_t<rm_cvref_t<Args>>>(
                 builder, arg, arg_vals), ...);
     }, args_);
 

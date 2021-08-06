@@ -23,13 +23,11 @@ namespace func_trait_detail
     template<typename UsrRet, typename...Args>
     struct FunctionTrait<UsrRet, std::function<void(Args...)>>
     {
-        using ArgTypes = std::tuple<
-            typename detail::DeValueType<rm_cvref_t<Args>>::Type...>;
+        using ArgTypes = std::tuple<deval_t<rm_cvref_t<Args>>...>;
 
         using RetType = UsrRet;
 
-        using FuncType =
-            RetType(typename detail::DeValueType<rm_cvref_t<Args>>::Type...);
+        using FuncType = RetType(deval_t<rm_cvref_t<Args>>...);
     };
     
     template<typename T>
@@ -57,21 +55,21 @@ namespace func_trait_detail
     };
 
     template<typename T>
-    using CPPArgToCUJArgType = typename CPPArgToCUJArgTypeAux<T>::Type;
+    using to_cuj_arg_t = typename CPPArgToCUJArgTypeAux<T>::Type;
 
     template<typename Ret, typename...Args>
-    using CPPFuncToCUJFuncType =
-        RawToCUJType<CPPArgToCUJArgType<Ret>>(CPPArgToCUJArgType<Args>...);
+    using to_cuj_func_t =
+        to_cuj_t<to_cuj_arg_t<Ret>>(to_cuj_arg_t<Args>...);
 
 } // namespace func_trait_detail
 
 template<typename UsrRet, typename T>
-using FunctionArgs = typename func_trait_detail::FunctionTrait<UsrRet, T>::ArgTypes;
+using func_args_t = typename func_trait_detail::FunctionTrait<UsrRet, T>::ArgTypes;
 
 template<typename UsrRet, typename T>
-using FunctionRet = typename func_trait_detail::FunctionTrait<UsrRet, T>::RetType;
+using func_ret_t = typename func_trait_detail::FunctionTrait<UsrRet, T>::RetType;
 
 template<typename UsrRet, typename T>
-using FunctionType = typename func_trait_detail::FunctionTrait<UsrRet, T>::FuncType;
+using func_t = typename func_trait_detail::FunctionTrait<UsrRet, T>::FuncType;
 
 CUJ_NAMESPACE_END(cuj::ast)

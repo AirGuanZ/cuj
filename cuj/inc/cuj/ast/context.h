@@ -33,19 +33,19 @@ public:
     // function definition
 
     template<typename Ret, typename Callable>
-    Function<void, FunctionType<RawToCUJType<Ret>, Callable>> add_function(
+    Function<void, func_t<to_cuj_t<Ret>, Callable>> add_function(
         std::string name, Callable &&callable);
 
     template<typename Ret, typename Callable>
-    Function<void, FunctionType<RawToCUJType<Ret>, Callable>> add_function(
+    Function<void, func_t<to_cuj_t<Ret>, Callable>> add_function(
         std::string name, ir::Function::Type type, Callable &&callable);
 
     template<typename Ret, typename Callable>
-    Function<void, FunctionType<RawToCUJType<Ret>, Callable>> add_function(
+    Function<void, func_t<to_cuj_t<Ret>, Callable>> add_function(
         Callable &&callable);
 
     template<typename Ret, typename Callable>
-    Function<void, FunctionType<RawToCUJType<Ret>, Callable>> add_function(
+    Function<void, func_t<to_cuj_t<Ret>, Callable>> add_function(
         ir::Function::Type type, Callable &&callable);
 
     template<typename FuncType>
@@ -57,19 +57,19 @@ public:
         uint64_t func_ptr, RC<UntypedOwner> ctx_data = {});
 
     template<typename Ret, typename...Args>
-    Function<Ret(Args...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
+    Function<Ret(Args...), func_trait_detail::to_cuj_func_t<Ret, Args...>>
         import_host_functor(std::function<Ret(Args...)> func);
 
     template<typename Ret, typename...Args>
-    Function<Ret(Args...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
+    Function<Ret(Args...), func_trait_detail::to_cuj_func_t<Ret, Args...>>
         import_host_functor(std::string name, std::function<Ret(Args...)> func);
 
     template<typename Ret, typename...Args>
-    Function<Ret(Args...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
+    Function<Ret(Args...), func_trait_detail::to_cuj_func_t<Ret, Args...>>
         import_host_function(Ret(*func_ptr)(Args...));
 
     template<typename Ret, typename...Args>
-    Function<Ret(Args...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
+    Function<Ret(Args...), func_trait_detail::to_cuj_func_t<Ret, Args...>>
         import_host_function(std::string name, Ret(*func_ptr)(Args...));
 
     template<typename T, typename = std::enable_if_t<!std::is_pointer_v<T>>>
@@ -124,7 +124,7 @@ private:
     Function<void, FuncType> get_function(int index) const;
 
     template<typename Ret, typename Callable, typename...Args, size_t...Is>
-    Function<void, FunctionType<RawToCUJType<Ret>, Callable>> add_function_impl(
+    Function<void, func_t<to_cuj_t<Ret>, Callable>> add_function_impl(
         std::string        name,
         ir::Function::Type type,
         Callable         &&callable,

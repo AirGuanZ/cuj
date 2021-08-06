@@ -29,7 +29,7 @@ public:
 
     template<typename F>
     explicit AssertBuilder(
-        const F           &calc_cond_func,
+        const F &calc_cond_func,
         const std::string &message,
         const std::string &file,
         uint32_t           line,
@@ -42,16 +42,26 @@ public:
         auto fail_cond = !calc_cond_func();
         func->pop_block();
 
-        auto message_consts  = string_literial(message);
-        auto file_consts     = string_literial(file);
+        auto message_consts = string_literial(message);
+        auto file_consts = string_literial(file);
         auto function_consts = string_literial(function);
 
         auto line_literial = ast::create_literial(line);
 
-        builtin::assert_impl(
-            cond_block, fail_cond.get_impl(),
-            message_consts, file_consts,
-            line_literial, function_consts);
+        if constexpr(std::is_same_v<decltype(fail_cond), bool>)
+        {
+            builtin::assert_impl(
+                cond_block, ast::create_literial(fail_cond).get_impl(),
+                message_consts, file_consts,
+                line_literial, function_consts);
+        }
+        else
+        {
+            builtin::assert_impl(
+                cond_block, fail_cond.get_impl(),
+                message_consts, file_consts,
+                line_literial, function_consts);
+        }
     }
 };
 

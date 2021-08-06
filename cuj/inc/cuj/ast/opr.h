@@ -191,7 +191,7 @@ auto operator!(const PointerImpl<T> &ptr)
 template<typename To, typename From>
 auto cast(const ArithmeticValue<From> &from)
 {
-    using TTo = typename detail::DeValueType<To>::Type;
+    using TTo = deval_t<To>;
     auto impl = newRC<InternalCastArithmeticValue<From, TTo>>();
     impl->from = from.get_impl();
     return Value<TTo>(std::move(impl));
@@ -200,7 +200,7 @@ auto cast(const ArithmeticValue<From> &from)
 template<typename To, typename From>
 auto ptr_cast(const PointerImpl<From> &from)
 {
-    using TTo = typename detail::DeValueType<To>::Type;
+    using TTo = deval_t<To>;
     auto impl = newRC<InternalCastPointerValue<From, TTo>>();
     impl->from = from.get_impl();
     return PointerImpl<TTo>(std::move(impl));

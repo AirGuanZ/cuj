@@ -111,7 +111,7 @@ const ir::Type *Context::get_type()
 }
 
 template<typename Ret, typename Callable>
-Function<void, FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
+Function<void, func_t<to_cuj_t<Ret>, Callable>> Context::add_function(
     std::string name, Callable &&callable)
 {
     return add_function<Ret>(
@@ -121,19 +121,19 @@ Function<void, FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
 }
 
 template<typename Ret, typename Callable>
-Function<void, FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
+Function<void, func_t<to_cuj_t<Ret>, Callable>> Context::add_function(
     std::string name, ir::Function::Type type, Callable &&callable)
 {
     return add_function_impl<Ret>(
         std::move(name), type,
         std::forward<Callable>(callable),
-        reinterpret_cast<FunctionArgs<RawToCUJType<Ret>, Callable>*>(0),
+        reinterpret_cast<func_args_t<to_cuj_t<Ret>, Callable>*>(0),
         std::make_index_sequence<
-            std::tuple_size_v<FunctionArgs<RawToCUJType<Ret>, Callable>>>());
+            std::tuple_size_v<func_args_t<to_cuj_t<Ret>, Callable>>>());
 }
 
 template<typename Ret, typename Callable>
-Function<void, FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
+Function<void, func_t<to_cuj_t<Ret>, Callable>> Context::add_function(
     Callable &&callable)
 {
     std::string name =
@@ -143,7 +143,7 @@ Function<void, FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
 }
 
 template<typename Ret, typename Callable>
-Function<void, FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function(
+Function<void, func_t<to_cuj_t<Ret>, Callable>> Context::add_function(
     ir::Function::Type type, Callable &&callable)
 {
     std::string name =
@@ -191,7 +191,7 @@ Function<FuncType, FuncType> Context::import_raw_host_function(
 }
 
 template<typename Ret, typename ... Args>
-Function<Ret(Args ...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
+Function<Ret(Args ...), func_trait_detail::to_cuj_func_t<Ret, Args...>>
     Context::import_host_functor(std::function<Ret(Args ...)> func)
 {
     using namespace func_trait_detail;
@@ -207,15 +207,15 @@ Function<Ret(Args ...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
     p_imported_func = imported_func;
 
     static_assert((std::is_same_v<rm_cvref_t<Args>, Args> && ...));
-    using FuncType = CPPArgToCUJArgType<Ret>(CPPArgToCUJArgType<Args>...);
+    using FuncType = to_cuj_arg_t<Ret>(to_cuj_arg_t<Args>...);
     auto f = import_raw_host_function<FuncType>(
         reinterpret_cast<uint64_t>(p_imported_func), owner);
 
-    return Function<Ret(Args...), CPPFuncToCUJFuncType<Ret, Args...>>(f.get_index());
+    return Function<Ret(Args...), to_cuj_func_t<Ret, Args...>>(f.get_index());
 }
 
 template<typename Ret, typename ... Args>
-Function<Ret(Args ...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
+Function<Ret(Args ...), func_trait_detail::to_cuj_func_t<Ret, Args...>>
     Context::import_host_functor(std::string name, std::function<Ret(Args ...)> func)
 {
     using namespace func_trait_detail;
@@ -231,34 +231,34 @@ Function<Ret(Args ...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
     p_imported_func = imported_func;
 
     static_assert((std::is_same_v<rm_cvref_t<Args>, Args> && ...));
-    using FuncType = CPPArgToCUJArgType<Ret>(CPPArgToCUJArgType<Args>...);
+    using FuncType = to_cuj_arg_t<Ret>(to_cuj_arg_t<Args>...);
     auto f = import_raw_host_function<FuncType>(
         std::move(name), reinterpret_cast<uint64_t>(p_imported_func), owner);
 
-    return Function<Ret(Args...), CPPFuncToCUJFuncType<Ret, Args...>>(f.get_index());
+    return Function<Ret(Args...), to_cuj_func_t<Ret, Args...>>(f.get_index());
 }
 
 template<typename Ret, typename ... Args>
-Function<Ret(Args...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
+Function<Ret(Args...), func_trait_detail::to_cuj_func_t<Ret, Args...>>
     Context::import_host_function(Ret (*func_ptr)(Args ...))
 {
     using namespace func_trait_detail;
     static_assert((std::is_same_v<rm_cvref_t<Args>, Args> && ...));
-    using FuncType = CPPArgToCUJArgType<Ret>(CPPArgToCUJArgType<Args>...);
+    using FuncType = to_cuj_arg_t<Ret>(to_cuj_arg_t<Args>...);
     auto f = import_raw_host_function<FuncType>(reinterpret_cast<uint64_t>(func_ptr));
-    return Function<Ret(Args...), CPPFuncToCUJFuncType<Ret, Args...>>(f.get_index());
+    return Function<Ret(Args...), to_cuj_func_t<Ret, Args...>>(f.get_index());
 }
 
 template<typename Ret, typename ... Args>
-Function<Ret(Args...), func_trait_detail::CPPFuncToCUJFuncType<Ret, Args...>>
+Function<Ret(Args...), func_trait_detail::to_cuj_func_t<Ret, Args...>>
     Context::import_host_function(std::string name, Ret (*func_ptr)(Args ...))
 {
     using namespace func_trait_detail;
     static_assert((std::is_same_v<rm_cvref_t<Args>, Args> && ...));
-    using FuncType = CPPArgToCUJArgType<Ret>(CPPArgToCUJArgType<Args>...);
+    using FuncType = to_cuj_arg_t<Ret>(to_cuj_arg_t<Args>...);
     auto f = import_raw_host_function<FuncType>(
                 std::move(name), reinterpret_cast<uint64_t>(func_ptr));
-    return Function<Ret(Args...), CPPFuncToCUJFuncType<Ret, Args...>>(f.get_index());
+    return Function<Ret(Args...), to_cuj_func_t<Ret, Args...>>(f.get_index());
 }
 
 template<typename FuncType>
@@ -354,7 +354,7 @@ Function<void, FuncType> Context::get_function(int index) const
 }
 
 template<typename Ret, typename Callable, typename...Args, size_t...Is>
-Function<void, FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function_impl(
+Function<void, func_t<to_cuj_t<Ret>, Callable>> Context::add_function_impl(
     std::string        name,
     ir::Function::Type type,
     Callable         &&callable,
@@ -363,7 +363,7 @@ Function<void, FunctionType<RawToCUJType<Ret>, Callable>> Context::add_function_
 {
     using ArgsTuple = std::tuple<Args...>;
 
-    auto ret = begin_function<FunctionType<RawToCUJType<Ret>, Callable>>(
+    auto ret = begin_function<func_t<to_cuj_t<Ret>, Callable>>(
         std::move(name), type);
     CUJ_SCOPE_GUARD({ end_function(); });
     

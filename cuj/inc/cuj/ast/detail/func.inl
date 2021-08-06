@@ -12,9 +12,8 @@ namespace detail
     template<size_t I, typename ToArgs, typename FromArgs>
     auto convert_func_arg_type(const FromArgs &from_args)
     {
-        using From = typename DeValueType<
-                        rm_cvref_t<std::remove_pointer_t<
-                            std::tuple_element_t<I, FromArgs>>>>::Type;
+        using From = deval_t<rm_cvref_t<std::remove_pointer_t<
+                        std::tuple_element_t<I, FromArgs>>>>;
         using To = std::tuple_element_t<I, ToArgs>;
 
         auto &from = *std::get<I>(from_args);
@@ -210,7 +209,7 @@ template<typename ForcedCFunctionType, typename Ret, typename...Args>
 void Function<ForcedCFunctionType, Ret(Args...)>::get_arg_types(std::vector<const ir::Type*> &output)
 {
     auto ctx = get_current_context();
-    (output.push_back(ctx->get_type<RawToCUJType<Args>>()), ...);
+    (output.push_back(ctx->get_type<to_cuj_t<Args>>()), ...);
 }
 
 template<typename ForcedCFunctionType, typename Ret, typename ... Args>

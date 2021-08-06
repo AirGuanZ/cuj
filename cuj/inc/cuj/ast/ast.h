@@ -96,14 +96,14 @@ CUJ_NAMESPACE_END(cuj)
     using CUJClassFlag = typename CUJClassBase::CUJClassFlag;
 
 #define $arg(TYPE, NAME)                                                        \
-    ::cuj::ast::Value<::cuj::ast::RawToCUJType<TYPE>> NAME =                    \
+    ::cuj::ast::Value<::cuj::ast::to_cuj_t<TYPE>> NAME =                        \
         ::cuj::ast::get_current_function()                                      \
-            ->create_arg<::cuj::ast::RawToCUJType<TYPE>>()
+            ->create_arg<::cuj::ast::to_cuj_t<TYPE>>()
 
 #define $mem(TYPE, NAME, ...)                                                   \
-    ::cuj::ast::Value<::cuj::ast::RawToCUJType<TYPE>> NAME =                    \
+    ::cuj::ast::Value<::cuj::ast::to_cuj_t<TYPE>> NAME =                        \
         this->CUJClassBase::                                                    \
-            template new_member<::cuj::ast::RawToCUJType<TYPE>>(__VA_ARGS__)
+            template new_member<::cuj::ast::to_cuj_t<TYPE>>(__VA_ARGS__)
 
 #define $if(COND)   ::cuj::ast::IfBuilder()+(COND)+[&]
 #define $elif(COND) +(COND)+[&]

@@ -150,7 +150,7 @@ namespace detail
     }
 
     template<typename T>
-    using CFunctionArgType = rm_cvref_t<std::remove_pointer_t<decltype(
+    using c_func_arg_t = rm_cvref_t<std::remove_pointer_t<decltype(
         CFunctionArgTypeAux<T>())>>;
 
 } // namespace detail
@@ -160,16 +160,16 @@ class Function<ForcedCFunctionType, Ret(Args...)>
 {
 public:
 
-    using ReturnType = typename detail::DeValueType<RawToCUJType<Ret>>::Type;
+    using ReturnType = deval_t<to_cuj_t<Ret>>;
 
     using CFunctionType = std::conditional_t<
         std::is_function_v<ForcedCFunctionType>,
         ForcedCFunctionType,
         std::conditional_t<
             is_cuj_class<ReturnType> || is_array<ReturnType>,
-            void(void *, detail::CFunctionArgType<RawToCUJType<Args>>...),
-            RawToCUJType<ReturnType>(
-                detail::CFunctionArgType<RawToCUJType<Args>>...)>>;
+            void(void *, detail::c_func_arg_t<to_cuj_t<Args>>...),
+            to_cuj_t<ReturnType>(
+                detail::c_func_arg_t<to_cuj_t<Args>>...)>>;
 
     using CFunctionPointer = CFunctionType*;
 
@@ -184,8 +184,8 @@ public:
 private:
 
     using Impl = FunctionImpl<
-        typename detail::DeValueType<RawToCUJType<Ret>>::Type,
-        RawToCUJType<Args>...>;
+        deval_t<to_cuj_t<Ret>>,
+        to_cuj_t<Args>...>;
 
     std::unique_ptr<Impl> impl_;
 

@@ -135,7 +135,7 @@ inline const ir::Type *FunctionContext::get_return_type() const
 template<typename T, typename...Args>
 RC<typename Value<T>::ImplType> FunctionContext::create_stack_var(Args &&...args)
 {
-    return alloc_stack_var<typename detail::DeValueType<T>::Type>(
+    return alloc_stack_var<deval_t<T>>(
         false, std::forward<Args>(args)...);
 }
 
