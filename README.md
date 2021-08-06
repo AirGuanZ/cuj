@@ -204,7 +204,7 @@ These codes define a CUJ function that is exactly the same as the previous one. 
 
 ### Call Functions
 
-A CUJ function can not be called within another CUJ function. The calling syntax is very similar to C++ —— just use the return value of `to_callable` or `Context::begin_function` as a functor. For example, to call `my_add_float` in another function:
+A CUJ function can only be called within another CUJ function. The calling syntax is very similar to C++ —— just use the return value of `to_callable` or `Context::begin_function` as a functor. For example, to call `my_add_float` in another function:
 
 ```cpp
 {
@@ -220,7 +220,7 @@ A CUJ function can not be called within another CUJ function. The calling syntax
         f32 z = my_add_float(x, 2.0f);
         $return(z);
     });
-    
+
     // other operations
 }
 ```
@@ -240,7 +240,7 @@ We can use `cuj::Value` to convert a C++ type to its corresponding CUJ type. To 
 {
     using namespace cuj;
     ScopedContext context;
-    
+
     auto my_func = to_callable<int32_t>(
         [](i32 x, i32 y)
     {
@@ -373,7 +373,7 @@ Function pointers can be queried by its CUJ function name or CUJ function handle
     auto add_float_handle = to_callable<float>(
         "add_float", [](f32 a, f32 b) { $return(a + b); });
     auto native_jit = context.gen_native_jit();
-    
+
     auto add_float_func_pointer1 = native_jit.get_function_by_name<float(float, float)>("add_float");
     auto add_float_func_pointer2 = native_jit.get_function(add_float_handle);
 
@@ -425,8 +425,8 @@ namespace cuj::builtin::cuda
     Dim3 thread_index();
     Dim3 block_index();
     Dim3 block_dim();
-	void sync_block_threads();
-    
+    void sync_block_threads();
+
     math::Vec1f sample_texture2d_1f(TextureObject tex, f32 u, f32 v);
     math::Vec2f sample_texture2d_2f(TextureObject tex, f32 u, f32 v);
     math::Vec3f sample_texture2d_3f(TextureObject tex, f32 u, f32 v);
