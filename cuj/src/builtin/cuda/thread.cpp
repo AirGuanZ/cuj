@@ -7,6 +7,15 @@ CUJ_NAMESPACE_BEGIN(cuj::builtin::cuda)
 namespace
 {
 
+    class InternalIntrinsicIntValue : public ast::InternalArithmeticValue<int>
+    {
+    public:
+
+        IntrinsicValueType type;
+
+        ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
+    };
+
     const char *get_intrinsic_name(IntrinsicValueType type)
     {
 #define INTRINSIC_CASE(NAME) case IntrinsicValueType::NAME: return "cuda." #NAME
@@ -31,7 +40,7 @@ namespace
 
     Value<int> intrinsic_int_value(IntrinsicValueType type)
     {
-        auto impl = newRC<detail::InternalIntrinsicIntValue>();
+        auto impl = newRC<InternalIntrinsicIntValue>();
         impl->type = type;
         return Value<int>(std::move(impl));
     }
@@ -47,19 +56,19 @@ namespace
         }
     };
 
+    ir::BasicValue InternalIntrinsicIntValue::gen_ir(
+        ir::IRBuilder &builder) const
+    {
+        ir::IntrinsicOp op = { get_intrinsic_name(type), {} };
+
+        auto int_type = get_current_context()->get_type<int>();
+        auto ret = builder.gen_temp_value(int_type);
+
+        builder.append_assign(ret, op);
+        return ret;
+    }
+
 } // namespace anonymous
-
-ir::BasicValue detail::InternalIntrinsicIntValue::gen_ir(
-    ir::IRBuilder &builder) const
-{
-    ir::IntrinsicOp op = { get_intrinsic_name(type), {} };
-
-    auto int_type = get_current_context()->get_type<int>();
-    auto ret = builder.gen_temp_value(int_type);
-
-    builder.append_assign(ret, op);
-    return ret;
-}
 
 Value<int> thread_index_x()
 {

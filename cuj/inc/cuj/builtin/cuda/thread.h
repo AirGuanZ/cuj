@@ -19,20 +19,6 @@ enum class IntrinsicValueType
     block_dim_z
 };
 
-namespace detail
-{
-
-    class InternalIntrinsicIntValue : public ast::InternalArithmeticValue<int>
-    {
-    public:
-
-        IntrinsicValueType type;
-
-        ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
-    };
-
-} // namespace detail
-
 using Dim3 = math::Vec3i;
 
 Value<int> thread_index_x();

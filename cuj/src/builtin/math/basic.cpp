@@ -6,6 +6,19 @@ namespace detail
 {
 
     template<typename R, typename F>
+    class InternalIntrinsicBasicMathFunction :
+        public ast::InternalArithmeticValue<R>
+    {
+    public:
+
+        IntrinsicBasicMathFunctionType      type;
+        RC<ast::InternalArithmeticValue<F>> input1;
+        RC<ast::InternalArithmeticValue<F>> input2;
+
+        ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
+    };
+
+    template<typename R, typename F>
     ir::BasicValue InternalIntrinsicBasicMathFunction<R, F>::gen_ir(
         ir::IRBuilder &builder) const
     {

@@ -35,24 +35,6 @@ enum class IntrinsicBasicMathFunctionType
 const char *intrinsic_basic_math_function_name(
     IntrinsicBasicMathFunctionType type);
 
-namespace detail
-{
-
-    template<typename R, typename F>
-    class InternalIntrinsicBasicMathFunction :
-        public ast::InternalArithmeticValue<R>
-    {
-    public:
-
-        IntrinsicBasicMathFunctionType      type;
-        RC<ast::InternalArithmeticValue<F>> input1;
-        RC<ast::InternalArithmeticValue<F>> input2;
-
-        ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
-    };
-
-} // namespace detail
-
 f32 abs      (const f32 &x);
 f32 mod      (const f32 &x, const f32 &y);
 f32 remainder(const f32 &x, const f32 &y);

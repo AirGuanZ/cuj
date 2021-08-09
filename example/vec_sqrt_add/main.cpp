@@ -18,23 +18,19 @@ void check_cuda_error(cudaError_t err)
 std::string generate_ptx()
 {
     ScopedContext context;
-    
-    context.begin_function<void(float*,float*,float*,int)>(
-        "vec_add", ir::Function::Type::Kernel);
-    
-    $arg(float*, A);
-    $arg(float*, B);
-    $arg(float*, C);
-    $arg(int,    N);
-    
-    i32 i = cuda::thread_index_x() + cuda::block_index_x() * cuda::block_dim_x();
 
-    $if(i < N)
+    to_kernel("vec_add", [&](
+        Value<float *> A,
+        Value<float *> B,
+        Value<float *> C,
+        Value<int>     N)
     {
-        C[i] = math::sqrt(A[i] + B[i]);
-    };
-
-    context.end_function();
+        i32 i = cuda::thread_index_x() + cuda::block_index_x() * cuda::block_dim_x();
+        $if(i < N)
+        {
+            C[i] = math::sqrt(A[i] + B[i]);
+        };
+    });
     
     std::cout << "=========== ptx ===========" << std::endl << std::endl;
 
