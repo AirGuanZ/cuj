@@ -4,14 +4,14 @@ Run-time program generator embedded in C++
 
 ## Building
 
-## Requirements
+### Requirements
 
 * LLVM 11.1.0 and (optional) CUDA 10.2/11.1 (other versions may work but haven't been tested)
 * A C++17 compiler
 
 ### Building with CMake
 
-```
+```powershell
 git clone https://github.com/AirGuanZ/cuj.git
 cd cuj
 mkdir build
@@ -286,9 +286,7 @@ p->x         = 5; // compile error
 p.deref()->x = 5; // ok
 ```
 
-#### Misc
-
-CUJ array/class objects can be freely passed as function arguments or return values. For example:
+CUJ array/class objects can be passed as function arguments or returned by a CUJ function. For example:
 
 ```cpp
 auto array_sum = to_callable<int>(
@@ -303,6 +301,31 @@ auto make_vector3 = to_callable<Vector3>(
     Vector3 result(x, y, z);
     $return(result);
 });
+```
+
+#### Cast Values
+
+```cpp
+i32 i = 2;
+f32 f = cast<f32>(i); // f is 2.0f
+
+Pointer<void> p = ...;
+Pointer<f32>  pf = ptr_cast<f32>(p);
+```
+
+#### Define Constant Data
+
+You can convert C++ native data to CUJ pointer. Converted data lifetime is maintained by CUJ backends.
+
+```cpp
+int data[5] = { 1, 2, 3, 4, 5 };
+Pointer<int> cuj_data_pointer = const_data(data);
+
+int *p_data = ...;
+Pointer<float> cuj_data_pointer2 = const_data<float>(p_data, total_bytes_of_data);
+
+Pointer<char> cuj_string = "hello, world!"_cuj;
+
 ```
 
 ### Control Flow
@@ -389,9 +412,221 @@ const std::string ptx = context.gen_ptx();
 
 #### Math
 
+```cpp
+// in namespace cuj::builtin::math
+```
+
+##### Basic
+
+```cpp
+f32 atomic_add(const Pointer<f32> &dst, const f32 &val);
+f64 atomic_add(const Pointer<f64> &dst, const f64 &val);
+
+f32 abs      (const f32 &x);
+f32 mod      (const f32 &x, const f32 &y);
+f32 remainder(const f32 &x, const f32 &y);
+f32 exp      (const f32 &x);
+f32 exp2     (const f32 &x);
+f32 log      (const f32 &x);
+f32 log2     (const f32 &x);
+f32 log10    (const f32 &x);
+f32 pow      (const f32 &x, const f32 &y);
+f32 sqrt     (const f32 &x);
+f32 sin      (const f32 &x);
+f32 cos      (const f32 &x);
+f32 tan      (const f32 &x);
+f32 asin     (const f32 &x);
+f32 acos     (const f32 &x);
+f32 atan     (const f32 &x);
+f32 atan2    (const f32 &y, const f32 &x);
+f32 ceil     (const f32 &x);
+f32 floor    (const f32 &x);
+f32 trunc    (const f32 &x);
+f32 round    (const f32 &x);
+i32 isfinite (const f32 &x);
+i32 isinf    (const f32 &x);
+i32 isnan    (const f32 &x);
+
+f64 abs      (const f64 &x);
+f64 mod      (const f64 &x, const f64 &y);
+f64 remainder(const f64 &x, const f64 &y);
+f64 exp      (const f64 &x);
+f64 exp2     (const f64 &x);
+f64 log      (const f64 &x);
+f64 log2     (const f64 &x);
+f64 log10    (const f64 &x);
+f64 pow      (const f64 &x, const f64 &y);
+f64 sqrt     (const f64 &x);
+f64 sin      (const f64 &x);
+f64 cos      (const f64 &x);
+f64 tan      (const f64 &x);
+f64 asin     (const f64 &x);
+f64 acos     (const f64 &x);
+f64 atan     (const f64 &x);
+f64 atan2    (const f64 &y, const f64 &x);
+f64 ceil     (const f64 &x);
+f64 floor    (const f64 &x);
+f64 trunc    (const f64 &x);
+f64 round    (const f64 &x);
+i32 isfinite (const f64 &x);
+i32 isinf    (const f64 &x);
+i32 isnan    (const f64 &x);
+
+// static_assert(std::is_arithmetic_v<T>);
+template<typename T>
+Value<T> min(const Value<T> &lhs, const Value<T> &rhs);
+template<typename T>
+Value<T> max(const Value<T> &lhs, const Value<T> &rhs);
+template<typename T>
+Value<T> clamp(const Value<T> &x, const Value<T> &min_x, const Value<T> &max_x);
+
+```
+
+##### Vec1/2/3/4
+
+```cpp
+// this is only for interface illustration.
+// actual implementation can be more complex.
+template<typename T>
+class Vec3
+{
+public:
+    
+    Value<T> x;
+    Value<T> y;
+    Value<T> z;
+    
+    Vec3();
+    Vec3(Value<T> value);
+    Vec3(Value<T> x, Value<T> y, Value<T> z);
+    Value<T> length_square() const;
+
+    Value<T> length() const;
+    Value<T> min_elem() const;
+    Value<T> max_elem() const;
+    
+    // returned value is a reference
+    Value<T> operator[](const ArithmeticValue<size_t> &i) const;
+    
+    Vec3<T> normalize() const;
+};
+
+using Vec3f = Vec3<float>;
+using Vec3d = Vec3<double>;
+using Vec3i = Vec3<int>;
+
+template<typename T>
+Vec3<T> make_vec3();
+template<typename T>
+Vec3<T> make_vec3(const Value<T> &v);
+template<typename T>
+Vec3<T> make_vec3(const Value<T> &x, const Value<T> &y, const Value<T> &z);
+
+inline Vec3f make_vec3f();
+inline Vec3f make_vec3f(const f32 &v);
+inline Vec3f make_vec3f(const f32 &x, const f32 &y, const f32 &z);
+
+inline Vec3d make_vec3d();
+inline Vec3d make_vec3d(const f64 &v);
+inline Vec3d make_vec3d(const f64 &x, const f64 &y, const f64 &z);
+
+inline Vec3i make_vec3i();
+inline Vec3i make_vec3i(const i32 &v);
+inline Vec3i make_vec3i(const i32 &x, const i32 &y, const i32 &z);
+
+template<typename T>
+Vec3<T> operator-(const Vec3<T> &v);
+
+template<typename T>
+Vec3<T> operator+(const Vec3<T> &lhs, const Vec3<T> &rhs);
+template<typename T>
+Vec3<T> operator-(const Vec3<T> &lhs, const Vec3<T> &rhs);
+template<typename T>
+Vec3<T> operator*(const Vec3<T> &lhs, const Vec3<T> &rhs);
+template<typename T>
+Vec3<T> operator/(const Vec3<T> &lhs, const Vec3<T> &rhs);
+
+template<typename T>
+Vec3<T> operator+(const Vec3<T> &lhs, const Value<T> &rhs);
+template<typename T>
+Vec3<T> operator-(const Vec3<T> &lhs, const Value<T> &rhs);
+template<typename T>
+Vec3<T> operator*(const Vec3<T> &lhs, const Value<T> &rhs);
+template<typename T>
+Vec3<T> operator/(const Vec3<T> &lhs, const Value<T> &rhs);
+
+template<typename T>
+Vec3<T> operator+(const Value<T> &lhs, const Vec3<T> &rhs);
+template<typename T>
+Vec3<T> operator-(const Value<T> &lhs, const Vec3<T> &rhs);
+template<typename T>
+Vec3<T> operator*(const Value<T> &lhs, const Vec3<T> &rhs);
+template<typename T>
+Vec3<T> operator/(const Value<T> &lhs, const Vec3<T> &rhs);
+
+template<typename T>
+Value<T> dot(const Vec3<T> &a, const Vec3<T> &b);
+template<typename T>
+Value<T> cos(const Vec3<T> &a, const Vec3<T> &b);
+template<typename T>
+Vec3<T> cross(const Vec3<T> &a, const Vec3<T> &b);
+```
+
 #### System
+
+```cpp
+// in namespace cuj::builtin::system
+
+void print(const Pointer<char> &msg);
+
+Pointer<void> malloc(const Value<size_t> &bytes);
+void free(const ast::Pointer<void> &ptr);
+```
+
+**Note**: `malloc` and `free` are only available on NativeJIT backend.
 
 #### Assertion
 
-#### Special Registers
+```cpp
+// in CUJ function
+CUJ_ASSERT(i >= 0);
+```
+
+#### CUDA Specific Functions
+
+```cpp
+// in namespace cuj::builtin::cuda
+
+using TextureObject = i64;
+
+math::Vec1f sample_texture2d_1f(TextureObject tex, f32 u, f32 v);
+math::Vec2f sample_texture2d_2f(TextureObject tex, f32 u, f32 v);
+math::Vec3f sample_texture2d_3f(TextureObject tex, f32 u, f32 v);
+math::Vec4f sample_texture2d_4f(TextureObject tex, f32 u, f32 v);
+
+math::Vec1i sample_texture2d_1i(TextureObject tex, f32 u, f32 v);
+math::Vec2i sample_texture2d_2i(TextureObject tex, f32 u, f32 v);
+math::Vec3i sample_texture2d_3i(TextureObject tex, f32 u, f32 v);
+math::Vec4i sample_texture2d_4i(TextureObject tex, f32 u, f32 v);
+
+using Dim3 = math::Vec3i;
+
+Value<int> thread_index_x();
+Value<int> thread_index_y();
+Value<int> thread_index_z();
+
+Value<int> block_index_x();
+Value<int> block_index_y();
+Value<int> block_index_z();
+
+Value<int> block_dim_x();
+Value<int> block_dim_y();
+Value<int> block_dim_z();
+
+Dim3 thread_index();
+Dim3 block_index();
+Dim3 block_dim();
+
+void sync_block_threads();
+```
 
