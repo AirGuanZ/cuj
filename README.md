@@ -19,7 +19,7 @@ cd build
 cmake -DLLVM_DIR="llvm_cmake_config_dir" ..
 ```
 
-To add CUJ into a CMake project, simply use `ADD_SUBDIRECTORY` and link with target `cuj`.
+To add CUJ into a CMake project, simply use `ADD_SUBDIRECTORY` and link against `cuj`.
 
 ## Usage
 
