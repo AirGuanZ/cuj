@@ -176,6 +176,20 @@ auto vec_add_float = to_kernel(
     });
 ```
 
+#### Import Host Functions
+
+```cpp
+// convert a host callable object to a cuj function
+// cuj will automatically handle the object's lifetime
+auto add_float = import_function([](float a, float b) { return a + b; });
+
+// capture is allowed
+int n = 4;
+auto set_n = import_function([&n](int value) { n = value; });
+```
+
+**Note**. after importing a host function, native-jit becomes the only valid backend.
+
 #### Call Functions
 
 ```cpp
