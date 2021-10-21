@@ -9,7 +9,12 @@
 #pragma warning(disable: 4996)
 #endif
 
+#include <llvm/Target/TargetLoweringObjectFile.h>
+
 #include <llvm/Analysis/TargetTransformInfo.h>
+#include <llvm/Analysis/TargetLibraryInfo.h>
+#include <llvm/CodeGen/MachineModuleInfo.h>
+#include <llvm/CodeGen/TargetPassConfig.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Module.h>
 #include <llvm/Support/TargetRegistry.h>
@@ -49,8 +54,10 @@ namespace
         auto target = llvm::TargetRegistry::lookupTarget(target_triple, err);
         if(!target)
             throw CUJException(err);
-        
-        auto machine = target->createTargetMachine(target_triple, "", {}, {}, {});
+
+        auto machine = target->createTargetMachine(
+            target_triple, "sm_20", "+ptx63", {}, {},
+            {}, llvm::CodeGenOpt::Aggressive);
         auto data_layout = machine->createDataLayout();
 
         LLVMIRGenerator ir_gen;
@@ -58,6 +65,7 @@ namespace
         ir_gen.generate(prog, &data_layout);
 
         auto llvm_module = ir_gen.get_module();
+        llvm_module->setTargetTriple(target_triple);
         llvm_module->setDataLayout(data_layout);
 
         llvm::PassManagerBuilder pass_mgr_builder;
@@ -105,7 +113,6 @@ void PTXGenerator::generate(const ir::Program &prog, OptLevel opt)
     auto im = construct_intermediate_module(prog, opt);
     
     llvm::legacy::PassManager passes;
-
     llvm::SmallString<8> output_buf;
     llvm::raw_svector_ostream output_stream(output_buf);
     if(im.machine->addPassesToEmitFile(

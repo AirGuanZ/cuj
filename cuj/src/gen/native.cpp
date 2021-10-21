@@ -27,7 +27,6 @@
 
 #include <cuj/gen/llvm.h>
 #include <cuj/gen/native.h>
-#include <cuj/util/atomic_add.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 
@@ -264,9 +263,6 @@ void NativeJIT::generate(const ir::Program &prog, const Options &opts)
     ADD_HOST_FUNC("host.math.isfinite.f64",  &is_finite_f64);
     ADD_HOST_FUNC("host.math.isinf.f64",     &is_inf_f64);
     ADD_HOST_FUNC("host.math.isnan.f64",     &is_nan_f64);
-
-    ADD_HOST_FUNC("host.atomic.add.f32", &atomic_add_float);
-    ADD_HOST_FUNC("host.atomic.add.f64", &atomic_add_double);
 
     ADD_HOST_FUNC("host.system.print",  &print);
     ADD_HOST_FUNC("host.system.malloc", &::malloc);

@@ -363,18 +363,11 @@ llvm::Value *process_cuda_intrinsic_op(
     CUJ_CALL_LIBDEVICE(isinf,     false);
     CUJ_CALL_LIBDEVICE(isnan,     false);
 
-    if(name == "atomic.add.f32")
+    if(name == "atomic.add.f32" || name == "atomic.add.f64")
     {
-        return ir.CreateIntrinsic(
-            llvm::Intrinsic::nvvm_atomic_add_gen_f_sys,
-            { ir.getFloatTy() }, args);
-    }
-
-    if(name == "atomic.add.f64")
-    {
-        return ir.CreateIntrinsic(
-            llvm::Intrinsic::nvvm_atomic_add_gen_f_sys,
-            { ir.getDoubleTy() }, args);
+        return ir.CreateAtomicRMW(
+            llvm::AtomicRMWInst::FAdd, args[0], args[1],
+            llvm::AtomicOrdering::SequentiallyConsistent);
     }
 
     return nullptr;
