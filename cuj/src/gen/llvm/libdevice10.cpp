@@ -1,5 +1,7 @@
 #if CUJ_ENABLE_CUDA
 
+#include <string>
+
 #include <cuj/common.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::gen::libdev)

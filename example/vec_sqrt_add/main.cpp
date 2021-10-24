@@ -1,3 +1,4 @@
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 
@@ -109,7 +110,7 @@ void test_ptx(const std::string &ptx)
 
     std::cout << "Expected C: ";
     for(int i = 0; i < N; ++i)
-        std::cout << std::setw(7) << std::sqrtf(data_A[i] + data_B[i]) << " ";
+        std::cout << std::setw(7) << std::sqrt(data_A[i] + data_B[i]) << " ";
     std::cout << std::endl;
 }
 
