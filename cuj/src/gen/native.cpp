@@ -1,4 +1,4 @@
-#include <atomic>
+#include <cmath>
 #include <iostream>
 
 #ifdef _MSC_VER
@@ -145,13 +145,13 @@ NativeJIT::~NativeJIT()
 namespace
 {
 
-    int is_finite_f32(float x) { return isfinite(x); }
-    int is_inf_f32   (float x) { return isinf(x); }
-    int is_nan_f32   (float x) { return isnan(x); }
+    int is_finite_f32(float x) { return std::isfinite(x); }
+    int is_inf_f32   (float x) { return std::isinf(x); }
+    int is_nan_f32   (float x) { return std::isnan(x); }
     
-    int is_finite_f64(double x) { return isfinite(x); }
-    int is_inf_f64   (double x) { return isinf(x); }
-    int is_nan_f64   (double x) { return isnan(x); }
+    int is_finite_f64(double x) { return std::isfinite(x); }
+    int is_inf_f64   (double x) { return std::isinf(x); }
+    int is_nan_f64   (double x) { return std::isnan(x); }
 
     void print(const char *msg)
     {

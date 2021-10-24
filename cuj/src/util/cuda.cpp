@@ -1,5 +1,6 @@
 #if CUJ_ENABLE_CUDA
 
+#include <cstring>
 #include <fstream>
 #include <vector>
 

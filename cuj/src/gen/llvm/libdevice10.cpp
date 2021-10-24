@@ -1,6 +1,6 @@
 #if CUJ_ENABLE_CUDA
 
-#include <string>
+#include <cstring>
 
 #include <cuj/common.h>
 

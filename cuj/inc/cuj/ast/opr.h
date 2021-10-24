@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstring>
+
 #include <cuj/ast/value.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::ast)
