@@ -123,3 +123,12 @@ CUJ_NAMESPACE_END(cuj)
     do {                                                                        \
         ::cuj::ast::ReturnBuilder t(__VA_ARGS__);                               \
     } while(false)
+
+#define $switch(VALUE) ::cuj::ast::SwitchBuilder(VALUE)+[&]
+#define $case(COND)    ::cuj::ast::SwitchCaseBuilder(COND)+[&]
+#define $default       ::cuj::ast::SwitchDefaultBuilder()+[&]
+#define $fallthrough                                                            \
+    do {                                                                        \
+        ::cuj::ast::SwitchCaseBuilderInterface::get_current_builder()           \
+            ->set_fallthrough();                                                \
+    } while(false)

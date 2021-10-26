@@ -137,6 +137,50 @@ inline void Continue::gen_ir(ir::IRBuilder &builder) const
 }
 
 template<typename T>
+Switch<T>::Switch(
+    RC<InternalArithmeticValue<T>> value,
+    std::vector<Case>              cases,
+    RC<Block>                      default_body)
+    : value_(std::move(value)),
+      cases_(std::move(cases)),
+      default_(std::move(default_body))
+{
+    
+}
+
+template<typename T>
+void Switch<T>::gen_ir(ir::IRBuilder &builder) const
+{
+    auto inst = ir::Switch{};
+    inst.value = value_->gen_ir(builder);
+    inst.cases.reserve(cases_.size());
+    for(auto &c : cases_)
+    {
+        auto body_block = newRC<ir::Block>();
+        builder.push_block(body_block);
+        c.body->gen_ir(builder);
+        builder.pop_block();
+
+        auto &inst_case = inst.cases.emplace_back();
+        inst_case.cond.value  = c.cond;
+        inst_case.body        = std::move(body_block);
+        inst_case.fallthrough = c.fallthrough;
+    }
+
+    if(default_)
+    {
+        auto body_block = newRC<ir::Block>();
+        builder.push_block(body_block);
+        default_->gen_ir(builder);
+        builder.pop_block();
+
+        inst.default_body = std::move(body_block);
+    }
+
+    builder.append_statement(newRC<ir::Statement>(std::move(inst)));
+}
+
+template<typename T>
 ReturnArithmetic<T>::ReturnArithmetic(RC<InternalArithmeticValue<T>> value)
     : value_(std::move(value))
 {

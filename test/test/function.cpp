@@ -230,4 +230,70 @@ TEST_CASE("function")
         if(test_func)
             REQUIRE(test_func(10) == 11);
     }
+
+    SECTION("switch")
+    {
+        ScopedContext ctx;
+
+        auto entry = to_callable<int32_t>([](i32 i)
+        {
+            $switch(i)
+            {
+                for(int j = 1; j <= 4; ++j)
+                    $case(j) { $return(j + 1); };
+                $default{ $return(0); };
+            };
+        });
+
+        auto jit = ctx.gen_native_jit();
+        auto entry_func = jit.get_function(entry);
+
+        REQUIRE(entry_func);
+        if(entry_func)
+        {
+            REQUIRE(entry_func(1) == 2);
+            REQUIRE(entry_func(2) == 3);
+            REQUIRE(entry_func(3) == 4);
+            REQUIRE(entry_func(4) == 5);
+            REQUIRE(entry_func(5) == 0);
+        }
+    }
+
+    SECTION("fallthrough")
+    {
+        ScopedContext ctx;
+
+        auto entry = to_callable<void>(
+            [](i32 i, Pointer<i32> a, Pointer<i32> b)
+        {
+            $switch(i)
+            {
+                $case(0) { *a = 1; $fallthrough; };
+                $case(1) { *b = 1; };
+                $case(2) { *a = 1; *b = 1; };
+            };
+        });
+
+        auto jit = ctx.gen_native_jit();
+        auto entry_func = jit.get_function(entry);
+
+        REQUIRE(entry_func);
+        if(entry_func)
+        {
+            int32_t a = 0, b = 0;
+            entry_func(0, &a, &b);
+            REQUIRE(a == 1);
+            REQUIRE(b == 1);
+
+            a = 0, b = 0;
+            entry_func(1, &a, &b);
+            REQUIRE(a == 0);
+            REQUIRE(b == 1);
+
+            a = 0, b = 0;
+            entry_func(2, &a, &b);
+            REQUIRE(a == 1);
+            REQUIRE(b == 1);
+        }
+    }
 }

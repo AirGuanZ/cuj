@@ -251,4 +251,119 @@ ReturnBuilder::ReturnBuilder(T val)
     (void)ReturnBuilder(create_literial(val));
 }
 
+inline SwitchBuilderInterface *SwitchBuilderInterface::get_current_builder()
+{
+    return current_builder_storage();
+}
+
+inline SwitchBuilderInterface *&SwitchBuilderInterface::current_builder_storage()
+{
+    thread_local static SwitchBuilderInterface *result = nullptr;
+    return result;
+}
+
+inline void SwitchBuilderInterface::set_current_builder(
+    SwitchBuilderInterface *builder)
+{
+    current_builder_storage() = builder;
+}
+
+template<typename T>
+SwitchBuilder<T>::SwitchBuilder(const ArithmeticValue<T> &val)
+    : value_(val.get_impl())
+{
+    
+}
+
+template<typename T>
+void SwitchBuilder<T>::operator+(const std::function<void()> &body)
+{
+    assert(value_ && cases_.empty() && !default_);
+
+    auto context = get_current_context();
+    auto func = context->get_current_function();
+
+    auto old_builder = get_current_builder();
+    CUJ_SCOPE_GUARD({ set_current_builder(old_builder); });
+    set_current_builder(this);
+
+    body();
+
+    func->append_statement(newRC<Switch<T>>(
+        std::move(value_), std::move(cases_), std::move(default_)));
+}
+
+template<typename T>
+void SwitchBuilder<T>::new_case(Int cond, RC<Block> body, bool fallthrough)
+{
+    assert(!default_);
+    T casted_cond = cond.match([](auto x) { return static_cast<T>(x); });
+    cases_.push_back({ casted_cond, std::move(body), fallthrough });
+}
+
+template<typename T>
+void SwitchBuilder<T>::new_default(RC<Block> block)
+{
+    assert(!default_);
+    default_ = std::move(block);
+}
+
+inline SwitchCaseBuilderInterface *SwitchCaseBuilderInterface::get_current_builder()
+{
+    return current_builder_storage();
+}
+
+inline SwitchCaseBuilderInterface *&SwitchCaseBuilderInterface::current_builder_storage()
+{
+    thread_local static SwitchCaseBuilderInterface *result = nullptr;
+    return result;
+}
+
+inline void SwitchCaseBuilderInterface::set_current_builder(SwitchCaseBuilderInterface *builder)
+{
+    current_builder_storage() = builder;
+}
+
+template<typename T>
+SwitchCaseBuilder<T>::SwitchCaseBuilder(T value)
+    : value_(value), fallthrough_(false)
+{
+    
+}
+
+template<typename T>
+void SwitchCaseBuilder<T>::operator+(const std::function<void()> &body_func)
+{
+    auto old_builder = get_current_builder();
+    CUJ_SCOPE_GUARD({ set_current_builder(old_builder); });
+    set_current_builder(this);
+
+    auto func = get_current_function();
+    auto body = newRC<Block>();
+    func->push_block(body);
+    body_func();
+    func->pop_block();
+
+    SwitchBuilderInterface::get_current_builder()->new_case(
+        value_, std::move(body), fallthrough_);
+}
+
+template<typename T>
+void SwitchCaseBuilder<T>::set_fallthrough()
+{
+    assert(!fallthrough_);
+    fallthrough_ = true;
+}
+
+inline void SwitchDefaultBuilder::operator+(const std::function<void()> &body_func)
+{
+    auto func = get_current_function();
+    auto body = newRC<Block>();
+    func->push_block(body);
+    body_func();
+    func->pop_block();
+
+    SwitchBuilderInterface::get_current_builder()->new_default(std::move(body));
+}
+
 CUJ_NAMESPACE_END(cuj::ast)

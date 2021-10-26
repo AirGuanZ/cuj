@@ -13,6 +13,7 @@ struct Continue;
 struct Block;
 struct If;
 struct While;
+struct Switch;
 struct Return;
 struct ReturnArray;
 struct ReturnClass;
@@ -22,7 +23,7 @@ struct IntrinsicCall;
 using Statement = Variant<
     Store, Assign,
     Break, Continue,
-    Block, If, While,
+    Block, If, While, Switch,
     Return, ReturnArray, ReturnClass,
     Call, IntrinsicCall>;
 
@@ -65,6 +66,20 @@ struct While
     RC<Block>  calculate_cond;
     BasicValue cond;
     RC<Block>  body;
+};
+
+struct Switch
+{
+    struct Case
+    {
+        BasicImmediateValue cond;
+        RC<Block>           body;
+        bool                fallthrough;
+    };
+
+    BasicValue        value;
+    std::vector<Case> cases;
+    RC<Block>         default_body;
 };
 
 struct Return

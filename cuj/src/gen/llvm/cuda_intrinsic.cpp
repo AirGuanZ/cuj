@@ -210,11 +210,11 @@ void link_with_libdevice(
 }
 
 bool process_cuda_intrinsic_stat(
-    llvm::LLVMContext              &ctx,
-    llvm::Module                   *top_module,
-    llvm::IRBuilder<>              &ir,
-    const std::string               name,
-    const std::vector<llvm::Value*> args)
+    llvm::LLVMContext               &ctx,
+    llvm::Module                    *top_module,
+    llvm::IRBuilder<>               &ir,
+    const std::string               &name,
+    const std::vector<llvm::Value*> &args)
 {
     if(name == "system.assertfail")
     {

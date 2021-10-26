@@ -41,6 +41,8 @@ private:
 
     void print(const ir::While &while_s);
 
+    void print(const ir::Switch &switch_s);
+
     void print(const ir::Return &return_s);
 
     void print(const ir::ReturnClass &return_class);

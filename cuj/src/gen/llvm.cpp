@@ -130,6 +130,29 @@ namespace
         unreachable();
     }
 
+    llvm::ConstantInt *get_constant_int(const ir::BasicImmediateValue &imm)
+    {
+        auto get = [](unsigned bits, uint64_t val, bool is_signed)
+        {
+            return llvm::ConstantInt::get(
+                *llvm_ctx, llvm::APInt(bits, val, is_signed));
+        };
+        return imm.value.match(
+            [&](char c)     { return get(CHAR_BIT, c, std::is_signed_v<char>); },
+            [&](uint8_t v)  { return get(8, v,  false); },
+            [&](uint16_t v) { return get(16, v, false); },
+            [&](uint32_t v) { return get(32, v, false); },
+            [&](uint64_t v) { return get(64, v, false); },
+            [&](int8_t v)   { return get(8, v,  true); },
+            [&](int16_t v)  { return get(16, v, true); },
+            [&](int32_t v)  { return get(32, v, true); },
+            [&](int64_t v)  { return get(64, v, true); },
+            [](auto) -> llvm::ConstantInt*
+            {
+                throw CUJException("expect immediate constant integer");
+            });
+    }
+
 } // namespace anonymous
 
 void link_with_libdevice(
@@ -138,11 +161,11 @@ void link_with_libdevice(
 
 #if CUJ_ENABLE_CUDA
 bool process_cuda_intrinsic_stat(
-    llvm::LLVMContext              &ctx,
-    llvm::Module                   *top_module,
-    llvm::IRBuilder<>              &ir,
-    const std::string               name,
-    const std::vector<llvm::Value*> args);
+    llvm::LLVMContext               &ctx,
+    llvm::Module                    *top_module,
+    llvm::IRBuilder<>               &ir,
+    const std::string               &name,
+    const std::vector<llvm::Value*> &args);
 
 llvm::Value *process_cuda_intrinsic_op(
     llvm::Module                     *top_module,
@@ -311,14 +334,9 @@ llvm::Type *LLVMIRGenerator::find_llvm_type(const ir::Type *type)
     const auto it = llvm_types.find(type);
     if(it != llvm_types.end())
         return it->second;
-    
-    auto result = type->match(
-        [](      ir::BuiltinType    t) { return create_llvm_type_record(t); },
-        [](const ir::ArrayType     &t) { return create_llvm_type_record(t); },
-        [](const ir::IntrinsicType &t) { return create_llvm_type_record(t); },
-        [](const ir::PointerType   &t) { return create_llvm_type_record(t); },
-        [](const ir::StructType    &t) { return create_llvm_type_record(t); });
 
+    auto result = type->match(
+        [](const auto &t) { return create_llvm_type_record(t); });
     CUJ_INTERNAL_ASSERT(!llvm_types.count(type));
     llvm_types.insert({ type, result });
 
@@ -720,19 +738,7 @@ void LLVMIRGenerator::copy_func_args(const ir::Function &func)
 
 void LLVMIRGenerator::generate(const ir::Statement &s)
 {
-    s.match(
-        [this](const ir::Store         &_s) { generate(_s); },
-        [this](const ir::Assign        &_s) { generate(_s); },
-        [this](const ir::Break         &_s) { generate(_s); },
-        [this](const ir::Continue      &_s) { generate(_s); },
-        [this](const ir::Block         &_s) { generate(_s); },
-        [this](const ir::If            &_s) { generate(_s); },
-        [this](const ir::While         &_s) { generate(_s); },
-        [this](const ir::Return        &_s) { generate(_s); },
-        [this](const ir::ReturnClass   &_s) { generate(_s); },
-        [this](const ir::ReturnArray   &_s) { generate(_s); },
-        [this](const ir::Call          &_s) { generate(_s); },
-        [this](const ir::IntrinsicCall &_s) { generate(_s); });
+    s.match([this](const auto &_s) { this->generate(_s); });
 }
 
 void LLVMIRGenerator::generate(const ir::Store &store)
@@ -838,6 +844,72 @@ void LLVMIRGenerator::generate(const ir::While &while_s)
 
     data_->function->getBasicBlockList().push_back(merge_block);
     data_->ir_builder->SetInsertPoint(merge_block);
+}
+
+void LLVMIRGenerator::generate(const ir::Switch &switch_s)
+{
+    // create basic blocks
+
+    auto end_block = llvm::BasicBlock::Create(*llvm_ctx, "end");
+
+    auto default_body_block = end_block;
+    if(switch_s.default_body)
+        default_body_block = llvm::BasicBlock::Create(*llvm_ctx, "default");
+
+    std::vector<llvm::BasicBlock *> case_body_blocks;
+    case_body_blocks.reserve(switch_s.cases.size());
+    for(auto &_ : switch_s.cases)
+        case_body_blocks.push_back(llvm::BasicBlock::Create(*llvm_ctx, "case"));
+
+    // insert basic blocks
+
+    auto function = data_->function;
+    for(auto c : case_body_blocks)
+        function->getBasicBlockList().push_back(c);
+    function->getBasicBlockList().push_back(default_body_block);
+    if(end_block != default_body_block)
+        function->getBasicBlockList().push_back(end_block);
+
+    // switch value
+
+    auto value = get_value(switch_s.value);
+    if(!value->getType()->isIntegerTy())
+        throw CUJException("switch statement only supports integer value");
+
+    // fill case bodies
+    
+    auto inst = data_->ir_builder->CreateSwitch(value, default_body_block);
+    size_t case_index = 0;
+    for(auto &c : switch_s.cases)
+    {
+        auto body_block = case_body_blocks[case_index++];
+        auto cond = get_constant_int(c.cond);
+
+        assert(cond->getType() == value->getType());
+        inst->addCase(cond, body_block);
+
+        data_->ir_builder->SetInsertPoint(body_block);
+        generate(*c.body);
+
+        llvm::BasicBlock *case_end = end_block;
+        if(c.fallthrough)
+        {
+            case_end = case_index < case_body_blocks.size() ?
+                case_body_blocks[case_index] : default_body_block;
+        }
+        data_->ir_builder->CreateBr(case_end);
+    }
+
+    // default body
+
+    if(default_body_block != end_block)
+    {
+        data_->ir_builder->SetInsertPoint(default_body_block);
+        generate(*switch_s.default_body);
+        data_->ir_builder->CreateBr(end_block);
+    }
+
+    data_->ir_builder->SetInsertPoint(end_block);
 }
 
 void LLVMIRGenerator::generate(const ir::Return &return_s)
@@ -1485,7 +1557,7 @@ ir::BuiltinType LLVMIRGenerator::get_arithmetic_type(const ir::BasicValue &v)
         [](const ir::BasicImmediateValue &t)
     {
         return t.value.match(
-            [](char c)   { return ir::BuiltinType::Char; },
+            [](char)     { return ir::BuiltinType::Char; },
             [](uint8_t)  { return ir::BuiltinType::U8;   },
             [](uint16_t) { return ir::BuiltinType::U16;  },
             [](uint32_t) { return ir::BuiltinType::U32;  },

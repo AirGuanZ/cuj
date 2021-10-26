@@ -95,6 +95,32 @@ public:
 };
 
 template<typename T>
+class Switch : public Statement
+{
+public:
+
+    struct Case
+    {
+        T         cond;
+        RC<Block> body;
+        bool      fallthrough;
+    };
+
+    Switch(
+        RC<InternalArithmeticValue<T>> value,
+        std::vector<Case>              cases,
+        RC<Block>                      default_body);
+
+    void gen_ir(ir::IRBuilder &builder) const override;
+
+private:
+
+    RC<InternalArithmeticValue<T>> value_;
+    std::vector<Case>              cases_;
+    RC<Block>                      default_;
+};
+
+template<typename T>
 class ReturnArithmetic : public Statement
 {
     RC<InternalArithmeticValue<T>> value_;

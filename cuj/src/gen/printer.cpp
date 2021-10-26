@@ -184,24 +184,7 @@ void IRPrinter::print(const ir::StructType *type)
 
 void IRPrinter::print(const ir::Statement &stat)
 {
-#define MATCH_STAT(TYPE) [this](const ir::TYPE &s) { print(s); }
-
-    match_variant(
-        stat,
-        MATCH_STAT(Store),
-        MATCH_STAT(Assign),
-        MATCH_STAT(Break),
-        MATCH_STAT(Continue),
-        MATCH_STAT(Block),
-        MATCH_STAT(If),
-        MATCH_STAT(While),
-        MATCH_STAT(Return),
-        MATCH_STAT(ReturnClass),
-        MATCH_STAT(ReturnArray),
-        MATCH_STAT(Call),
-        MATCH_STAT(IntrinsicCall));
-
-#undef MATCH_STAT
+    stat.match([this](const auto &_s) { this->print(_s); });
 }
 
 void IRPrinter::print(const ir::Store &store)
@@ -271,6 +254,37 @@ void IRPrinter::print(const ir::While &while_s)
     str_.pop_indent();
 }
 
+void IRPrinter::print(const ir::Switch &switch_s)
+{
+    str_.append("switch ", to_string(switch_s.value));
+    str_.new_line();
+
+    for(auto &c : switch_s.cases)
+    {
+        str_.append("case ", to_string(c.cond));
+        str_.new_line();
+        str_.push_indent();
+        print(*c.body);
+        if(c.fallthrough)
+        {
+            str_.append("fallthrough");
+            str_.new_line();
+        }
+        str_.pop_indent();
+    }
+
+    if(switch_s.default_body)
+    {
+        str_.append("default");
+        str_.new_line();
+        str_.push_indent();
+        print(*switch_s.default_body);
+        str_.pop_indent();
+    }
+
+    str_.append("endswitch");
+}
+
 void IRPrinter::print(const ir::Return &return_s)
 {
     str_.append("return");
@@ -307,28 +321,8 @@ void IRPrinter::print(const ir::IntrinsicCall &call)
 
 std::string IRPrinter::get_typename(const ir::Type *type) const
 {
-    return match_variant(
-        *type,
-        [this](ir::BuiltinType t)
-    {
-        return get_typename(t);
-    },
-        [this](const ir::ArrayType &t)
-    {
-        return get_typename(t);
-    },
-        [this](const ir::IntrinsicType &t)
-    {
-        return get_typename(t);
-    },
-        [this](const ir::PointerType &t)
-    {
-        return get_typename(t);
-    },
-        [this](const ir::StructType &t)
-    {
-        return get_typename(t);
-    });
+    return type->match(
+        [this](const auto &t) { return this->get_typename(t); });
 }
 
 std::string IRPrinter::get_typename(ir::BuiltinType type) const

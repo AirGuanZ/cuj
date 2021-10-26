@@ -390,6 +390,32 @@ auto sum = to_callable<int32_t>(
 });
 ```
 
+#### Switch
+
+```cpp
+auto entry1 = to_callable<void>(
+    [](i32 i, Pointer<i32> a, Pointer<i32> b)
+{
+    $switch(i)
+    {
+        $case(0) { *a = 1; $fallthrough; }; // 'break' became the default behavior
+        $case(1) { *b = 1; };
+        $case(2) { *a = 1; *b = 1; };
+    };
+});
+
+auto entry2 = to_callable<int32_t>(
+    [](i32 i)
+{
+    $switch(i)
+    {
+        for(int j = 1; j <= 4; ++j)
+            $case(j) { $return(j + 1); };
+        $default{ $return(0); };
+    };
+});
+```
+
 ### Backends
 
 #### Native JIT

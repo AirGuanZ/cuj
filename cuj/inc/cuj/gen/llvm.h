@@ -99,6 +99,8 @@ private:
 
     void generate(const ir::While &while_s);
 
+    void generate(const ir::Switch &switch_s);
+
     void generate(const ir::Return &return_s);
 
     void generate(const ir::ReturnClass &return_class);
