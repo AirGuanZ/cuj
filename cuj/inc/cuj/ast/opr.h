@@ -213,16 +213,23 @@ auto ptr_cast(const PointerImpl<From> &from)
 template<typename T>
 auto const_data(const void *data, size_t bytes)
 {
-    auto impl = newRC<InternalConstData<T>>();
+    using TT = deval_t<T>;
+    auto impl = newRC<InternalConstData<TT>>();
     impl->bytes.resize(bytes);
     std::memcpy(impl->bytes.data(), data, bytes);
-    return PointerImpl<T>(impl);
+    return PointerImpl<TT>(impl);
 }
 
 template<typename T, typename U, size_t N>
 auto const_data(const U(&data)[N])
 {
     return ast::const_data<T>(&data[0], sizeof(U) * N);
+}
+
+template<typename T>
+auto const_data(const std::vector<T> &data)
+{
+    return const_data<T>(data.data(), data.size() * sizeof(T));
 }
 
 // string literial
