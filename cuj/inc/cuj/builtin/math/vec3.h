@@ -54,6 +54,12 @@ template<typename T>
 using Vec3 = typename Vec3Aux<T>::Type;
 
 template<typename T>
+Vec3<T> make_vec3(const Value<T> &x, const Value<T> &y, const Value<T> &z)
+{
+    return Vec3<T>(x, y, z);
+}
+
+template<typename T>
 Vec3<T> make_vec3()
 {
     return make_vec3<T>(0, 0, 0);
@@ -63,12 +69,6 @@ template<typename T>
 Vec3<T> make_vec3(const Value<T> &v)
 {
     return make_vec3<T>(v, v, v);
-}
-
-template<typename T>
-Vec3<T> make_vec3(const Value<T> &x, const Value<T> &y, const Value<T> &z)
-{
-    return Vec3<T>(x, y, z);
 }
 
 inline Vec3f make_vec3f()

@@ -54,6 +54,13 @@ template<typename T>
 using Vec4 = typename Vec4Aux<T>::Type;
 
 template<typename T>
+Vec4<T> make_vec4(
+    const Value<T> &x, const Value<T> &y, const Value<T> &z, const Value<T> &w)
+{
+    return Vec4<T>(x, y, z, w);
+}
+
+template<typename T>
 Vec4<T> make_vec4()
 {
     return make_vec4<T>(0, 0, 0, 0);
@@ -63,13 +70,6 @@ template<typename T>
 Vec4<T> make_vec4(const Value<T> &v)
 {
     return make_vec4<T>(v, v, v, v);
-}
-
-template<typename T>
-Vec4<T> make_vec4(
-    const Value<T> &x, const Value<T> &y, const Value<T> &z, const Value<T> &w)
-{
-    return Vec4<T>(x, y, z, w);
 }
 
 inline Vec4f make_vec4f()

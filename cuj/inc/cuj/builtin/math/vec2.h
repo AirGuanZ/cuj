@@ -54,6 +54,12 @@ template<typename T>
 using Vec2 = typename Vec2Aux<T>::Type;
 
 template<typename T>
+Vec2<T> make_vec2(const Value<T> &x, const Value<T> &y)
+{
+    return Vec2<T>(x, y);
+}
+
+template<typename T>
 Vec2<T> make_vec2()
 {
     return make_vec2<T>(0, 0);
@@ -63,12 +69,6 @@ template<typename T>
 Vec2<T> make_vec2(const Value<T> &v)
 {
     return make_vec2<T>(v, v);
-}
-
-template<typename T>
-Vec2<T> make_vec2(const Value<T> &x, const Value<T> &y)
-{
-    return Vec2<T>(x, y);
 }
 
 inline Vec2f make_vec2f()

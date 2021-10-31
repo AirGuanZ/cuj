@@ -50,15 +50,15 @@ template<typename T>
 using Vec1 = typename Vec1Aux<T>::Type;
 
 template<typename T>
-Vec1<T> make_vec1()
-{
-    return make_vec1<T>(0);
-}
-
-template<typename T>
 Vec1<T> make_vec1(const Value<T> &v)
 {
     return Vec1<T>(v);
+}
+
+template<typename T>
+Vec1<T> make_vec1()
+{
+    return make_vec1<T>(0);
 }
 
 inline Vec1f make_vec1f()

@@ -35,19 +35,19 @@ namespace
 math::Vec1f sample_texture2d_1f(TextureObject tex, f32 u, f32 v)
 {
     math::Vec4f t = sample_texture2d_4f(tex, u, v);
-    return math::make_vec1f(t->x);
+    return math::make_vec1f(t.x);
 }
 
 math::Vec2f sample_texture2d_2f(TextureObject tex, f32 u, f32 v)
 {
     math::Vec4f t = sample_texture2d_4f(tex, u, v);
-    return math::make_vec2f(t->x, t->y);
+    return math::make_vec2f(t.x, t.y);
 }
 
 math::Vec3f sample_texture2d_3f(TextureObject tex, f32 u, f32 v)
 {
     math::Vec4f t = sample_texture2d_4f(tex, u, v);
-    return math::make_vec3f(t->x, t->y, t->z);
+    return math::make_vec3f(t.x, t.y, t.z);
 }
 
 math::Vec4f sample_texture2d_4f(TextureObject tex, f32 u, f32 v)
@@ -69,19 +69,19 @@ math::Vec4f sample_texture2d_4f(TextureObject tex, f32 u, f32 v)
 math::Vec1i sample_texture2d_1i(TextureObject tex, f32 u, f32 v)
 {
     math::Vec4i t = sample_texture2d_4i(tex, u, v);
-    return math::make_vec1i(t->x);
+    return math::make_vec1i(t.x);
 }
 
 math::Vec2i sample_texture2d_2i(TextureObject tex, f32 u, f32 v)
 {
     math::Vec4i t = sample_texture2d_4i(tex, u, v);
-    return math::make_vec2i(t->x, t->y);
+    return math::make_vec2i(t.x, t.y);
 }
 
 math::Vec3i sample_texture2d_3i(TextureObject tex, f32 u, f32 v)
 {
     math::Vec4i t = sample_texture2d_4i(tex, u, v);
-    return math::make_vec3i(t->x, t->y, t->z);
+    return math::make_vec3i(t.x, t.y, t.z);
 }
 
 math::Vec4i sample_texture2d_4i(TextureObject tex, f32 u, f32 v)
