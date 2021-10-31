@@ -11,7 +11,6 @@
 #include <cuj/ast/stat_builder.h>
 #include <cuj/ast/value.h>
 
-#include <cuj/ast/detail/class.inl>
 #include <cuj/ast/detail/context.inl>
 #include <cuj/ast/detail/expr.inl>
 #include <cuj/ast/detail/func.inl>
