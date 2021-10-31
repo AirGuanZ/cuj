@@ -5,97 +5,183 @@
 CUJ_NAMESPACE_BEGIN(cuj::builtin::math)
 
 template<typename T>
-class Vec2Impl : public ClassBase<Vec2Impl<T>>
+struct Vec2Host
 {
-public:
-
-    CUJ_DEFINE_CLASS(Vec2Impl)
-
-    $mem(T, x);
-    $mem(T, y);
-
-    using ClassBase<Vec2Impl>::ClassBase;
-
-    explicit Vec2Impl(ClassAddress addr);
-
-    Vec2Impl(ClassAddress addr, const Value<T> &v);
-
-    Vec2Impl(ClassAddress addr, const Value<T> &_x, const Value<T> &_y);
-
-    Vec2Impl(ClassAddress addr, const ClassValue<Vec2Impl<T>> &other);
-
-    Value<T> length_square() const;
-
-    Value<T> length() const;
-
-    Value<T> min_elem() const;
-
-    Value<T> max_elem() const;
-
-    ClassValue<Vec2Impl<T>> normalize() const;
-
-    Value<T> operator[](const ArithmeticValue<size_t> &i) const;
+    T x, y;
 };
 
-template<typename T>
-using Vec2 = ClassValue<Vec2Impl<T>>;
+#define CUJ_DEFINE_VEC2(BASE, NAME, COMP)                                       \
+CUJ_MAKE_PROXY_BEGIN(BASE, NAME, x, y)                                          \
+    CUJ_PROXY_CONSTRUCTOR(NAME)                                                 \
+    {                                                                           \
+        x = 0; y = 0;                                                           \
+    }                                                                           \
+    explicit CUJ_PROXY_CONSTRUCTOR(NAME, COMP v)                                \
+    {                                                                           \
+        x = v; y = v;                                                           \
+    }                                                                           \
+    CUJ_PROXY_CONSTRUCTOR(NAME, COMP _x, COMP _y)                               \
+    {                                                                           \
+        x = _x; y = _y;                                                         \
+    }                                                                           \
+    auto operator[](const Value<size_t> &idx) const                             \
+    {                                                                           \
+        return Value<COMP>((x.address() + idx).deref().get_impl());             \
+    }                                                                           \
+    auto length_square() const { return x * x + y * y; }                        \
+    auto length() const { return sqrt(length_square()); }                       \
+    auto min_elem() const { return min(x, y); }                                 \
+    auto max_elem() const { return max(x, y); }                                 \
+    auto normalize() const                                                      \
+    {                                                                           \
+        auto f = 1 / length();                                                  \
+        return NAME(f * x, f * y);                                              \
+    }                                                                           \
+CUJ_MAKE_PROXY_END
 
-using Vec2f = Vec2<float>;
-using Vec2d = Vec2<double>;
-using Vec2i = Vec2<int>;
+CUJ_DEFINE_VEC2(Vec2Host<int>,    Vec2i, i32)
+CUJ_DEFINE_VEC2(Vec2Host<float>,  Vec2f, f32)
+CUJ_DEFINE_VEC2(Vec2Host<double>, Vec2d, f64)
 
-template<typename T>
-Vec2<T> make_vec2();
-template<typename T>
-Vec2<T> make_vec2(const Value<T> &v);
-template<typename T>
-Vec2<T> make_vec2(const Value<T> &x, const Value<T> &y);
+#undef CUJ_DEFINE_VEC2
 
-inline Vec2f make_vec2f();
-inline Vec2f make_vec2f(const f32 &v);
-inline Vec2f make_vec2f(const f32 &x, const f32 &y);
-
-inline Vec2d make_vec2d();
-inline Vec2d make_vec2d(const f64 &v);
-inline Vec2d make_vec2d(const f64 &x, const f64 &y);
-
-inline Vec2i make_vec2i();
-inline Vec2i make_vec2i(const i32 &v);
-inline Vec2i make_vec2i(const i32 &x, const i32 &y);
-
-template<typename T>
-Vec2<T> operator-(const Vec2<T> &v);
-
-template<typename T>
-Vec2<T> operator+(const Vec2<T> &lhs, const Vec2<T> &rhs);
-template<typename T>
-Vec2<T> operator-(const Vec2<T> &lhs, const Vec2<T> &rhs);
-template<typename T>
-Vec2<T> operator*(const Vec2<T> &lhs, const Vec2<T> &rhs);
-template<typename T>
-Vec2<T> operator/(const Vec2<T> &lhs, const Vec2<T> &rhs);
-
-template<typename T>
-Vec2<T> operator+(const Vec2<T> &lhs, const Value<T> &rhs);
-template<typename T>
-Vec2<T> operator-(const Vec2<T> &lhs, const Value<T> &rhs);
-template<typename T>
-Vec2<T> operator*(const Vec2<T> &lhs, const Value<T> &rhs);
-template<typename T>
-Vec2<T> operator/(const Vec2<T> &lhs, const Value<T> &rhs);
+template<typename T> struct Vec2Aux { };
+template<> struct Vec2Aux<int>    { using Type = Vec2i; };
+template<> struct Vec2Aux<float>  { using Type = Vec2f; };
+template<> struct Vec2Aux<double> { using Type = Vec2d; };
 
 template<typename T>
-Vec2<T> operator+(const Value<T> &lhs, const Vec2<T> &rhs);
-template<typename T>
-Vec2<T> operator-(const Value<T> &lhs, const Vec2<T> &rhs);
-template<typename T>
-Vec2<T> operator*(const Value<T> &lhs, const Vec2<T> &rhs);
-template<typename T>
-Vec2<T> operator/(const Value<T> &lhs, const Vec2<T> &rhs);
+using Vec2 = typename Vec2Aux<T>::Type;
 
 template<typename T>
-Value<T> dot(const Vec2<T> &a, const Vec2<T> &b);
+Vec2<T> make_vec2()
+{
+    return make_vec2<T>(0, 0);
+}
+
 template<typename T>
-Value<T> cos(const Vec2<T> &a, const Vec2<T> &b);
+Vec2<T> make_vec2(const Value<T> &v)
+{
+    return make_vec2<T>(v, v);
+}
+
+template<typename T>
+Vec2<T> make_vec2(const Value<T> &x, const Value<T> &y)
+{
+    return Vec2<T>(x, y);
+}
+
+inline Vec2f make_vec2f()
+{
+    return make_vec2<float>();
+}
+
+inline Vec2f make_vec2f(const f32 &v)
+{
+    return make_vec2<float>(v, v);
+}
+
+inline Vec2f make_vec2f(const f32 &x, const f32 &y)
+{
+    return make_vec2<float>(x, y);
+}
+
+inline Vec2d make_vec2d()
+{
+    return make_vec2<double>();
+}
+
+inline Vec2d make_vec2d(const f64 &v)
+{
+    return make_vec2<double>(v);
+}
+
+inline Vec2d make_vec2d(const f64 &x, const f64 &y)
+{
+    return make_vec2<double>(x, y);
+}
+
+inline Vec2i make_vec2i()
+{
+    return make_vec2<int>();
+}
+
+inline Vec2i make_vec2i(const i32 &v)
+{
+    return make_vec2<int>(v);
+}
+
+inline Vec2i make_vec2i(const i32 &x, const i32 &y)
+{
+    return make_vec2<int>(x, y);
+}
+
+#define CUJ_DEFINE_VEC2_OPERATORS(T)                                                \
+inline Vec2<T> operator-(const Vec2<T> &v)                                             \
+{                                                                               \
+    return make_vec2<T>(-v.x, -v.y);                                            \
+}                                                                               \
+inline Vec2<T> operator+(const Vec2<T> &lhs, const Vec2<T> &rhs)                       \
+{                                                                               \
+    return make_vec2<T>(lhs.x + rhs.x, lhs.y + rhs.y);                          \
+}                                                                               \
+inline Vec2<T> operator-(const Vec2<T> &lhs, const Vec2<T> &rhs)                       \
+{                                                                               \
+    return make_vec2<T>(lhs.x - rhs.x, lhs.y - rhs.y);                          \
+}                                                                               \
+inline Vec2<T> operator*(const Vec2<T> &lhs, const Vec2<T> &rhs)                       \
+{                                                                               \
+    return make_vec2<T>(lhs.x * rhs.x, lhs.y * rhs.y);                          \
+}                                                                               \
+inline Vec2<T> operator/(const Vec2<T> &lhs, const Vec2<T> &rhs)                       \
+{                                                                               \
+    return make_vec2<T>(lhs.x / rhs.x, lhs.y / rhs.y);                          \
+}                                                                               \
+inline Vec2<T> operator+(const Vec2<T> &lhs, const Value<T> &rhs)                      \
+{                                                                               \
+    return make_vec2<T>(lhs.x + rhs, lhs.y + rhs);                              \
+}                                                                               \
+inline Vec2<T> operator-(const Vec2<T> &lhs, const Value<T> &rhs)                      \
+{                                                                               \
+    return make_vec2<T>(lhs.x - rhs, lhs.y - rhs);                              \
+}                                                                               \
+inline Vec2<T> operator*(const Vec2<T> &lhs, const Value<T> &rhs)                      \
+{                                                                               \
+    return make_vec2<T>(lhs.x * rhs, lhs.y * rhs);                              \
+}                                                                               \
+inline Vec2<T> operator/(const Vec2<T> &lhs, const Value<T> &rhs)                      \
+{                                                                               \
+    return make_vec2<T>(lhs.x / rhs, lhs.y / rhs);                              \
+}                                                                               \
+inline Vec2<T> operator+(const Value<T> &lhs, const Vec2<T> &rhs)                      \
+{                                                                               \
+    return make_vec2<T>(lhs + rhs.x, lhs + rhs.y);                              \
+}                                                                               \
+inline Vec2<T> operator-(const Value<T> &lhs, const Vec2<T> &rhs)                      \
+{                                                                               \
+    return make_vec2<T>(lhs - rhs.x, lhs - rhs.y);                              \
+}                                                                               \
+inline Vec2<T> operator*(const Value<T> &lhs, const Vec2<T> &rhs)                      \
+{                                                                               \
+    return make_vec2<T>(lhs * rhs.x, lhs * rhs.y);                              \
+}                                                                               \
+inline Vec2<T> operator/(const Value<T> &lhs, const Vec2<T> &rhs)                      \
+{                                                                               \
+    return make_vec2<T>(lhs / rhs.x, lhs / rhs.y);                              \
+}                                                                               \
+inline Value<T> dot(const Vec2<T> &a, const Vec2<T> &b)                                \
+{                                                                               \
+    return a.x * b.x + a.y * b.y;                                               \
+}                                                                               \
+inline Value<T> cos(const Vec2<T> &a, const Vec2<T> &b)                                \
+{                                                                               \
+    return dot(a, b) / (a.length() * b.length());                               \
+}
+
+CUJ_DEFINE_VEC2_OPERATORS(int)
+CUJ_DEFINE_VEC2_OPERATORS(float)
+CUJ_DEFINE_VEC2_OPERATORS(double)
+
+#undef CUJ_DEFINE_VEC2_OPERATORS
 
 CUJ_NAMESPACE_END(cuj::builtin::math)

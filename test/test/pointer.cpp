@@ -135,7 +135,7 @@ TEST_CASE("pointer")
             [](const Pointer<void>        &a,
                const Pointer<math::Vec3f> &b)
         {
-            ptr_cast<math::Vec3f>(a).deref()->x = b.deref()->x;
+            ptr_cast<math::Vec3f>(a).deref().x = b.deref().x;
         });
 
         auto jit = ctx.gen_native_jit();

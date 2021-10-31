@@ -33,8 +33,6 @@ using ast::FunctionContext;
 
 using ast::ArithmeticValue;
 using ast::Array;
-using ast::ClassBase;
-using ast::ClassValue;
 using ast::Pointer;
 using ast::Value;
 using ast::Variable;

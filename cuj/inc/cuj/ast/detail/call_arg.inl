@@ -15,7 +15,7 @@ namespace call_detail
     {
         if constexpr(is_cuj_class<T>)
         {
-            output.push_back(value->get_address()->gen_ir(builder));
+            output.push_back(value->gen_ir(builder));
         }
         else if constexpr(is_array<T>)
         {

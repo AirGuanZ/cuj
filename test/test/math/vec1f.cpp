@@ -22,7 +22,7 @@ struct Vec1Data
             [](const Vec1f &a, const Vec1f &b)                                  \
         {                                                                       \
             $return(                                                            \
-                math::abs(a->x - b->x) < 0.001f);                               \
+                math::abs(a.x - b.x) < 0.001f);                               \
         });                                                                     \
         auto test = to_callable<bool>(                                          \
             [&]                                                                 \
@@ -95,19 +95,19 @@ TEST_CASE("builtin.math.vec1f")
     SECTION("function")
     {
         ADD_TEST_EXPR(
-            approx_eq_f(make_vec1f(2)->length_square(), 4));
+            approx_eq_f(make_vec1f(2).length_square(), 4));
 
         ADD_TEST_EXPR(
-            approx_eq_f(make_vec1f(2)->length(), 2));
+            approx_eq_f(make_vec1f(2).length(), 2));
 
         ADD_TEST_EXPR(
-            approx_eq_f(make_vec1f(2)->min_elem(), 2));
+            approx_eq_f(make_vec1f(2).min_elem(), 2));
 
         ADD_TEST_EXPR(
-            approx_eq_f(make_vec1f(2)->max_elem(), 2));
+            approx_eq_f(make_vec1f(2).max_elem(), 2));
 
         ADD_TEST_EXPR(
-            approx_eq(make_vec1f(-2)->normalize(), make_vec1f(-1)));
+            approx_eq(make_vec1f(-2).normalize(), make_vec1f(-1)));
     }
 
     SECTION("operator")

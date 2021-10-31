@@ -22,11 +22,14 @@ namespace detail
     template<typename T>
     struct MakeArgValue
     {
-        static_assert(std::is_arithmetic_v<T>);
+        static_assert(std::is_arithmetic_v<T> || is_cuj_class<T>);
 
-        static auto process(T val)
+        static auto process(const T &val)
         {
-            return create_literial(val);
+            if constexpr(is_cuj_class<T>)
+                return val;
+            else
+                return create_literial(val);
         }
     };
 
@@ -36,15 +39,6 @@ namespace detail
         static auto process(const ArithmeticVariable<T> &val)
         {
             return MakeArgValue<ArithmeticValue<T>>::process(val);
-        }
-    };
-
-    template<typename T>
-    struct MakeArgValue<ClassVariable<T>>
-    {
-        static auto process(const ClassVariable<T> &val)
-        {
-            return MakeArgValue<ClassValue<T>>::process(val);
         }
     };
 
@@ -63,15 +57,6 @@ namespace detail
         static auto process(const ArrayVariable<T, N> &val)
         {
             return MakeArgValue<ArrayImpl<T, N>>::process(val);
-        }
-    };
-
-    template<typename T>
-    struct MakeArgValue<ClassValue<T>>
-    {
-        static auto process(const ClassValue<T> &val)
-        {
-            return val;
         }
     };
 

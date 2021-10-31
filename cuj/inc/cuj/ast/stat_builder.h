@@ -73,8 +73,8 @@ public:
     template<typename T>
     ReturnBuilder(const PointerImpl<T> &val);
 
-    template<typename T>
-    ReturnBuilder(const ClassValue<T> &val);
+    template<typename T, typename = std::enable_if_t<is_cuj_class<T>>>
+    ReturnBuilder(const T &val);
 
     template<typename T, size_t N>
     ReturnBuilder(const ArrayImpl<T, N> &val);

@@ -249,55 +249,7 @@ Array<Array<i32, 4>, 3> arr2;
 #### Define Classes
 
 ```cpp
-class Vector3Impl : public ClassBase<Vector3Impl>
-{
-public:
-    
-    CUJ_DEFINE_CLASS(Vector3Impl)
-    
-    $mem(float, x);
-    $mem(float, y);
-    $mem(float, z);
-    
-    using ClassBase<Vector3Impl>::ClassBase;
-    
-    // (optional) custom constructors
-    // first parameter must be of type 'ClassAddress'
-    explicit Vector3Impl(ClassAddress addr) : Vector3Impl(addr, 0) { }
-    
-    Vector3Impl(ClassAddress addr, f32 _x, f32 _y, f32 _z)
-        : ClassBase<Vector3>(addr)
-    {
-        x = _x;
-        y = _y;
-        z = _z;
-    }
-};
-
-using Vector3 = ClassValue<Vector3Impl>;
-```
-
-We can then use `Vector3` like other normal types:
-
-```cpp
-auto add_vector3 = to_callable<Vector3>(
-    [](const Vector3 &lhs, const Vector3 &rhs)
-{
-    Vector3 ret;
-    ret->x = lhs->x + rhs->x;
-    ret->y = lhs->y + rhs->y;
-    ret->z = lhs->z + rhs->z;
-    $return(ret);
-});
-```
-
-Note that member variables are accessed with overloaded `->`, which is conflict with the native `->` operator of pointers. That means we cannot use `->` to access members of pointed class object in CUJ. Instead, explicit dereference must be done first --
-
-```cpp
-Value<Vector3*> p = ...;
-p->x         = 5; // compile error
-(*p)->x      = 5; // ok
-p.deref()->x = 5; // ok
+TODO
 ```
 
 CUJ array/class objects can be passed as function arguments or returned by a CUJ function. For example:
@@ -649,8 +601,6 @@ math::Vec2i sample_texture2d_2i(TextureObject tex, f32 u, f32 v);
 math::Vec3i sample_texture2d_3i(TextureObject tex, f32 u, f32 v);
 math::Vec4i sample_texture2d_4i(TextureObject tex, f32 u, f32 v);
 
-using Dim3 = math::Vec3i;
-
 Value<int> thread_index_x();
 Value<int> thread_index_y();
 Value<int> thread_index_z();
@@ -662,10 +612,6 @@ Value<int> block_index_z();
 Value<int> block_dim_x();
 Value<int> block_dim_y();
 Value<int> block_dim_z();
-
-Dim3 thread_index();
-Dim3 block_index();
-Dim3 block_dim();
 
 void sync_block_threads();
 ```

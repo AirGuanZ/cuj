@@ -19,8 +19,6 @@ enum class IntrinsicValueType
     block_dim_z
 };
 
-using Dim3 = math::Vec3i;
-
 Value<int> thread_index_x();
 Value<int> thread_index_y();
 Value<int> thread_index_z();
@@ -32,10 +30,6 @@ Value<int> block_index_z();
 Value<int> block_dim_x();
 Value<int> block_dim_y();
 Value<int> block_dim_z();
-
-Dim3 thread_index();
-Dim3 block_index();
-Dim3 block_dim();
 
 void sync_block_threads();
 

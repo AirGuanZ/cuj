@@ -27,6 +27,21 @@ namespace detail
     struct HasStructName<T, std::void_t<decltype(T::struct_name())>>
         : std::true_type{ };
 
+    class StructMemberRecorder
+    {
+    public:
+
+        Context                       *context;
+        std::vector<const ir::Type *> &members;
+
+        template<typename MemberProxyBase>
+        void operator()() const
+        {
+            members.push_back(
+                context->get_type<typename MemberProxyBase::Member>());
+        }
+    };
+
 } // namespace detail
 
 template<typename T>
@@ -93,17 +108,10 @@ const ir::Type *Context::get_type()
         type = newRC<ir::Type>(ir::StructType{});
         auto &s_type = type->as<ir::StructType>();
 
-        StructTypeRecorder type_recorder(&s_type);
-        T obj(&type_recorder);
+        s_type.name = "CUJStruct" + std::to_string(struct_name_index++);
 
-        if constexpr(detail::HasStructName<T>::value)
-        {
-            s_type.name = T::struct_name();
-        }
-        else
-        {
-            s_type.name = "CUJStruct" + std::to_string(struct_name_index++);
-        }
+        detail::StructMemberRecorder recorder{ this, s_type.mem_types };
+        T::foreach_member(recorder);
 
         used_types_[type_idx] = type;
         return type.get();

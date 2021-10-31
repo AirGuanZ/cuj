@@ -22,8 +22,8 @@ struct Vec2Data
             [](const Vec2f &a, const Vec2f &b)                                  \
         {                                                                       \
             $return(                                                            \
-                math::abs(a->x - b->x) < 0.001f &&                              \
-                math::abs(a->y - b->y) < 0.001f);                               \
+                math::abs(a.x - b.x) < 0.001f &&                              \
+                math::abs(a.y - b.y) < 0.001f);                               \
         });                                                                     \
         auto test = to_callable<bool>(                                          \
             [&]                                                                 \
@@ -109,19 +109,19 @@ TEST_CASE("builtin.math.vec2f")
     SECTION("function")
     {
         ADD_TEST_EXPR(
-            approx_eq_f(make_vec2f(1, 2)->length_square(), 5));
+            approx_eq_f(make_vec2f(1, 2).length_square(), 5));
 
         ADD_TEST_EXPR(
-            approx_eq_f(make_vec2f(1, 2)->length(), std::sqrt(5.0f)));
+            approx_eq_f(make_vec2f(1, 2).length(), std::sqrt(5.0f)));
 
         ADD_TEST_EXPR(
-            approx_eq_f(make_vec2f(1, 2)->min_elem(), 1));
+            approx_eq_f(make_vec2f(1, 2).min_elem(), 1));
 
         ADD_TEST_EXPR(
-            approx_eq_f(make_vec2f(1, 2)->max_elem(), 2));
+            approx_eq_f(make_vec2f(1, 2).max_elem(), 2));
 
         ADD_TEST_EXPR(
-            approx_eq(make_vec2f(2, 2)->normalize(), make_vec2f(1 / std::sqrt(2.0f))));
+            approx_eq(make_vec2f(2, 2).normalize(), make_vec2f(1 / std::sqrt(2.0f))));
     }
 
     SECTION("operator")

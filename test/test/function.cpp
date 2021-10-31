@@ -72,7 +72,7 @@ TEST_CASE("function")
         auto float2_sum = to_callable<float>(
             [](math::Vec2f a, math::Vec2f b, math::Vec2f c)
         {
-            $return(a->x + a->y + b->x + b->y + c->x + c->y);
+            $return(a.x + a.y + b.x + b.y + c.x + c.y);
         });
 
         auto test_float2_sum_func = to_callable<float>(
@@ -108,7 +108,7 @@ TEST_CASE("function")
             [&](f32 x, f32 y)
         {
             math::Vec2f v = my_make_vec2f(x, y);
-            $return(v->x + v->y);
+            $return(v.x + v.y);
         });
         
         auto jit = ctx.gen_native_jit();
@@ -285,12 +285,12 @@ TEST_CASE("function")
             REQUIRE(a == 1);
             REQUIRE(b == 1);
 
-            a = 0, b = 0;
+            a = 0; b = 0;
             entry_func(1, &a, &b);
             REQUIRE(a == 0);
             REQUIRE(b == 1);
 
-            a = 0, b = 0;
+            a = 0; b = 0;
             entry_func(2, &a, &b);
             REQUIRE(a == 1);
             REQUIRE(b == 1);

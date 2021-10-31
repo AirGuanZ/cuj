@@ -73,12 +73,6 @@ ir::BasicValue InternalArithmeticLeftValue<T>::gen_ir(ir::IRBuilder &builder) co
 }
 
 template<typename T>
-RC<InternalPointerValue<T>> InternalClassLeftValue<T>::get_address() const
-{
-    return address;
-}
-
-template<typename T>
 RC<InternalPointerValue<PointerImpl<T>>> InternalPointerValue<T>::get_address() const
 {
     throw CUJException("getting address of a non-left pointer value");

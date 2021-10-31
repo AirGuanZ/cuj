@@ -7,9 +7,6 @@ CUJ_NAMESPACE_BEGIN(cuj::ast)
 template<typename T>
 class ArithmeticVariable;
 
-template<typename T>
-class ClassVariable;
-
 template<typename T, size_t N>
 class ArrayVariable;
 
@@ -56,50 +53,6 @@ public:
     void set_impl(RC<InternalArithmeticValue<T>> impl);
 
     void swap_impl(const ArithmeticValue<T> &other) noexcept;
-};
-
-template<typename T>
-class ClassValue
-{
-    RC<InternalClassLeftValue<T>> impl_;
-
-    template<typename...Args>
-    void init_as_stack_var(const Args &...args);
-
-public:
-
-    using VariableType = ClassVariable<T>;
-
-    using ImplType = InternalClassLeftValue<T>;
-
-    ClassValue();
-
-    template<typename U, typename...Args>
-    explicit ClassValue(const U &other, const Args &...args);
-
-    ClassValue(RC<InternalClassLeftValue<T>> impl);
-
-    ClassValue(const ClassValue &rhs);
-    
-    ClassValue &operator=(const ClassValue &rhs);
-
-    PointerImpl<T> address() const;
-
-    T *operator->() const;
-
-    template<typename U>
-    auto operator[](U &&other) { return impl_->subscript(std::forward<U>(other)); }
-
-    template<typename U>
-    auto operator[](U &&other) const { return impl_->subscript(std::forward<U>(other)); }
-
-    RC<InternalClassLeftValue<T>> get_impl() const;
-
-    void set_impl(const ClassValue<T> &val);
-
-    void set_impl(RC<InternalClassLeftValue<T>> impl);
-
-    void swap_impl(ClassValue<T> &other) noexcept;
 };
 
 template<typename T, size_t N>
@@ -253,34 +206,6 @@ public:
     ArithmeticVariable &operator=(U &&other)
     {
         ArithmeticValue<T>::operator=(std::forward<U>(other));
-        return *this;
-    }
-};
-
-template<typename T>
-class ClassVariable : public ClassValue<T>
-{
-public:
-
-    using ClassValue<T>::ClassValue;
-
-    ClassVariable(const ClassValue<T> &other)
-        : ClassValue<T>(other)
-    {
-        
-    }
-
-    template<typename U>
-    ClassVariable &operator=(U &&other) const
-    {
-        ClassValue<T>::operator=(std::forward<U>(other));
-        return *this;
-    }
-
-    template<typename U>
-    ClassVariable &operator=(U &&other)
-    {
-        ClassValue<T>::operator=(std::forward<U>(other));
         return *this;
     }
 };

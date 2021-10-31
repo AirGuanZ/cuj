@@ -12,9 +12,6 @@ class InternalArithmeticValue;
 template<typename T>
 class InternalArithmeticLeftValue;
 
-template<typename T>
-class InternalClassLeftValue;
-
 template<typename T, size_t N>
 class InternalArrayValue;
 
@@ -34,16 +31,10 @@ template<typename T, size_t N>
 class ArrayImpl;
 
 template<typename T>
-class ClassValue;
-
-template<typename T>
 class PointerImpl;
 
 template<typename T>
 class ArithmeticVariable;
-
-template<typename T>
-class ClassVariable;
 
 template<typename T, size_t N>
 class ArrayVariable;
@@ -51,16 +42,13 @@ class ArrayVariable;
 template<typename T>
 class PointerVariable;
 
-template<typename C>
-class ClassBase;
-
 namespace detail
 {
     template<typename T, typename = void>
-    struct IsDerivedFromClassBase : std::false_type { };
+    struct IsCujClass : std::false_type { };
 
     template<typename T>
-    struct IsDerivedFromClassBase<T, std::void_t<typename T::CUJClassFlag>>
+    struct IsCujClass<T, std::void_t<typename T::CUJClassFlag>>
         : std::true_type
     {
 
@@ -102,8 +90,6 @@ namespace detail
     {
         if constexpr(std::is_arithmetic_v<T>)
             return reinterpret_cast<ArithmeticValue<T>*>(0);
-        else if constexpr(IsDerivedFromClassBase<T>::value)
-            return reinterpret_cast<ClassValue<T>*>(0);
         else
             return reinterpret_cast<T *>(0);
     }
@@ -139,12 +125,6 @@ namespace detail
     };
 
     template<typename T>
-    struct DeValueType<ClassVariable<T>>
-    {
-        using Type = typename DeValueType<T>::Type;
-    };
-
-    template<typename T>
     struct DeValueType<PointerVariable<T>>
     {
         using Type = PointerImpl<typename DeValueType<T>::Type>;
@@ -174,12 +154,6 @@ namespace detail
         using Type = T;
     };
 
-    template<typename T>
-    struct DeValueType<ClassValue<T>>
-    {
-        using Type = typename DeValueType<T>::Type;
-    };
-
 } // namespace detail
 
 template<typename T>
@@ -202,7 +176,7 @@ template<typename T>
 constexpr bool is_array = detail::IsArrayValue<T>::value;
 
 template<typename T>
-constexpr bool is_cuj_class = detail::IsDerivedFromClassBase<T>::value;
+constexpr bool is_cuj_class = detail::IsCujClass<T>::value;
 
 template<typename T>
 constexpr bool is_intrinsic = detail::IsIntrinsicValue<T>::value;
@@ -235,26 +209,6 @@ public:
     RC<InternalPointerValue<T>> get_address() const override;
 
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
-};
-
-template<typename T>
-class InternalClassLeftValue
-{
-public:
-
-    static_assert(std::is_class_v<T>);
-
-    std::unique_ptr<T> obj;
-
-    RC<InternalPointerValue<T>> address;
-    
-    RC<InternalPointerValue<T>> get_address() const;
-
-    template<typename U>
-    auto subscript(U &&other) { return (*obj)[std::forward<U>(other)]; }
-
-    template<typename U>
-    auto subscript(U &&other) const { return (*obj)[std::forward<U>(other)]; }
 };
 
 template<typename T>

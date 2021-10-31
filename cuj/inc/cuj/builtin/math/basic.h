@@ -85,6 +85,8 @@ i32 isfinite (const f64 &x);
 i32 isinf    (const f64 &x);
 i32 isnan    (const f64 &x);
 
+inline i32 sqrt(i32 x) { return cast<i32>(sqrt(cast<f64>(x))); }
+
 template<typename T>
 ArithmeticValue<T> min(
     const ArithmeticValue<T> &lhs, const ArithmeticValue<T> &rhs)

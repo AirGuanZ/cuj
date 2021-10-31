@@ -114,104 +114,6 @@ void ArithmeticValue<T>::swap_impl(const ArithmeticValue<T> &other) noexcept
     std::swap(impl_, other.impl_);
 }
 
-template<typename T>
-template<typename...Args>
-void ClassValue<T>::init_as_stack_var(const Args &...args)
-{
-    CUJ_INTERNAL_ASSERT(!impl_);
-    impl_ = get_current_function()->create_stack_var<T>(args...);
-}
-
-template<typename T>
-ClassValue<T>::ClassValue()
-{
-    init_as_stack_var();
-}
-
-template<typename T>
-template<typename U, typename...Args>
-ClassValue<T>::ClassValue(const U &other, const Args &...args)
-{
-    using RU = rm_cvref_t<U>;
-
-    static_assert(!std::is_same_v<RU, UninitializeFlag> ||
-                  sizeof...(args) == 0);
-    static_assert(!std::is_convertible_v<RU, RC<InternalClassLeftValue<T>>> ||
-                  sizeof...(args) == 0);
-
-    if constexpr(std::is_same_v<RU, UninitializeFlag>)
-    {
-        return;
-    }
-    else if constexpr(std::is_convertible_v<RU, RC<InternalClassLeftValue<T>>>)
-    {
-        impl_ = other;
-        return;
-    }
-    else
-    {
-        this->init_as_stack_var(other, args...);
-        return;
-    }
-}
-
-template<typename T>
-ClassValue<T>::ClassValue(RC<InternalClassLeftValue<T>> impl)
-    : impl_(std::move(impl))
-{
-    
-}
-
-template<typename T>
-ClassValue<T>::ClassValue(const ClassValue &rhs)
-{
-    this->init_as_stack_var();
-    this->operator=(rhs);
-}
-
-template<typename T>
-ClassValue<T> &ClassValue<T>::operator=(const ClassValue &rhs)
-{
-    *impl_->obj = *rhs.impl_->obj;
-    return *this;
-}
-
-template<typename T>
-PointerImpl<T> ClassValue<T>::address() const
-{
-    return Variable<PointerImpl<T>>(impl_->get_address());
-}
-
-template<typename T>
-T *ClassValue<T>::operator->() const
-{
-    return impl_->obj.get();
-}
-
-template<typename T>
-RC<InternalClassLeftValue<T>> ClassValue<T>::get_impl() const
-{
-    return impl_;
-}
-
-template<typename T>
-void ClassValue<T>::set_impl(const ClassValue<T> &val)
-{
-    this->set_impl(val.get_impl());
-}
-
-template<typename T>
-void ClassValue<T>::set_impl(RC<InternalClassLeftValue<T>> impl)
-{
-    impl_ = std::move(impl);
-}
-
-template<typename T>
-void ClassValue<T>::swap_impl(ClassValue<T> &other) noexcept
-{
-    std::swap(impl_, other.impl_);
-}
-
 template<typename T, size_t N>
 void ArrayImpl<T, N>::init_as_stack_var()
 {
@@ -417,11 +319,7 @@ Value<T> PointerImpl<T>::deref() const
     }
     else
     {
-        auto addr_value = impl_;
-        auto impl = newRC<InternalClassLeftValue<T>>();
-        impl->address = addr_value;
-        impl->obj     = newBox<T>(addr_value, UNINIT);
-        return Value<T>(std::move(impl));
+        return T(impl_);
     }
 }
 

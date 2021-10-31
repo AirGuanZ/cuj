@@ -22,10 +22,10 @@ struct Vec4fData
             [](const Vec4f &a, const Vec4f &b)                                  \
         {                                                                       \
             $return(                                                            \
-                math::abs(a->x - b->x) < 0.001f &&                              \
-                math::abs(a->y - b->y) < 0.001f &&                              \
-                math::abs(a->z - b->z) < 0.001f &&                              \
-                math::abs(a->w - b->w) < 0.001f);                               \
+                math::abs(a.x - b.x) < 0.001f &&                              \
+                math::abs(a.y - b.y) < 0.001f &&                              \
+                math::abs(a.z - b.z) < 0.001f &&                              \
+                math::abs(a.w - b.w) < 0.001f);                               \
         });                                                                     \
         auto test = to_callable<bool>(                                          \
             [&]                                                                 \
@@ -118,19 +118,19 @@ TEST_CASE("builtin.math.vec4f")
     SECTION("function")
     {
         ADD_TEST_EXPR(
-            approx_eq_f(make_vec4f(1, 2, 3, 4)->length_square(), 30));
+            approx_eq_f(make_vec4f(1, 2, 3, 4).length_square(), 30));
 
         ADD_TEST_EXPR(
-            approx_eq_f(make_vec4f(1, 2, 3, 4)->length(), std::sqrt(30.0f)));
+            approx_eq_f(make_vec4f(1, 2, 3, 4).length(), std::sqrt(30.0f)));
 
         ADD_TEST_EXPR(
-            approx_eq_f(make_vec4f(1, 2, 3, 4)->min_elem(), 1));
+            approx_eq_f(make_vec4f(1, 2, 3, 4).min_elem(), 1));
 
         ADD_TEST_EXPR(
-            approx_eq_f(make_vec4f(1, 2, 3, 4)->max_elem(), 4));
+            approx_eq_f(make_vec4f(1, 2, 3, 4).max_elem(), 4));
 
         ADD_TEST_EXPR(
-            approx_eq(make_vec4f(2, 2, 2, 2)->normalize(), make_vec4f(1 / std::sqrt(4.0f))));
+            approx_eq(make_vec4f(2, 2, 2, 2).normalize(), make_vec4f(1 / std::sqrt(4.0f))));
     }
 
     SECTION("operator")

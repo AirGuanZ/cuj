@@ -55,19 +55,7 @@ RC<typename Value<T>::ImplType> FunctionContext::alloc_stack_var(
     }
     else
     {
-        auto impl = newRC<InternalClassLeftValue<T>>();
-        impl->address = address;
-        if(is_arg)
-        {
-            CUJ_INTERNAL_ASSERT(!sizeof...(Args));
-            impl->obj = newBox<T>(std::move(address), UNINIT);
-        }
-        else
-        {
-            impl->obj = newBox<T>(
-                std::move(address), std::forward<Args>(args)...);
-        }
-        return impl;
+        return address;
     }
 }
 

@@ -2,6 +2,17 @@
 
 #include <test/test.h>
 
+struct Struct0Host
+{
+    int x;
+    int y[3];
+    float z;
+};
+
+CUJ_MAKE_PROXY_BEGIN(Struct0Host, Struct0, x, y, z)
+    CUJ_PROXY_CONSTRUCTOR(Struct0) { }
+CUJ_MAKE_PROXY_END
+
 TEST_CASE("array")
 {
     SECTION("basic")
@@ -110,32 +121,21 @@ TEST_CASE("array")
 
     SECTION("array of struct")
     {
-        class Struct0 : public ClassBase<Struct0>
-        {
-        public:
-            
-            using ClassBase::ClassBase;
-        
-            $mem(int,    x);
-            $mem(int[3], y);
-            $mem(float,  z);
-        };
-
         ScopedContext ctx;
 
         auto make_arr = to_callable<Array<Struct0, 2>>([]
         {
             Array<Struct0, 2> arr;
-            arr[0]->x    = 0;
-            arr[0]->y[0] = 1;
-            arr[0]->y[1] = 2;
-            arr[0]->y[2] = 3;
-            arr[0]->z    = 4;
-            arr[1]->x    = 5;
-            arr[1]->y[0] = 6;
-            arr[1]->y[1] = 7;
-            arr[1]->y[2] = 8;
-            arr[1]->z    = 9;
+            arr[0].x    = 0;
+            arr[0].y[0] = 1;
+            arr[0].y[1] = 2;
+            arr[0].y[2] = 3;
+            arr[0].z    = 4;
+            arr[1].x    = 5;
+            arr[1].y[0] = 6;
+            arr[1].y[1] = 7;
+            arr[1].y[2] = 8;
+            arr[1].z    = 9;
             $return(arr);
         });
 
@@ -143,16 +143,16 @@ TEST_CASE("array")
         {
             auto arr = make_arr();
             f32 ret = 0;
-            ret = ret + arr[0]->x;
-            ret = ret + arr[0]->y[0];
-            ret = ret + arr[0]->y[1];
-            ret = ret + arr[0]->y[2];
-            ret = ret + arr[0]->z;
-            ret = ret + arr[1]->x;
-            ret = ret + arr[1]->y[0];
-            ret = ret + arr[1]->y[1];
-            ret = ret + arr[1]->y[2];
-            ret = ret + arr[1]->z;
+            ret = ret + arr[0].x;
+            ret = ret + arr[0].y[0];
+            ret = ret + arr[0].y[1];
+            ret = ret + arr[0].y[2];
+            ret = ret + arr[0].z;
+            ret = ret + arr[1].x;
+            ret = ret + arr[1].y[0];
+            ret = ret + arr[1].y[1];
+            ret = ret + arr[1].y[2];
+            ret = ret + arr[1].z;
             $return(ret);
         });
 

@@ -115,21 +115,6 @@ Value<int> block_dim_z()
     return intrinsic_int_value(IntrinsicValueType::block_dim_z);
 }
 
-Dim3 thread_index()
-{
-    return Dim3(thread_index_x(), thread_index_y(), thread_index_z());
-}
-
-Dim3 block_index()
-{
-    return Dim3(block_index_x(), block_index_y(), block_index_z());
-}
-
-Dim3 block_dim()
-{
-    return Dim3(block_dim_x(), block_dim_y(), block_dim_z());
-}
-
 void sync_block_threads()
 {
     auto stat = newRC<ThreadBlockBarrierStatement>();

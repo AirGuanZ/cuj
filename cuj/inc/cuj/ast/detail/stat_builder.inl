@@ -217,8 +217,8 @@ ReturnBuilder::ReturnBuilder(const PointerImpl<T> &val)
     func->append_statement(newRC<ReturnPointer<T>>(val.get_impl()));
 }
 
-template<typename T>
-ReturnBuilder::ReturnBuilder(const ClassValue<T> &val)
+template<typename T, typename>
+ReturnBuilder::ReturnBuilder(const T &val)
 {
     auto context = get_current_context();
     auto func = context->get_current_function();
