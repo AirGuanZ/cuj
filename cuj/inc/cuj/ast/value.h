@@ -112,13 +112,6 @@ using Array = typename ArrayValue<T, N>::VariableType;
 template<typename T>
 class PointerImpl
 {
-    static_assert(
-        is_array<T>             ||
-        is_pointer<T>           ||
-        std::is_arithmetic_v<T> ||
-        is_cuj_class<T>         ||
-        std::is_void_v<T>);
-
     RC<InternalPointerValue<T>> impl_;
 
     void init_as_stack_var();

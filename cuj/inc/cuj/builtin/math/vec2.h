@@ -10,38 +10,28 @@ struct Vec2Host
     T x, y;
 };
 
-#define CUJ_DEFINE_VEC2(BASE, NAME, COMP)                                       \
-CUJ_MAKE_PROXY_BEGIN(BASE, NAME, x, y)                                          \
-    CUJ_PROXY_CONSTRUCTOR(NAME)                                                 \
-    {                                                                           \
-        x = 0; y = 0;                                                           \
-    }                                                                           \
-    explicit CUJ_PROXY_CONSTRUCTOR(NAME, COMP v)                                \
-    {                                                                           \
-        x = v; y = v;                                                           \
-    }                                                                           \
-    CUJ_PROXY_CONSTRUCTOR(NAME, COMP _x, COMP _y)                               \
-    {                                                                           \
-        x = _x; y = _y;                                                         \
-    }                                                                           \
+#define CUJ_DEFINE_VEC2(NAME, BASE, COMP)                                       \
+CUJ_MAKE_PROXY_CLASS(NAME, BASE, x, y)                                          \
+{                                                                               \
+    using CUJBase::CUJBase;                                                     \
+    NAME() { x = 0; y = 0; }                                                    \
+    NAME(COMP _x, COMP _y) { x = _x; y = _y; }                                  \
     auto operator[](const Value<size_t> &idx) const                             \
-    {                                                                           \
-        return Value<COMP>((x.address() + idx).deref().get_impl());             \
-    }                                                                           \
+    { return Value<COMP>((x.address() + idx).deref().get_impl()); }             \
     auto length_square() const { return x * x + y * y; }                        \
     auto length() const { return sqrt(length_square()); }                       \
     auto min_elem() const { return min(x, y); }                                 \
     auto max_elem() const { return max(x, y); }                                 \
     auto normalize() const                                                      \
     {                                                                           \
-        auto f = 1 / length();                                                  \
+        COMP f = 1 / length();                                                  \
         return NAME(f * x, f * y);                                              \
     }                                                                           \
-CUJ_MAKE_PROXY_END
+};
 
-CUJ_DEFINE_VEC2(Vec2Host<int>,    Vec2i, i32)
-CUJ_DEFINE_VEC2(Vec2Host<float>,  Vec2f, f32)
-CUJ_DEFINE_VEC2(Vec2Host<double>, Vec2d, f64)
+CUJ_DEFINE_VEC2(Vec2i, Vec2Host<int>,    i32)
+CUJ_DEFINE_VEC2(Vec2f, Vec2Host<float>,  f32)
+CUJ_DEFINE_VEC2(Vec2d, Vec2Host<double>, f64)
 
 #undef CUJ_DEFINE_VEC2
 

@@ -11,33 +11,24 @@ struct Vec1Host
     T x;
 };
 
-#define CUJ_DEFINE_VEC1(BASE, NAME, COMP)                                       \
-CUJ_MAKE_PROXY_BEGIN(BASE, NAME, x)                                             \
-    CUJ_PROXY_CONSTRUCTOR(NAME)                                                 \
-    {                                                                           \
-        x = 0;                                                                  \
-    }                                                                           \
-    explicit CUJ_PROXY_CONSTRUCTOR(NAME, COMP _x)                               \
-    {                                                                           \
-        x = _x;                                                                 \
-    }                                                                           \
+#define CUJ_DEFINE_VEC1(NAME, BASE, COMP)                                       \
+CUJ_MAKE_PROXY_CLASS(NAME, BASE, x)                                             \
+{                                                                               \
+    using CUJBase::CUJBase;                                                     \
+    NAME() { x = 0; }                                                           \
+    explicit NAME(COMP _x) { x = _x; }                                          \
     auto operator[](const Value<size_t> &idx) const                             \
-    {                                                                           \
-        return Value<COMP>((x.address() + idx).deref().get_impl());             \
-    }                                                                           \
+    { return Value<COMP>((x.address() + idx).deref().get_impl()); }             \
     auto length_square() const { return x * x; }                                \
     auto length() const { return sqrt(length_square()); }                       \
     auto min_elem() const { return x; }                                         \
     auto max_elem() const { return x; }                                         \
-    auto normalize() const                                                      \
-    {                                                                           \
-        return NAME(x / length());                                              \
-    }                                                                           \
-CUJ_MAKE_PROXY_END
+    auto normalize() const { return NAME(x / length()); }                       \
+};
 
-CUJ_DEFINE_VEC1(Vec1Host<int>,    Vec1i, i32)
-CUJ_DEFINE_VEC1(Vec1Host<float>,  Vec1f, f32)
-CUJ_DEFINE_VEC1(Vec1Host<double>, Vec1d, f64)
+CUJ_DEFINE_VEC1(Vec1i, Vec1Host<int>,    i32)
+CUJ_DEFINE_VEC1(Vec1f, Vec1Host<float>,  f32)
+CUJ_DEFINE_VEC1(Vec1d, Vec1Host<double>, f64)
 
 #undef CUJ_DEFINE_VEC1
 

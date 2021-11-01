@@ -10,38 +10,28 @@ struct Vec3Host
     T x, y, z;
 };
 
-#define CUJ_DEFINE_VEC3(BASE, NAME, COMP)                                       \
-CUJ_MAKE_PROXY_BEGIN(BASE, NAME, x, y, z)                                       \
-    CUJ_PROXY_CONSTRUCTOR(NAME)                                                 \
-    {                                                                           \
-        x = 0; y = 0; z = 0;                                                    \
-    }                                                                           \
-    explicit CUJ_PROXY_CONSTRUCTOR(NAME, COMP v)                                \
-    {                                                                           \
-        x = v; y = v; z = v;                                                    \
-    }                                                                           \
-    CUJ_PROXY_CONSTRUCTOR(NAME, COMP _x, COMP _y, COMP _z)                      \
-    {                                                                           \
-        x = _x; y = _y; z = _z;                                                 \
-    }                                                                           \
+#define CUJ_DEFINE_VEC3(NAME, BASE, COMP)                                       \
+CUJ_MAKE_PROXY_CLASS(NAME, BASE, x, y, z)                                       \
+{                                                                               \
+    using CUJBase::CUJBase;                                                     \
+    NAME() { x = 0; y = 0; z = 0; }                                             \
+    NAME(COMP _x, COMP _y, COMP _z) { x = _x; y = _y; z = _z; }                 \
     auto operator[](const Value<size_t> &idx) const                             \
-    {                                                                           \
-        return Value<COMP>((x.address() + idx).deref().get_impl());             \
-    }                                                                           \
+    { return Value<COMP>((x.address() + idx).deref().get_impl()); }             \
     auto length_square() const { return x * x + y * y + z * z; }                \
     auto length() const { return sqrt(length_square()); }                       \
-    auto min_elem() const { return min(min(x, y), z); }                         \
-    auto max_elem() const { return max(max(x, y), z); }                         \
+    auto min_elem() const { return min(x, min(y, z)); }                         \
+    auto max_elem() const { return max(x, max(y, z)); }                         \
     auto normalize() const                                                      \
     {                                                                           \
-        auto f = 1 / length();                                                  \
+        COMP f = 1 / length();                                                  \
         return NAME(f * x, f * y, f * z);                                       \
     }                                                                           \
-CUJ_MAKE_PROXY_END
+};
 
-CUJ_DEFINE_VEC3(Vec3Host<int>,    Vec3i, i32)
-CUJ_DEFINE_VEC3(Vec3Host<float>,  Vec3f, f32)
-CUJ_DEFINE_VEC3(Vec3Host<double>, Vec3d, f64)
+CUJ_DEFINE_VEC3(Vec3i, Vec3Host<int>,    i32)
+CUJ_DEFINE_VEC3(Vec3f, Vec3Host<float>,  f32)
+CUJ_DEFINE_VEC3(Vec3d, Vec3Host<double>, f64)
 
 #undef CUJ_DEFINE_VEC3
 

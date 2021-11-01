@@ -234,12 +234,26 @@ void PointerImpl<T>::init_as_stack_var()
 template<typename T>
 PointerImpl<T>::PointerImpl()
 {
+    static_assert(
+        is_array<T> ||
+        is_pointer<T> ||
+        std::is_arithmetic_v<T> ||
+        is_cuj_class<T> ||
+        std::is_void_v<T>);
+
     init_as_stack_var();
 }
 
 template<typename T>
 PointerImpl<T>::PointerImpl(const std::nullptr_t &)
 {
+    static_assert(
+        is_array<T> ||
+        is_pointer<T> ||
+        std::is_arithmetic_v<T> ||
+        is_cuj_class<T> ||
+        std::is_void_v<T>);
+
     init_as_stack_var();
     this->operator=(nullptr);
 }
@@ -248,12 +262,24 @@ template<typename T>
 PointerImpl<T>::PointerImpl(RC<InternalPointerValue<T>> impl)
     : impl_(std::move(impl))
 {
-
+    static_assert(
+        is_array<T> ||
+        is_pointer<T> ||
+        std::is_arithmetic_v<T> ||
+        is_cuj_class<T> ||
+        std::is_void_v<T>);
 }
 
 template<typename T>
 PointerImpl<T>::PointerImpl(const PointerImpl &other)
 {
+    static_assert(
+        is_array<T> ||
+        is_pointer<T> ||
+        std::is_arithmetic_v<T> ||
+        is_cuj_class<T> ||
+        std::is_void_v<T>);
+
     init_as_stack_var();
     this->operator=(other);
 }

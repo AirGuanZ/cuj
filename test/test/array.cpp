@@ -9,9 +9,10 @@ struct Struct0Host
     float z;
 };
 
-CUJ_MAKE_PROXY_BEGIN(Struct0Host, Struct0, x, y, z)
-    CUJ_PROXY_CONSTRUCTOR(Struct0) { }
-CUJ_MAKE_PROXY_END
+CUJ_MAKE_PROXY_CLASS(Struct0, Struct0Host, x, y, z)
+{
+    using CUJBase::CUJBase;
+};
 
 TEST_CASE("array")
 {

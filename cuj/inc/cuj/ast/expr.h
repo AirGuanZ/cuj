@@ -48,11 +48,7 @@ namespace detail
     struct IsCujClass : std::false_type { };
 
     template<typename T>
-    struct IsCujClass<T, std::void_t<typename T::CUJClassFlag>>
-        : std::true_type
-    {
-
-    };
+    struct IsCujClass<T, std::void_t<typename T::CUJBase>> : std::true_type { };
 
     template<typename T, typename = void>
     struct IsPointerValue : std::false_type { };
