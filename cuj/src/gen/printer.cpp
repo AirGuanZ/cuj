@@ -403,17 +403,17 @@ std::string IRPrinter::to_string(const ir::Value &value) const
         [this](const ir::CastBuiltinOp &v)
     {
         return "builtin_cast<" + get_typename(v.to_type) + "> "
-             + to_string(v.val);
+            + to_string(v.val);
     },
         [this](const ir::CastPointerOp &v)
     {
         return "pointer_cast<" + get_typename(v.to_type) + "> "
-             + to_string(v.from_val);
+            + to_string(v.from_val);
     },
         [this](const ir::ArrayElemAddrOp &v)
     {
         return "array_elem_ptr<" + get_typename(v.arr_type) + "> "
-             + to_string(v.arr_alloc);
+            + to_string(v.arr_alloc);
     },
         [this](const ir::IntrinsicOp &v)
     {
@@ -440,13 +440,18 @@ std::string IRPrinter::to_string(const ir::Value &value) const
     {
         return std::string("nullptr");
     },
+        [this](const ir::PointerDiffOp &v)
+    {
+        return "pointer diff " + to_string(v.lhs) + " " + to_string(v.rhs);
+    },
         [this](const ir::PointerToUIntOp &v)
     {
         return "pointer to uint " + to_string(v.ptr_val);
     },
-        [this](const ir::PointerDiffOp &v)
+        [this](const ir::UintToPointerOp &v)
     {
-        return "pointer diff " + to_string(v.lhs) + " " + to_string(v.rhs);
+        return "uint to pointer<" + get_typename(v.ptr_type) + ">"
+                                  + " " + to_string(v.uint_val);
     });
 }
 

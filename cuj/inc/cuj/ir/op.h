@@ -104,17 +104,23 @@ struct EmptyPointerOp
     const Type *ptr_type;
 };
 
+struct PointerDiffOp // type: i64
+{
+    const Type *ptr_type;
+    BasicValue  lhs;
+    BasicValue  rhs;
+};
+
 struct PointerToUIntOp
 {
     const Type *ptr_type;
     BasicValue  ptr_val;
 };
 
-struct PointerDiffOp // type: i64
+struct UintToPointerOp
 {
     const Type *ptr_type;
-    BasicValue  lhs;
-    BasicValue  rhs;
+    BasicValue  uint_val; // tyoe: u32/u64 according to sizeof(void*)
 };
 
 using Value = Variant<
@@ -130,7 +136,8 @@ using Value = Variant<
     MemberPtrOp,
     PointerOffsetOp,
     EmptyPointerOp,
+    PointerDiffOp,
     PointerToUIntOp,
-    PointerDiffOp>;
+    UintToPointerOp>;
 
 CUJ_NAMESPACE_END(cuj::ir)

@@ -1,5 +1,5 @@
 ﻿ADD_SUBDIRECTORY(native_codegen)
-
+ADD_SUBDIRECTORY(search_binary_tree)
 IF(CUJ_ENABLE_CUDA)
 	ADD_SUBDIRECTORY(vec_sqrt_add)
 ENDIF()

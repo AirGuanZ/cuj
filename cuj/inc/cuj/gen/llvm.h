@@ -139,6 +139,8 @@ private:
 
     llvm::Value *get_value(const ir::PointerToUIntOp &v);
 
+    llvm::Value *get_value(const ir::UintToPointerOp &v);
+
     llvm::Value *get_value(const ir::PointerDiffOp &v);
 
     llvm::Value *get_value(const ir::BasicTempValue &v);

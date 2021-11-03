@@ -44,9 +44,11 @@ namespace detail
 
 } // namespace detail
 
-template<typename T>
+template<typename T_>
 const ir::Type *Context::get_type()
 {
+    using T = deval_t<to_cuj_t<T_>>;
+
     static_assert(
         std::is_same_v<T, void> ||
         is_array<T>             ||

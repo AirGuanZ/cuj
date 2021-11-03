@@ -49,6 +49,10 @@ using ast::pop_context;
 using ast::ptr_cast;
 using ast::cast;
 
+using ast::ptr_to_uint;
+using ast::uint_to_ptr;
+using ast::ptr_literial;
+
 using ast::const_data;
 using ast::string_literial;
 

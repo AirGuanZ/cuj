@@ -36,12 +36,8 @@ namespace class_detail
         }
         else if constexpr(is_pointer<T>)
         {
-            auto impl_value = newRC<InternalArithmeticLeftValue<size_t>>();
-            impl_value->address = std::move(address);
-
-            auto impl = newRC<InternalPointerValue<typename T::PointedType>>();
-            impl->value = std::move(impl_value);
-
+            auto impl = newRC<InternalPointerLeftValue<typename T::PointedType>>();
+            impl->address = std::move(address);
             return impl;
         }
         else if constexpr(std::is_arithmetic_v<T>)
@@ -63,7 +59,7 @@ namespace class_detail
         using MemberPtr = decltype(&CLASS::MEMBER);                             \
         using Member = ::cuj::ast::deval_t<::cuj::ast::Value<                   \
             ::cuj::ast::class_detail::mem_var_t<MemberPtr>>>;                   \
-        using MemberProxy = ::cuj::ast::Value<::cuj::ast::to_cuj_t<Member>>;    \
+        using MemberProxy = ::cuj::ast::Variable<Member>;                       \
         template<typename F>                                                    \
         static void process(const F &f)                                         \
         {                                                                       \
@@ -85,6 +81,7 @@ namespace class_detail
 
 #define CUJ_PROXY_CLASS(PROXY, CLASS, ...)                                      \
     struct PROXY;                                                               \
+    inline PROXY *_cuj_class_to_proxy_aux(const CLASS *) { return nullptr; }    \
     struct CUJReflection##PROXY                                                 \
     {                                                                           \
         static constexpr int MemberCount =                                      \
@@ -93,7 +90,6 @@ namespace class_detail
         CUJ_MACRO_FOREACH_INDEXED_2(                                            \
             CUJ_MAKE_REFLECTION_MEMBER_INFO, CLASS, __VA_ARGS__)                \
     };                                                                          \
-    inline PROXY *_cuj_class_to_proxy_aux(const CLASS *) { return nullptr; }    \
     class CUJBase##PROXY                                                        \
     {                                                                           \
     public:                                                                     \

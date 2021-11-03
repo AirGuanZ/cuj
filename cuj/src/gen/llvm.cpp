@@ -982,30 +982,12 @@ void LLVMIRGenerator::generate(const ir::IntrinsicCall &call)
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::Value &v)
 {
-    return v.match(
-        [this](const ir::BasicValue      &v) { return get_value(v); },
-        [this](const ir::BinaryOp        &v) { return get_value(v); },
-        [this](const ir::UnaryOp         &v) { return get_value(v); },
-        [this](const ir::LoadOp          &v) { return get_value(v); },
-        [this](const ir::CallOp          &v) { return get_value(v); },
-        [this](const ir::CastBuiltinOp   &v) { return get_value(v); },
-        [this](const ir::CastPointerOp   &v) { return get_value(v); },
-        [this](const ir::ArrayElemAddrOp &v) { return get_value(v); },
-        [this](const ir::IntrinsicOp     &v) { return get_value(v); },
-        [this](const ir::MemberPtrOp     &v) { return get_value(v); },
-        [this](const ir::PointerOffsetOp &v) { return get_value(v); },
-        [this](const ir::EmptyPointerOp  &v) { return get_value(v); },
-        [this](const ir::PointerToUIntOp &v) { return get_value(v); },
-        [this](const ir::PointerDiffOp   &v) { return get_value(v); });
+    return v.match([this](const auto &x) { return this->get_value(x); });
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::BasicValue &v)
 {
-    return v.match(
-        [this](const ir::BasicTempValue      &v) { return get_value(v); },
-        [this](const ir::BasicImmediateValue &v) { return get_value(v); },
-        [this](const ir::AllocAddress        &v) { return get_value(v); },
-        [this](const ir::ConstData           &v) { return get_value(v); });
+    return v.match([this](const auto &x) { return this->get_value(x); });
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::BinaryOp &v)
@@ -1321,6 +1303,13 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::PointerToUIntOp &v)
     else
         to_type = data_->ir_builder->getInt64Ty();
     return data_->ir_builder->CreatePtrToInt(ptr, to_type);
+}
+
+llvm::Value *LLVMIRGenerator::get_value(const ir::UintToPointerOp &v)
+{
+    auto val = get_value(v.uint_val);
+    llvm::Type *to_type = find_llvm_type(v.ptr_type);
+    return data_->ir_builder->CreateIntToPtr(val, to_type);
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::PointerDiffOp &v)

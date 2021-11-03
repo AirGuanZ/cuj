@@ -16,6 +16,14 @@ struct TypeTestStruct2
     int z;
 };
 
+namespace TypeTest
+{
+    struct TypeTestStruct3
+    {
+        float x, y, z;
+    };
+}
+
 CUJ_CLASS(TypeTestStruct0, x)
 {
     using CUJBase::CUJBase;
@@ -28,11 +36,25 @@ CUJ_CLASS(TypeTestStruct1, y, s0)
 
 CUJ_REGISTER_GLOBAL_CLASS(TypeTestStruct2, i32);
 
+namespace TypeTest2
+{
+    CUJ_PROXY_CLASS(CTypeTestStruct3, TypeTest::TypeTestStruct3, x, y, z)
+    {
+        using CUJBase::CUJBase;
+    };
+}
+
+CUJ_REGISTER_GLOBAL_CLASS(TypeTest::TypeTestStruct3, TypeTest2::CTypeTestStruct3);
+
 static_assert(std::is_same_v<
     decltype(std::declval<CUJProxyTypeTestStruct1>().s0),
     CUJProxyTypeTestStruct0>);
 
 static_assert(std::is_same_v<Variable<TypeTestStruct2>, i32>);
+
+static_assert(std::is_same_v<
+    Variable<TypeTest::TypeTestStruct3>,
+    TypeTest2::CTypeTestStruct3>);
 
 TEST_CASE("type")
 {

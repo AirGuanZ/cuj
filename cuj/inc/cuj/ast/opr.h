@@ -193,7 +193,7 @@ auto operator!(const PointerImpl<T> &ptr)
 template<typename To, typename From>
 auto cast(const ArithmeticValue<From> &from)
 {
-    using TTo = deval_t<To>;
+    using TTo = deval_t<to_cuj_t<To>>;
     auto impl = newRC<InternalCastArithmeticValue<From, TTo>>();
     impl->from = from.get_impl();
     return Value<TTo>(std::move(impl));
@@ -202,10 +202,39 @@ auto cast(const ArithmeticValue<From> &from)
 template<typename To, typename From>
 auto ptr_cast(const PointerImpl<From> &from)
 {
-    using TTo = deval_t<To>;
+    using TTo = deval_t<to_cuj_t<To>>;
     auto impl = newRC<InternalCastPointerValue<From, TTo>>();
     impl->from = from.get_impl();
     return PointerImpl<TTo>(std::move(impl));
+}
+
+template<typename T>
+auto uint_to_ptr(const ArithmeticValue<size_t> &uint)
+{
+    using TTo = deval_t<to_cuj_t<T>>;
+    auto impl = newRC<InternalUIntToPointer<TTo>>();
+    impl->value = uint.get_impl();
+    return PointerImpl<TTo>(std::move(impl));
+}
+
+template<typename T>
+ArithmeticValue<size_t> ptr_to_uint(const PointerImpl<T> &ptr)
+{
+    auto impl = newRC<InternalPointerToUInt<T>>();
+    impl->pointer = ptr.get_impl();
+    return ArithmeticValue<size_t>(std::move(impl));
+}
+
+template<typename T>
+auto ptr_literial(T *raw)
+{
+    return uint_to_ptr<T>(reinterpret_cast<size_t>(raw));
+}
+
+template<typename T>
+auto ptr_literial(const T *raw)
+{
+    return uint_to_ptr<T>(reinterpret_cast<size_t>(raw));
 }
 
 // const data
@@ -213,7 +242,7 @@ auto ptr_cast(const PointerImpl<From> &from)
 template<typename T>
 auto const_data(const void *data, size_t bytes)
 {
-    using TT = deval_t<T>;
+    using TT = deval_t<to_cuj_t<T>>;
     auto impl = newRC<InternalConstData<TT>>();
     impl->bytes.resize(bytes);
     std::memcpy(impl->bytes.data(), data, bytes);

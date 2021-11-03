@@ -145,6 +145,36 @@ ir::BasicValue InternalMemberPointerValueOffset<C, M>::gen_ir(
 }
 
 template<typename T>
+ir::BasicValue InternalPointerToUInt<T>::gen_ir(ir::IRBuilder &builder) const
+{
+    auto ptr = pointer->gen_ir(builder);
+
+    auto ptr_type = get_current_context()->get_type<PointerImpl<T>>();
+    auto uint_type = get_current_context()->get_type<size_t>();
+
+    auto op = ir::PointerToUIntOp{ ptr_type, ptr };
+
+    auto ret = builder.gen_temp_value(uint_type);
+    builder.append_assign(ret, op);
+
+    return ret;
+}
+
+template<typename T>
+ir::BasicValue InternalUIntToPointer<T>::gen_ir(ir::IRBuilder &builder) const
+{
+    auto val = value->gen_ir(builder);
+    auto ptr_type = get_current_context()->get_type<PointerImpl<T>>();
+
+    auto op = ir::UintToPointerOp{ ptr_type, val };
+
+    auto ret = builder.gen_temp_value(ptr_type);
+    builder.append_assign(ret, op);
+
+    return ret;
+}
+
+template<typename T>
 ir::BasicValue InternalPointerDiff<T>::gen_ir(ir::IRBuilder &builder) const
 {
     auto lhs_val = lhs->gen_ir(builder);

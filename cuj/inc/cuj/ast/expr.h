@@ -304,6 +304,26 @@ public:
 };
 
 template<typename T>
+class InternalPointerToUInt : public InternalArithmeticValue<size_t>
+{
+public:
+
+    RC<InternalPointerValue<T>> pointer;
+
+    ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
+};
+
+template<typename T>
+class InternalUIntToPointer : public InternalPointerValue<T>
+{
+public:
+
+    RC<InternalArithmeticValue<size_t>> value;
+
+    ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
+};
+
+template<typename T>
 class InternalPointerDiff : public InternalArithmeticValue<int64_t>
 {
 public:

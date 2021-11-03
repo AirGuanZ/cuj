@@ -234,12 +234,13 @@ void PointerImpl<T>::init_as_stack_var()
 template<typename T>
 PointerImpl<T>::PointerImpl()
 {
+    using T_ = deval_t<to_cuj_t<T>>;
     static_assert(
-        is_array<T> ||
-        is_pointer<T> ||
-        std::is_arithmetic_v<T> ||
-        is_cuj_class<T> ||
-        std::is_void_v<T>);
+        is_array<T_> ||
+        is_pointer<T_> ||
+        std::is_arithmetic_v<T_> ||
+        is_cuj_class<T_> ||
+        std::is_void_v<T_>);
 
     init_as_stack_var();
 }
@@ -247,12 +248,13 @@ PointerImpl<T>::PointerImpl()
 template<typename T>
 PointerImpl<T>::PointerImpl(const std::nullptr_t &)
 {
+    using T_ = deval_t<to_cuj_t<T>>;
     static_assert(
-        is_array<T> ||
-        is_pointer<T> ||
-        std::is_arithmetic_v<T> ||
-        is_cuj_class<T> ||
-        std::is_void_v<T>);
+        is_array<T_> ||
+        is_pointer<T_> ||
+        std::is_arithmetic_v<T_> ||
+        is_cuj_class<T_> ||
+        std::is_void_v<T_>);
 
     init_as_stack_var();
     this->operator=(nullptr);
@@ -262,23 +264,25 @@ template<typename T>
 PointerImpl<T>::PointerImpl(RC<InternalPointerValue<T>> impl)
     : impl_(std::move(impl))
 {
+    using T_ = deval_t<to_cuj_t<T>>;
     static_assert(
-        is_array<T> ||
-        is_pointer<T> ||
-        std::is_arithmetic_v<T> ||
-        is_cuj_class<T> ||
-        std::is_void_v<T>);
+        is_array<T_> ||
+        is_pointer<T_> ||
+        std::is_arithmetic_v<T_> ||
+        is_cuj_class<T_> ||
+        std::is_void_v<T_>);
 }
 
 template<typename T>
 PointerImpl<T>::PointerImpl(const PointerImpl &other)
 {
+    using T_ = deval_t<to_cuj_t<T>>;
     static_assert(
-        is_array<T> ||
-        is_pointer<T> ||
-        std::is_arithmetic_v<T> ||
-        is_cuj_class<T> ||
-        std::is_void_v<T>);
+        is_array<T_> ||
+        is_pointer<T_> ||
+        std::is_arithmetic_v<T_> ||
+        is_cuj_class<T_> ||
+        std::is_void_v<T_>);
 
     init_as_stack_var();
     this->operator=(other);
@@ -314,11 +318,12 @@ PointerImpl<T> &PointerImpl<T>::operator=(const PointerImpl<U> &other)
 template<typename T>
 Value<T> PointerImpl<T>::deref() const
 {
+    using T_ = deval_t<to_cuj_t<T>>;
     static_assert(
-        is_array<T>             ||
-        is_pointer<T>           ||
-        std::is_arithmetic_v<T> ||
-        is_cuj_class<T>);
+        is_array<T_> ||
+        is_pointer<T_> ||
+        std::is_arithmetic_v<T_> ||
+        is_cuj_class<T_>);
 
     if constexpr(is_array<T>)
     {
@@ -345,7 +350,7 @@ Value<T> PointerImpl<T>::deref() const
     }
     else
     {
-        return T(impl_);
+        return Value<T>(impl_);
     }
 }
 
