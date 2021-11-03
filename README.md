@@ -249,7 +249,62 @@ Array<Array<i32, 4>, 3> arr2;
 #### Define Classes
 
 ```cpp
-TODO
+struct Float3 { float x, y, z; };
+
+// Variable<Float3> is mapped to CFloat3,
+// Variable<Float3*> is mapped to Pointer<CFloat3>, etc
+CUJ_PROXY_CLASS(CFloat3, Float3, x, y, z)
+{
+    // define additional member functions
+        
+    using CUJBase::CUJBase;
+    
+    CFloat3(f32 _x, f32 _y, f32 _z)
+    {
+        x = _x;
+        y = _y;
+        z = _z;
+    }
+    
+    auto length() const
+    {
+        return builtin::math::sqrt(x * x + y * y + z * z);
+    }
+};
+
+void foo()
+{
+    // ...
+    
+    ScopedContext ctx;
+    
+    auto sum = to_callable<f32>([](const CFloat3 &v)
+    {
+        $return(v.x + v.y + v.z);
+    });
+    
+    // ...
+}
+```
+
+You can also use `CUJ_CLASS(Float3, x, y, z)` to make the proxy class anonymous.
+
+It's recommanded to use `CUJ_CLASS` and `CUJ_PROXY_CLASS` in the same namespace that defining the original class. Otherwise, you should add `CUJ_REGISTER_GLOBAL_CLASS(Float3, CFloat3)` to the global namespace. For example:
+
+```cpp
+namespace N
+{
+    struct Float3 { float x, y, z; };
+}
+
+namespace M
+{
+	CUJ_PROXY_CLASS(CFloat3, Float3, x, y, z) { using CUJBase::CUJBase; };
+}
+
+// this line must be added to the global namespace
+// as CFloat3 is not defined in the same namespace of Float3
+CUJ_REGISTER_GLOBAL_CLASS(N::Float3, M::CFloat3);
 ```
 
 CUJ array/class objects can be passed as function arguments or returned by a CUJ function. For example:
@@ -277,11 +332,17 @@ f32 f = cast<f32>(i); // f is 2.0f
 
 Pointer<void> p = ...;
 Pointer<f32>  pf = ptr_cast<f32>(p);
+
+Variable<size_t> ip = ptr_to_uint(p);
+Pointer<f32> pip = uint_to_ptr<f32>(ip);
+
+float float_value = 1.0f;
+Pointer<f32> pl = ptr_literial(&float_value); // pl can only be dereferenced when using host backend
 ```
 
 #### Define Constant Data
 
-You can convert C++ native data to CUJ pointer. Converted data lifetime is maintained by CUJ backends.
+You can convert C++ native data to CUJ pointer. Converted data and be accessed when using any backends and its lifetime is maintained by CUJ backends.
 
 ```cpp
 int data[5] = { 1, 2, 3, 4, 5 };
@@ -291,7 +352,6 @@ int *p_data = ...;
 Pointer<float> cuj_data_pointer2 = const_data<float>(p_data, total_bytes_of_data);
 
 Pointer<char> cuj_string = "hello, world!"_cuj;
-
 ```
 
 ### Control Flow
