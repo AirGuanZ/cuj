@@ -11,7 +11,7 @@ struct Vec4Host
 };
 
 #define CUJ_DEFINE_VEC4(NAME, BASE, COMP)                                       \
-CUJ_MAKE_PROXY_CLASS(NAME, BASE, x, y, z, w)                                    \
+CUJ_PROXY_CLASS(NAME, BASE, x, y, z, w)                                         \
 {                                                                               \
     using CUJBase::CUJBase;                                                     \
     NAME() { x = 0; y = 0; z = 0; w = 0; }                                      \
@@ -111,75 +111,75 @@ inline Vec4i make_vec4i(
 }
 
 #define CUJ_DEFINE_VEC4_OPERATORS(T)                                            \
-inline Vec4<T> operator-(const Vec4<T> &v)                                             \
+inline Vec4<T> operator-(const Vec4<T> &v)                                      \
 {                                                                               \
     return make_vec4<T>(-v.x, -v.y, -v.z, -v.w);                                \
 }                                                                               \
-inline Vec4<T> operator+(const Vec4<T> &lhs, const Vec4<T> &rhs)                       \
+inline Vec4<T> operator+(const Vec4<T> &lhs, const Vec4<T> &rhs)                \
 {                                                                               \
     return make_vec4<T>(                                                        \
         lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z, lhs.w + rhs.w);            \
 }                                                                               \
-inline Vec4<T> operator-(const Vec4<T> &lhs, const Vec4<T> &rhs)                       \
+inline Vec4<T> operator-(const Vec4<T> &lhs, const Vec4<T> &rhs)                \
 {                                                                               \
     return make_vec4<T>(                                                        \
         lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z, lhs.w - rhs.w);            \
 }                                                                               \
-inline Vec4<T> operator*(const Vec4<T> &lhs, const Vec4<T> &rhs)                       \
+inline Vec4<T> operator*(const Vec4<T> &lhs, const Vec4<T> &rhs)                \
 {                                                                               \
     return make_vec4<T>(                                                        \
         lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z, lhs.w * rhs.w);            \
 }                                                                               \
-inline Vec4<T> operator/(const Vec4<T> &lhs, const Vec4<T> &rhs)                       \
+inline Vec4<T> operator/(const Vec4<T> &lhs, const Vec4<T> &rhs)                \
 {                                                                               \
     return make_vec4<T>(                                                        \
         lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z, lhs.w / rhs.w);            \
 }                                                                               \
-inline Vec4<T> operator+(const Vec4<T> &lhs, const Value<T> &rhs)                      \
+inline Vec4<T> operator+(const Vec4<T> &lhs, const Value<T> &rhs)               \
 {                                                                               \
     return make_vec4<T>(                                                        \
         lhs.x + rhs, lhs.y + rhs, lhs.z + rhs, lhs.w + rhs);                    \
 }                                                                               \
-inline Vec4<T> operator-(const Vec4<T> &lhs, const Value<T> &rhs)                      \
+inline Vec4<T> operator-(const Vec4<T> &lhs, const Value<T> &rhs)               \
 {                                                                               \
     return make_vec4<T>(                                                        \
         lhs.x - rhs, lhs.y - rhs, lhs.z - rhs, lhs.w - rhs);                    \
 }                                                                               \
-inline Vec4<T> operator*(const Vec4<T> &lhs, const Value<T> &rhs)                      \
+inline Vec4<T> operator*(const Vec4<T> &lhs, const Value<T> &rhs)               \
 {                                                                               \
     return make_vec4<T>(                                                        \
         lhs.x * rhs, lhs.y * rhs, lhs.z * rhs, lhs.w * rhs);                    \
 }                                                                               \
-inline Vec4<T> operator/(const Vec4<T> &lhs, const Value<T> &rhs)                      \
+inline Vec4<T> operator/(const Vec4<T> &lhs, const Value<T> &rhs)               \
 {                                                                               \
     return make_vec4<T>(                                                        \
         lhs.x / rhs, lhs.y / rhs, lhs.z / rhs, lhs.w / rhs);                    \
 }                                                                               \
-inline Vec4<T> operator+(const Value<T> &lhs, const Vec4<T> &rhs)                      \
+inline Vec4<T> operator+(const Value<T> &lhs, const Vec4<T> &rhs)               \
 {                                                                               \
     return make_vec4<T>(                                                        \
         lhs + rhs.x, lhs + rhs.y, lhs + rhs.z, lhs + rhs.w);                    \
 }                                                                               \
-inline Vec4<T> operator-(const Value<T> &lhs, const Vec4<T> &rhs)                      \
+inline Vec4<T> operator-(const Value<T> &lhs, const Vec4<T> &rhs)               \
 {                                                                               \
     return make_vec4<T>(                                                        \
         lhs - rhs.x, lhs - rhs.y, lhs - rhs.z, lhs - rhs.w);                    \
 }                                                                               \
-inline Vec4<T> operator*(const Value<T> &lhs, const Vec4<T> &rhs)                      \
+inline Vec4<T> operator*(const Value<T> &lhs, const Vec4<T> &rhs)               \
 {                                                                               \
     return make_vec4<T>(                                                        \
         lhs * rhs.x, lhs * rhs.y, lhs * rhs.z, lhs * rhs.w);                    \
 }                                                                               \
-inline Vec4<T> operator/(const Value<T> &lhs, const Vec4<T> &rhs)                      \
+inline Vec4<T> operator/(const Value<T> &lhs, const Vec4<T> &rhs)               \
 {                                                                               \
     return make_vec4<T>(                                                        \
         lhs / rhs.x, lhs / rhs.y, lhs / rhs.z, lhs / rhs.w);                    \
 }                                                                               \
-inline Value<T> dot(const Vec4<T> &a, const Vec4<T> &b)                                \
+inline Value<T> dot(const Vec4<T> &a, const Vec4<T> &b)                         \
 {                                                                               \
     return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;                       \
 }                                                                               \
-inline Value<T> cos(const Vec4<T> &a, const Vec4<T> &b)                                \
+inline Value<T> cos(const Vec4<T> &a, const Vec4<T> &b)                         \
 {                                                                               \
     return dot(a, b) / (a.length() * b.length());                               \
 }

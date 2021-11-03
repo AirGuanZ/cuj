@@ -58,8 +58,7 @@ namespace func_trait_detail
     using to_cuj_arg_t = typename CPPArgToCUJArgTypeAux<T>::Type;
 
     template<typename Ret, typename...Args>
-    using to_cuj_func_t =
-        to_cuj_t<to_cuj_arg_t<Ret>>(to_cuj_arg_t<Args>...);
+    using to_cuj_func_t = to_cuj_t<to_cuj_arg_t<Ret>>(to_cuj_arg_t<Args>...);
 
 } // namespace func_trait_detail
 

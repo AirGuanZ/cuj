@@ -22,10 +22,10 @@ struct Vec4fData
             [](const Vec4f &a, const Vec4f &b)                                  \
         {                                                                       \
             $return(                                                            \
-                math::abs(a.x - b.x) < 0.001f &&                              \
-                math::abs(a.y - b.y) < 0.001f &&                              \
-                math::abs(a.z - b.z) < 0.001f &&                              \
-                math::abs(a.w - b.w) < 0.001f);                               \
+                math::abs(a.x - b.x) < 0.001f &&                                \
+                math::abs(a.y - b.y) < 0.001f &&                                \
+                math::abs(a.z - b.z) < 0.001f &&                                \
+                math::abs(a.w - b.w) < 0.001f);                                 \
         });                                                                     \
         auto test = to_callable<bool>(                                          \
             [&]                                                                 \

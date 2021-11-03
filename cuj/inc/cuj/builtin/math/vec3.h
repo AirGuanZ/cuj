@@ -11,7 +11,7 @@ struct Vec3Host
 };
 
 #define CUJ_DEFINE_VEC3(NAME, BASE, COMP)                                       \
-CUJ_MAKE_PROXY_CLASS(NAME, BASE, x, y, z)                                       \
+CUJ_PROXY_CLASS(NAME, BASE, x, y, z)                                            \
 {                                                                               \
     using CUJBase::CUJBase;                                                     \
     NAME() { x = 0; y = 0; z = 0; }                                             \
@@ -107,67 +107,67 @@ inline Vec3i make_vec3i(const i32 &x, const i32 &y, const i32 &z)
 }
 
 #define CUJ_DEFINE_VEC3_OPERATORS(T)                                            \
-inline Vec3<T> operator-(const Vec3<T> &v)                                             \
+inline Vec3<T> operator-(const Vec3<T> &v)                                      \
 {                                                                               \
     return make_vec3<T>(-v.x, -v.y, -v.z);                                      \
 }                                                                               \
-inline Vec3<T> operator+(const Vec3<T> &lhs, const Vec3<T> &rhs)                       \
+inline Vec3<T> operator+(const Vec3<T> &lhs, const Vec3<T> &rhs)                \
 {                                                                               \
     return make_vec3<T>(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z);           \
 }                                                                               \
-inline Vec3<T> operator-(const Vec3<T> &lhs, const Vec3<T> &rhs)                       \
+inline Vec3<T> operator-(const Vec3<T> &lhs, const Vec3<T> &rhs)                \
 {                                                                               \
     return make_vec3<T>(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z);           \
 }                                                                               \
-inline Vec3<T> operator*(const Vec3<T> &lhs, const Vec3<T> &rhs)                       \
+inline Vec3<T> operator*(const Vec3<T> &lhs, const Vec3<T> &rhs)                \
 {                                                                               \
     return make_vec3<T>(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z);           \
 }                                                                               \
-inline Vec3<T> operator/(const Vec3<T> &lhs, const Vec3<T> &rhs)                       \
+inline Vec3<T> operator/(const Vec3<T> &lhs, const Vec3<T> &rhs)                \
 {                                                                               \
     return make_vec3<T>(lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z);           \
 }                                                                               \
-inline Vec3<T> operator+(const Vec3<T> &lhs, const Value<T> &rhs)                      \
+inline Vec3<T> operator+(const Vec3<T> &lhs, const Value<T> &rhs)               \
 {                                                                               \
     return make_vec3<T>(lhs.x + rhs, lhs.y + rhs, lhs.z + rhs);                 \
 }                                                                               \
-inline Vec3<T> operator-(const Vec3<T> &lhs, const Value<T> &rhs)                      \
+inline Vec3<T> operator-(const Vec3<T> &lhs, const Value<T> &rhs)               \
 {                                                                               \
     return make_vec3<T>(lhs.x - rhs, lhs.y - rhs, lhs.z - rhs);                 \
 }                                                                               \
-inline Vec3<T> operator*(const Vec3<T> &lhs, const Value<T> &rhs)                      \
+inline Vec3<T> operator*(const Vec3<T> &lhs, const Value<T> &rhs)               \
 {                                                                               \
     return make_vec3<T>(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs);                 \
 }                                                                               \
-inline Vec3<T> operator/(const Vec3<T> &lhs, const Value<T> &rhs)                      \
+inline Vec3<T> operator/(const Vec3<T> &lhs, const Value<T> &rhs)               \
 {                                                                               \
     return make_vec3<T>(lhs.x / rhs, lhs.y / rhs, lhs.z / rhs);                 \
 }                                                                               \
-inline Vec3<T> operator+(const Value<T> &lhs, const Vec3<T> &rhs)                      \
+inline Vec3<T> operator+(const Value<T> &lhs, const Vec3<T> &rhs)               \
 {                                                                               \
     return make_vec3<T>(lhs + rhs.x, lhs + rhs.y, lhs + rhs.z);                 \
 }                                                                               \
-inline Vec3<T> operator-(const Value<T> &lhs, const Vec3<T> &rhs)                      \
+inline Vec3<T> operator-(const Value<T> &lhs, const Vec3<T> &rhs)               \
 {                                                                               \
     return make_vec3<T>(lhs - rhs.x, lhs - rhs.y, lhs - rhs.z);                 \
 }                                                                               \
-inline Vec3<T> operator*(const Value<T> &lhs, const Vec3<T> &rhs)                      \
+inline Vec3<T> operator*(const Value<T> &lhs, const Vec3<T> &rhs)               \
 {                                                                               \
     return make_vec3<T>(lhs * rhs.x, lhs * rhs.y, lhs * rhs.z);                 \
 }                                                                               \
-inline Vec3<T> operator/(const Value<T> &lhs, const Vec3<T> &rhs)                      \
+inline Vec3<T> operator/(const Value<T> &lhs, const Vec3<T> &rhs)               \
 {                                                                               \
     return make_vec3<T>(lhs / rhs.x, lhs / rhs.y, lhs / rhs.z);                 \
 }                                                                               \
-inline Value<T> dot(const Vec3<T> &a, const Vec3<T> &b)                                \
+inline Value<T> dot(const Vec3<T> &a, const Vec3<T> &b)                         \
 {                                                                               \
     return a.x * b.x + a.y * b.y + a.z * b.z;                                   \
 }                                                                               \
-inline Value<T> cos(const Vec3<T> &a, const Vec3<T> &b)                                \
+inline Value<T> cos(const Vec3<T> &a, const Vec3<T> &b)                         \
 {                                                                               \
     return dot(a, b) / (a.length() * b.length());                               \
 }                                                                               \
-inline Vec3<T> cross(const Vec3<T> &a, const Vec3<T> &b)                               \
+inline Vec3<T> cross(const Vec3<T> &a, const Vec3<T> &b)                        \
 {                                                                               \
     return make_vec3<T>(                                                        \
         a.y * b.z - a.z * b.y,                                                  \

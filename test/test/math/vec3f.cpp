@@ -22,9 +22,9 @@ struct Vec3fData
             [](const Vec3f &a, const Vec3f &b)                                  \
         {                                                                       \
             $return(                                                            \
-                math::abs(a.x - b.x) < 0.001f &&                              \
-                math::abs(a.y - b.y) < 0.001f &&                              \
-                math::abs(a.z - b.z) < 0.001f);                               \
+                math::abs(a.x - b.x) < 0.001f &&                                \
+                math::abs(a.y - b.y) < 0.001f &&                                \
+                math::abs(a.z - b.z) < 0.001f);                                 \
         });                                                                     \
         auto test = to_callable<bool>(                                          \
             [&]                                                                 \

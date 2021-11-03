@@ -80,7 +80,10 @@ namespace class_detail
 
 #define CUJ_ASSIGN_MEMBER_FROM_OTHER(MEMBER) this->MEMBER = other.MEMBER;
 
-#define CUJ_MAKE_PROXY_CLASS(PROXY, CLASS, ...)                                 \
+#define CUJ_CLASS(CLASS, ...) \
+    CUJ_PROXY_CLASS(CUJProxy##CLASS, CLASS, __VA_ARGS__)
+
+#define CUJ_PROXY_CLASS(PROXY, CLASS, ...)                                      \
     struct PROXY;                                                               \
     struct CUJReflection##PROXY                                                 \
     {                                                                           \
@@ -90,6 +93,7 @@ namespace class_detail
         CUJ_MACRO_FOREACH_INDEXED_2(                                            \
             CUJ_MAKE_REFLECTION_MEMBER_INFO, CLASS, __VA_ARGS__)                \
     };                                                                          \
+    inline PROXY *_cuj_class_to_proxy_aux(const CLASS *) { return nullptr; }    \
     class CUJBase##PROXY                                                        \
     {                                                                           \
     public:                                                                     \
@@ -97,6 +101,7 @@ namespace class_detail
         using Proxy = PROXY;                                                    \
         using Reflection = CUJReflection##PROXY;                                \
         using Address = ::cuj::RC<::cuj::ast::InternalPointerValue<PROXY>>;     \
+        using VariableType = PROXY;                                             \
         using ImplType = ::cuj::ast::InternalPointerValue<PROXY>;               \
         struct CUJClassFlag { };                                                \
         CUJBase##PROXY() : CUJBase##PROXY(                                      \
@@ -106,7 +111,9 @@ namespace class_detail
             : cuj_address_(std::move(address)) { }                              \
         CUJBase##PROXY(const CUJBase##PROXY &other)                             \
             : CUJBase##PROXY()                                                  \
-        { CUJ_MACRO_FOREACH_1(CUJ_ASSIGN_MEMBER_FROM_OTHER, __VA_ARGS__) }      \
+        {                                                                       \
+            CUJ_MACRO_FOREACH_1(CUJ_ASSIGN_MEMBER_FROM_OTHER, __VA_ARGS__)      \
+        }                                                                       \
         CUJBase##PROXY &operator=(const CUJBase##PROXY &other)                  \
         {                                                                       \
             CUJ_MACRO_FOREACH_1(CUJ_ASSIGN_MEMBER_FROM_OTHER, __VA_ARGS__)      \

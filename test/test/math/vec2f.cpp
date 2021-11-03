@@ -22,8 +22,8 @@ struct Vec2Data
             [](const Vec2f &a, const Vec2f &b)                                  \
         {                                                                       \
             $return(                                                            \
-                math::abs(a.x - b.x) < 0.001f &&                              \
-                math::abs(a.y - b.y) < 0.001f);                               \
+                math::abs(a.x - b.x) < 0.001f &&                                \
+                math::abs(a.y - b.y) < 0.001f);                                 \
         });                                                                     \
         auto test = to_callable<bool>(                                          \
             [&]                                                                 \

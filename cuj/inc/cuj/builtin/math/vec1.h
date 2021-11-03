@@ -12,7 +12,7 @@ struct Vec1Host
 };
 
 #define CUJ_DEFINE_VEC1(NAME, BASE, COMP)                                       \
-CUJ_MAKE_PROXY_CLASS(NAME, BASE, x)                                             \
+CUJ_PROXY_CLASS(NAME, BASE, x)                                                  \
 {                                                                               \
     using CUJBase::CUJBase;                                                     \
     NAME() { x = 0; }                                                           \
@@ -82,64 +82,64 @@ inline Vec1i make_vec1i(const i32 &v)
     return make_vec1<int>(v);
 }
 
-#define CUJ_DEFINE_VEC1_OPERATORS(T)                                                \
-inline Vec1<T> operator-(const Vec1<T> &v)                                             \
+#define CUJ_DEFINE_VEC1_OPERATORS(T)                                            \
+inline Vec1<T> operator-(const Vec1<T> &v)                                      \
 {                                                                               \
     return make_vec1<T>(-v.x);                                                  \
 }                                                                               \
-inline Vec1<T> operator+(const Vec1<T> &lhs, const Vec1<T> &rhs)                       \
+inline Vec1<T> operator+(const Vec1<T> &lhs, const Vec1<T> &rhs)                \
 {                                                                               \
     return make_vec1<T>(lhs.x + rhs.x);                                         \
 }                                                                               \
-inline Vec1<T> operator-(const Vec1<T> &lhs, const Vec1<T> &rhs)                       \
+inline Vec1<T> operator-(const Vec1<T> &lhs, const Vec1<T> &rhs)                \
 {                                                                               \
     return make_vec1<T>(lhs.x - rhs.x);                                         \
 }                                                                               \
-inline Vec1<T> operator*(const Vec1<T> &lhs, const Vec1<T> &rhs)                       \
+inline Vec1<T> operator*(const Vec1<T> &lhs, const Vec1<T> &rhs)                \
 {                                                                               \
     return make_vec1<T>(lhs.x * rhs.x);                                         \
 }                                                                               \
-inline Vec1<T> operator/(const Vec1<T> &lhs, const Vec1<T> &rhs)                       \
+inline Vec1<T> operator/(const Vec1<T> &lhs, const Vec1<T> &rhs)                \
 {                                                                               \
     return make_vec1<T>(lhs.x / rhs.x);                                         \
 }                                                                               \
-inline Vec1<T> operator+(const Vec1<T> &lhs, const Value<T> &rhs)                      \
+inline Vec1<T> operator+(const Vec1<T> &lhs, const Value<T> &rhs)               \
 {                                                                               \
     return make_vec1<T>(lhs.x + rhs);                                           \
 }                                                                               \
-inline Vec1<T> operator-(const Vec1<T> &lhs, const Value<T> &rhs)                      \
+inline Vec1<T> operator-(const Vec1<T> &lhs, const Value<T> &rhs)               \
 {                                                                               \
     return make_vec1<T>(lhs.x - rhs);                                           \
 }                                                                               \
-inline Vec1<T> operator*(const Vec1<T> &lhs, const Value<T> &rhs)                      \
+inline Vec1<T> operator*(const Vec1<T> &lhs, const Value<T> &rhs)               \
 {                                                                               \
     return make_vec1<T>(lhs.x * rhs);                                           \
 }                                                                               \
-inline Vec1<T> operator/(const Vec1<T> &lhs, const Value<T> &rhs)                      \
+inline Vec1<T> operator/(const Vec1<T> &lhs, const Value<T> &rhs)               \
 {                                                                               \
     return make_vec1<T>(lhs.x / rhs);                                           \
 }                                                                               \
-inline Vec1<T> operator+(const Value<T> &lhs, const Vec1<T> &rhs)                      \
+inline Vec1<T> operator+(const Value<T> &lhs, const Vec1<T> &rhs)               \
 {                                                                               \
     return make_vec1<T>(lhs + rhs.x);                                           \
 }                                                                               \
-inline Vec1<T> operator-(const Value<T> &lhs, const Vec1<T> &rhs)                      \
+inline Vec1<T> operator-(const Value<T> &lhs, const Vec1<T> &rhs)               \
 {                                                                               \
     return make_vec1<T>(lhs - rhs.x);                                           \
 }                                                                               \
-inline Vec1<T> operator*(const Value<T> &lhs, const Vec1<T> &rhs)                      \
+inline Vec1<T> operator*(const Value<T> &lhs, const Vec1<T> &rhs)               \
 {                                                                               \
     return make_vec1<T>(lhs * rhs.x);                                           \
 }                                                                               \
-inline Vec1<T> operator/(const Value<T> &lhs, const Vec1<T> &rhs)                      \
+inline Vec1<T> operator/(const Value<T> &lhs, const Vec1<T> &rhs)               \
 {                                                                               \
     return make_vec1<T>(lhs / rhs.x);                                           \
 }                                                                               \
-inline Value<T> dot(const Vec1<T> &a, const Vec1<T> &b)                                \
+inline Value<T> dot(const Vec1<T> &a, const Vec1<T> &b)                         \
 {                                                                               \
     return a.x * b.x;                                                           \
 }                                                                               \
-inline Value<T> cos(const Vec1<T> &a, const Vec1<T> &b)                                \
+inline Value<T> cos(const Vec1<T> &a, const Vec1<T> &b)                         \
 {                                                                               \
     return dot(a, b) / (a.length() * b.length());                               \
 }

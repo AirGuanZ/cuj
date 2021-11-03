@@ -4,6 +4,16 @@
 
 #include <cuj/ir/builder.h>
 
+template<typename T>
+struct CUJClassValueMap { };
+
+#define CUJ_REGISTER_GLOBAL_CLASS(CLASS, PROXY)                                 \
+    template<>                                                                  \
+    struct CUJClassValueMap<CLASS>                                              \
+    {                                                                           \
+        using Proxy = PROXY;                                                    \
+    }
+
 CUJ_NAMESPACE_BEGIN(cuj::ast)
 
 template<typename T>
@@ -91,9 +101,26 @@ namespace detail
     }
 
     template<typename T>
+    T *_cuj_class_to_proxy_aux(const T *) { return nullptr; }
+
+    template<typename T, typename = void>
+    struct RawToCUJTypeClassAux
+    {
+        using Type = std::remove_pointer_t<decltype(
+            _cuj_class_to_proxy_aux(std::declval<const T *>()))>;
+    };
+
+    template<typename T>
+    struct RawToCUJTypeClassAux<
+        T, std::void_t<typename CUJClassValueMap<T>::Proxy>>
+    {
+        using Type = typename CUJClassValueMap<T>::Proxy;
+    };
+
+    template<typename T>
     struct RawToCUJType
     {
-        using Type = T;
+        using Type = typename RawToCUJTypeClassAux<T>::Type;
     };
 
     template<typename T, size_t N>
