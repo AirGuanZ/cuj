@@ -69,10 +69,11 @@ namespace class_detail
 
 #define CUJ_MAKE_PROXY_BASE_MEMBER(INDEX, CLASS, MEMBER)                        \
     Reflection::MemberInfo<INDEX - 1>::MemberProxy MEMBER =                     \
+        Reflection::MemberInfo<INDEX - 1>::MemberProxy(                         \
         ::cuj::ast::class_detail::address_to_member_impl(                       \
             ::cuj::ast::create_member_pointer_offset<                           \
                 Proxy, Reflection::MemberInfo<INDEX - 1>::Member>(              \
-                    cuj_address_, INDEX - 1));
+                    cuj_address_, INDEX - 1)));
 
 #define CUJ_ASSIGN_MEMBER_FROM_OTHER(MEMBER) this->MEMBER = other.MEMBER;
 
@@ -82,13 +83,18 @@ namespace class_detail
 #define CUJ_PROXY_CLASS(PROXY, CLASS, ...)                                      \
     struct PROXY;                                                               \
     inline PROXY *_cuj_class_to_proxy_aux(const CLASS *) { return nullptr; }    \
+    namespace CUJReflectionNamespace##PROXY                                     \
+    {                                                                           \
+        template<int N> struct MemberInfo;                                      \
+        CUJ_MACRO_FOREACH_INDEXED_2(                                            \
+            CUJ_MAKE_REFLECTION_MEMBER_INFO, CLASS, __VA_ARGS__)                \
+    }                                                                           \
     struct CUJReflection##PROXY                                                 \
     {                                                                           \
         static constexpr int MemberCount =                                      \
             CUJ_MACRO_OVERLOADING_COUNT_ARGS(__VA_ARGS__);                      \
-        template<int N> struct MemberInfo;                                      \
-        CUJ_MACRO_FOREACH_INDEXED_2(                                            \
-            CUJ_MAKE_REFLECTION_MEMBER_INFO, CLASS, __VA_ARGS__)                \
+        template<int N>                                                         \
+        using MemberInfo = CUJReflectionNamespace##PROXY::MemberInfo<N>;        \
     };                                                                          \
     class CUJBase##PROXY                                                        \
     {                                                                           \

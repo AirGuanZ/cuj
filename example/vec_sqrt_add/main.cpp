@@ -82,7 +82,7 @@ void test_ptx(const std::string &ptx)
     check_cuda_error(cudaMemcpy(
         device_B, data_B.data(), sizeof(float) * N, cudaMemcpyHostToDevice));
 
-    const int blockSize  = 64;
+    const int blockSize  = 6;
     const int blockCount = (N + blockSize - 1) / blockSize;
 
     int n = N;
@@ -104,7 +104,7 @@ void test_ptx(const std::string &ptx)
     for(float b : data_B) std::cout << std::setw(7) << b << " ";
     std::cout << std::endl;
 
-    std::cout << "C:          ";
+    std::cout << "Computed C: ";
     for(float c : data_C) std::cout << std::setw(7) << c << " ";
     std::cout << std::endl;
 

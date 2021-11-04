@@ -37,6 +37,8 @@ Pointer<Node> find_node(const Node *node, i32 value)
 
 void run()
 {
+    // build binary tree
+
     /*
                 a
             b       c
@@ -70,6 +72,8 @@ void run()
     c.left  = &f;
     c.right = &g;
 
+    // construct searching function
+
     ScopedContext ctx;
 
     to_callable<Pointer<Node>>("find", [&](i32 value)
@@ -82,6 +86,8 @@ void run()
 
     auto jit = ctx.gen_native_jit();
     auto find = jit.get_function_by_name<const Node *(int32_t)>("find");
+
+    // test
 
     std::cout << find(a.key)->value << " == " << a.value << std::endl;
     std::cout << find(c.key)->value << " == " << c.value << std::endl;
