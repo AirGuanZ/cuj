@@ -436,7 +436,7 @@ std::string IRPrinter::to_string(const ir::Value &value) const
         const auto offset = to_string(v.index);
         return "pointer offset<" + elem_type + "> " + ptr + " " + offset;
     },
-        [this](const ir::EmptyPointerOp &)
+        [](const ir::EmptyPointerOp &)
     {
         return std::string("nullptr");
     },

@@ -1,5 +1,6 @@
 #if CUJ_ENABLE_CUDA
 
+#include <array>
 #include <cstring>
 #include <fstream>
 #include <vector>
@@ -91,33 +92,47 @@ void CUDAModule::link()
     CUlinkState link_state = nullptr;
     CUJ_SCOPE_GUARD({ if(link_state) cuLinkDestroy(link_state); });
 
-    if(impl_->ptx_data.size() == 1)
+    std::array<char, 4096> err_buffer;
+    std::array<CUjit_option, 2> options = {
+        CU_JIT_ERROR_LOG_BUFFER,
+        CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES
+    };
+    std::array<void *, 2> option_values = {
+        err_buffer.data(),
+        reinterpret_cast<void *>(err_buffer.size())
+    };
+
+    check_cu(cuLinkCreate(
+        options.size(), options.data(), option_values.data(), &link_state));
+
+    auto report_error = [&](CUresult result)
     {
-        check_cu(cuModuleLoadDataEx(
-            &impl_->cu_module, impl_->ptx_data[0].data(),
-            0, nullptr, nullptr));
-    }
-    else
+        if(result == CUDA_SUCCESS)
+            return;
+        const char *result_str;
+        cuGetErrorName(result, &result_str);
+        throw CUJException(result_str + std::string(". ") + err_buffer.data());
+    };
+
+    for(auto &ptx : impl_->ptx_data)
     {
-        check_cu(cuLinkCreate(0, nullptr, nullptr, &link_state));
+        std::vector<char> data(
+            ptx.data(), ptx.data() + ptx.size() + 1);
 
-        for(auto &ptx : impl_->ptx_data)
-        {
-            std::vector<char> data(
-                ptx.data(), ptx.data() + ptx.size() + 1);
+        const auto result = cuLinkAddData(
+            link_state, CU_JIT_INPUT_PTX, data.data(),
+            ptx.size(), nullptr, 0, nullptr, nullptr);
 
-            check_cu(cuLinkAddData(
-                link_state, CU_JIT_INPUT_PTX,
-                data.data(), ptx.size(),
-                nullptr, 0, nullptr, nullptr));
-        }
-
-        void *cubin = nullptr; size_t cubin_size = 0;
-        check_cu(cuLinkComplete(link_state, &cubin, &cubin_size));
-
-        check_cu(cuModuleLoadDataEx(
-            &impl_->cu_module, cubin, 0, nullptr, nullptr));
+        report_error(result);
     }
+
+    void *cubin = nullptr; size_t cubin_size = 0;
+    auto result = cuLinkComplete(link_state, &cubin, &cubin_size);
+    report_error(result);
+
+    result = cuModuleLoadDataEx(
+        &impl_->cu_module, cubin, 2, options.data(), option_values.data());
+    report_error(result);
 }
 
 void CUDAModule::launch_impl(

@@ -42,7 +42,7 @@ constexpr inline UninitializeFlag UNINIT;
     std::terminate();
 }
 
-class CUJException : std::runtime_error
+class CUJException : public std::runtime_error
 {
 public:
 
