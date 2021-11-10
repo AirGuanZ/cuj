@@ -78,6 +78,15 @@ namespace
         }
         pass_mgr_builder.Inliner = llvm::createFunctionInliningPass(
             pass_mgr_builder.OptLevel, 0, false);
+        pass_mgr_builder.MergeFunctions = true;
+
+        {
+            llvm::legacy::FunctionPassManager fp_mgr(llvm_module);
+            pass_mgr_builder.populateFunctionPassManager(fp_mgr);
+            for(auto &f : llvm_module->functions())
+                fp_mgr.run(f);
+        }
+
         machine->adjustPassManager(pass_mgr_builder);
 
         llvm::legacy::PassManager passes;
