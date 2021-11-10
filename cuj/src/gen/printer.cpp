@@ -31,6 +31,8 @@ namespace
         case ir::BinaryOp::Type::BitwiseAnd:   return "&";
         case ir::BinaryOp::Type::BitwiseOr:    return "|";
         case ir::BinaryOp::Type::BitwiseXOr:   return "^";
+        case ir::BinaryOp::Type::LeftShift:    return "<<";
+        case ir::BinaryOp::Type::RightShift:   return ">>";
         case ir::BinaryOp::Type::Equal:        return "==";
         case ir::BinaryOp::Type::NotEqual:     return "!=";
         case ir::BinaryOp::Type::Less:         return "<";
@@ -45,8 +47,9 @@ namespace
     {
         switch(type)
         {
-        case ir::UnaryOp::Type::Neg: return "-";
-        case ir::UnaryOp::Type::Not: return "!";
+        case ir::UnaryOp::Type::Neg:        return "-";
+        case ir::UnaryOp::Type::Not:        return "!";
+        case ir::UnaryOp::Type::BitwiseNot: return "~";
         }
         return "unknown";
     }

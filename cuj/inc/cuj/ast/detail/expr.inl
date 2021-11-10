@@ -375,6 +375,15 @@ ir::BasicValue InternalBinaryOperator<T, L, R>::gen_ir(ir::IRBuilder &builder) c
             rhs_val = detail::gen_arithmetic_cast<size_t, bool>(rhs_val, builder);
         }
     }
+    else if(type == ir::BinaryOp::Type::LeftShift ||
+            type == ir::BinaryOp::Type::RightShift)
+    {
+        CUJ_INTERNAL_ASSERT(std::is_unsigned_v<L> && std::is_arithmetic_v<R>);
+        if constexpr(std::is_arithmetic_v<L> && std::is_arithmetic_v<R>)
+        {
+            rhs_val = detail::gen_arithmetic_cast<R, L>(rhs_val, builder);
+        }
+    }
     else if constexpr(!std::is_same_v<L, bool> || !std::is_same_v<R, bool>)
     {
         CUJ_INTERNAL_ASSERT(

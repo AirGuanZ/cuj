@@ -21,6 +21,9 @@ struct BinaryOp
         BitwiseOr,
         BitwiseXOr,
 
+        LeftShift,
+        RightShift,
+
         Equal,
         NotEqual,
         Less,
@@ -40,6 +43,7 @@ struct UnaryOp
     {
         Neg,
         Not,
+        BitwiseNot,
     };
 
     Type       type;

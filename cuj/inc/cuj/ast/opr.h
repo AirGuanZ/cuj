@@ -43,6 +43,9 @@ CUJ_OVERLOAD_BINARY_ARITHMETIC_OP(BitwiseAnd, &)
 CUJ_OVERLOAD_BINARY_ARITHMETIC_OP(BitwiseOr,  |)
 CUJ_OVERLOAD_BINARY_ARITHMETIC_OP(BitwiseXOr, ^)
 
+CUJ_OVERLOAD_BINARY_ARITHMETIC_OP(LeftShift,  <<)
+CUJ_OVERLOAD_BINARY_ARITHMETIC_OP(RightShift, >>)
+
 CUJ_OVERLOAD_BINARY_ARITHMETIC_OP(Equal,        ==)
 CUJ_OVERLOAD_BINARY_ARITHMETIC_OP(NotEqual,     !=)
 CUJ_OVERLOAD_BINARY_ARITHMETIC_OP(Less,         <)
@@ -175,8 +178,9 @@ auto operator SYM(const ArithmeticValue<I> &input)                              
     return Value<T>(std::move(impl));                                           \
 }
 
-CUJ_OVERLOAD_UNARY_ARITHMETIC_OP(Neg, -)
-CUJ_OVERLOAD_UNARY_ARITHMETIC_OP(Not, !)
+CUJ_OVERLOAD_UNARY_ARITHMETIC_OP(Neg,        -)
+CUJ_OVERLOAD_UNARY_ARITHMETIC_OP(Not,        !)
+CUJ_OVERLOAD_UNARY_ARITHMETIC_OP(BitwiseNot, ~)
 
 #undef CUJ_OVERLOAD_UNARY_ARITHMETIC_OP
 
