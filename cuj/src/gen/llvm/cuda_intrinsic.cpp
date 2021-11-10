@@ -344,17 +344,12 @@ llvm::Value *process_cuda_intrinsic_op(
             llvm::Intrinsic::nvvm_ceil_f, {}, args);
     }
 
-    if(approx_math_funcs && name == "math.rsqrt.f32")
-    {
-        return ir.CreateIntrinsic(
-            llvm::Intrinsic::nvvm_rsqrt_approx_ftz_f, {}, args);
-    }
-
     CUJ_CALL_LIBDEVICE(abs,       true);
     CUJ_CALL_LIBDEVICE(mod,       true);
     CUJ_CALL_LIBDEVICE(remainder, true);
     CUJ_CALL_LIBDEVICE(exp,       true);
     CUJ_CALL_LIBDEVICE(exp2,      true);
+    CUJ_CALL_LIBDEVICE(exp10,     true);
     CUJ_CALL_LIBDEVICE(log,       true);
     CUJ_CALL_LIBDEVICE(log2,      true);
     CUJ_CALL_LIBDEVICE(log10,     true);
@@ -381,6 +376,7 @@ llvm::Value *process_cuda_intrinsic_op(
     CUJ_CALL_LIBDEVICE(remainder, false);
     CUJ_CALL_LIBDEVICE(exp,       false);
     CUJ_CALL_LIBDEVICE(exp2,      false);
+    CUJ_CALL_LIBDEVICE(exp10,     false);
     CUJ_CALL_LIBDEVICE(log,       false);
     CUJ_CALL_LIBDEVICE(log2,      false);
     CUJ_CALL_LIBDEVICE(log10,     false);

@@ -60,6 +60,7 @@ namespace
         TRY_REGISTER_FUNC("host.math.remainder.f32", true, f32, f32, f32);
         TRY_REGISTER_FUNC("host.math.exp.f32",       true, f32, f32);
         TRY_REGISTER_FUNC("host.math.exp2.f32",      true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.exp10.f32",     true, f32, f32);
         TRY_REGISTER_FUNC("host.math.log.f32",       true, f32, f32);
         TRY_REGISTER_FUNC("host.math.log2.f32",      true, f32, f32);
         TRY_REGISTER_FUNC("host.math.log10.f32",     true, f32, f32);
@@ -86,6 +87,7 @@ namespace
         TRY_REGISTER_FUNC("host.math.remainder.f64", true, f64, f64, f64);
         TRY_REGISTER_FUNC("host.math.exp.f64",       true, f64, f64);
         TRY_REGISTER_FUNC("host.math.exp2.f64",      true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.exp10.f64",     true, f64, f64);
         TRY_REGISTER_FUNC("host.math.log.f64",       true, f64, f64);
         TRY_REGISTER_FUNC("host.math.log2.f64",      true, f64, f64);
         TRY_REGISTER_FUNC("host.math.log10.f64",     true, f64, f64);

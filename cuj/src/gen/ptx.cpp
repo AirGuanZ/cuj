@@ -53,9 +53,25 @@ namespace
         if(!target)
             throw CUJException(err);
 
+        llvm::TargetOptions options;
+        if(opts.fast_math)
+        {
+            options.AllowFPOpFusion = llvm::FPOpFusion::Fast;
+            options.UnsafeFPMath = 1;
+            options.NoInfsFPMath = 1;
+            options.NoNaNsFPMath = 1;
+        }
+        else
+        {
+            options.AllowFPOpFusion = llvm::FPOpFusion::Strict;
+            options.UnsafeFPMath = 0;
+            options.NoInfsFPMath = 0;
+            options.NoNaNsFPMath = 0;
+        }
+
         auto machine = target->createTargetMachine(
-            target_triple, "sm_60", "+ptx63", {}, {},
-            {}, llvm::CodeGenOpt::Aggressive);
+            target_triple, "sm_60", "+ptx63", options, {},
+            llvm::CodeModel::Small, llvm::CodeGenOpt::Aggressive);
         auto data_layout = machine->createDataLayout();
 
         LLVMIRGenerator ir_gen;
@@ -78,19 +94,25 @@ namespace
         }
         pass_mgr_builder.Inliner = llvm::createFunctionInliningPass(
             pass_mgr_builder.OptLevel, 0, false);
-        pass_mgr_builder.SLPVectorize = opts.enable_slp;
+        pass_mgr_builder.SLPVectorize = false;
         pass_mgr_builder.MergeFunctions = true;
 
         {
             llvm::legacy::FunctionPassManager fp_mgr(llvm_module);
+            fp_mgr.add(createTargetTransformInfoWrapperPass(
+                machine->getTargetIRAnalysis()));
             pass_mgr_builder.populateFunctionPassManager(fp_mgr);
+            fp_mgr.doInitialization();
             for(auto &f : llvm_module->functions())
                 fp_mgr.run(f);
+            fp_mgr.doFinalization();
         }
 
         machine->adjustPassManager(pass_mgr_builder);
 
         llvm::legacy::PassManager passes;
+        passes.add(createTargetTransformInfoWrapperPass(
+            machine->getTargetIRAnalysis()));
         pass_mgr_builder.populateModulePassManager(passes);
 
         passes.run(*llvm_module);

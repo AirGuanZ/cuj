@@ -46,7 +46,11 @@ Vec3f abs(const Vec3f &v)
 i32 floor_div_rem(i32 a, i32 b)
 {
     i32 r = a % b;
-    $if((r > 0 && b < 0) || (r < 0 && b > 0))
+    $if(r > 0 && b < 0)
+    {
+        r = r + b;
+    }
+    $elif(r < 0 && b > 0)
     {
         r = r + b;
     };
@@ -100,7 +104,7 @@ f32 make_nested(f32 f)
             f = floor(f) + 1 - f;
         };
     };
-    f = (f - 0.2) * (1.0f / 40);
+    f = (f - 0.2f) * (1.0f / 40);
     return f;
 }
 
@@ -237,7 +241,7 @@ void render_pixel(
             $if(normal.length_square() != 0.0f)
             {
                 d = out_dir(normal, rng);
-                pos = hit_pos + 1e-3 * d;
+                pos = hit_pos + 1e-3f * d;
                 throughput = c * throughput;
             }
             $else
@@ -261,28 +265,23 @@ std::string generate_ptx()
 
     auto render = to_kernel(
         "render", [&](
-            Pointer<Vec3f> color_buffer, i32 x_thread_count, i32 spp, i32 iter)
+            Pointer<Vec3f> color_buffer, i32 spp, i32 iter)
     {
         i32 x = block_index_x() * block_dim_x() + thread_index_x();
         i32 y = block_index_y() * block_dim_y() + thread_index_y();
 
-        $if(y >= HEIGHT)
+        $if(x >= WIDTH || y >= HEIGHT)
         {
             $return();
         };
 
-        $while(x < WIDTH)
+        LCG rng(cast<u32>((iter + 1) *(y * WIDTH + x)));
+
+        i32 i = 0;
+        $while(i < spp)
         {
-            LCG rng(cast<u32>((iter + 1) * (y * WIDTH + x)));
-
-            i32 i = 0;
-            $while(i < spp)
-            {
-                i = i + 1;
-                render_pixel(color_buffer, x, y, rng.address());
-            };
-
-            x = x + x_thread_count;
+            i = i + 1;
+            render_pixel(color_buffer, x, y, rng.address());
         };
     });
 
@@ -312,25 +311,23 @@ void run()
     check_cuda_error(cudaMemset(
         device_color_buffer, 0, sizeof(float) * 3 * WIDTH * HEIGHT));
 
-    constexpr int BLOCK_SIZE_X = 8;
+    constexpr int BLOCK_SIZE_X = 16;
     constexpr int BLOCK_SIZE_Y = 8;
 
-    constexpr int BLOCK_COUNT_X = 16;
+    constexpr int BLOCK_COUNT_X = (WIDTH  + BLOCK_SIZE_X - 1) / BLOCK_SIZE_X;
     constexpr int BLOCK_COUNT_Y = (HEIGHT + BLOCK_SIZE_Y - 1) / BLOCK_SIZE_Y;
 
     std::cout << "start rendering" << std::endl;
     const auto start_time = std::chrono::steady_clock::now();
 
-    int x_thread_count = BLOCK_SIZE_X * BLOCK_COUNT_X;
-    int iters = 4;
-    int spp = 10;
+    int iters = 10; int spp = 4;
     for(int i = 0; i < iters; ++i)
     {
         cuda_module.launch(
             "render",
             { BLOCK_COUNT_X, BLOCK_COUNT_Y, 1 },
             { BLOCK_SIZE_X, BLOCK_SIZE_Y, 1 },
-            device_color_buffer, x_thread_count, spp, i);
+            device_color_buffer, spp, i);
     }
 
     cudaDeviceSynchronize();

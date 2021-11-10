@@ -167,6 +167,9 @@ namespace
     float  rsqrt_f32(float x)  { return 1 / std::sqrt(x); }
     double rsqrt_f64(double x) { return 1 / std::sqrt(x); }
 
+    float  exp10_f32(float x)  { return std::pow(10.0f, x); }
+    double exp10_f64(double x) { return std::pow(10.0,  x); }
+
     void print(const char *msg)
     {
         std::cout << msg;
@@ -230,6 +233,7 @@ void NativeJIT::generate(const ir::Program &prog, const Options &opts)
     ADD_HOST_FUNC("host.math.remainder.f32", &::remainderf);
     ADD_HOST_FUNC("host.math.exp.f32",       &::expf);
     ADD_HOST_FUNC("host.math.exp2.f32",      &::exp2f);
+    ADD_HOST_FUNC("host.math.exp10.f32",     &exp10_f32);
     ADD_HOST_FUNC("host.math.log.f32",       &::logf);
     ADD_HOST_FUNC("host.math.log2.f32",      &::log2f);
     ADD_HOST_FUNC("host.math.log10.f32",     &::log10f);
@@ -259,6 +263,7 @@ void NativeJIT::generate(const ir::Program &prog, const Options &opts)
     ADD_HOST_FUNC("host.math.remainder.f64", static_cast<DD2>(&::remainder));
     ADD_HOST_FUNC("host.math.exp.f64",       static_cast<DD> (&::exp));
     ADD_HOST_FUNC("host.math.exp2.f64",      static_cast<DD> (&::exp2));
+    ADD_HOST_FUNC("host.math.exp10.f64",     &exp10_f64);
     ADD_HOST_FUNC("host.math.log.f64",       static_cast<DD> (&::log));
     ADD_HOST_FUNC("host.math.log2.f64",      static_cast<DD> (&::log2));
     ADD_HOST_FUNC("host.math.log10.f64",     static_cast<DD> (&::log10));

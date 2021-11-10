@@ -11,6 +11,7 @@ enum class IntrinsicBasicMathFunctionType
     remainder,
     exp,
     exp2,
+    exp10,
     log,
     log2,
     log10,
@@ -30,7 +31,19 @@ enum class IntrinsicBasicMathFunctionType
     round,
     isfinite,
     isinf,
-    isnan
+    isnan,
+
+    fast_cos,
+    fast_sin,
+    fast_pow,
+    fast_exp,
+    fast_exp10,
+    fast_div,
+    fast_log,
+    fast_log2,
+    fast_log10,
+    fast_tan,
+    fast_sincos,
 };
 
 const char *intrinsic_basic_math_function_name(
@@ -41,6 +54,7 @@ f32 mod      (const f32 &x, const f32 &y);
 f32 remainder(const f32 &x, const f32 &y);
 f32 exp      (const f32 &x);
 f32 exp2     (const f32 &x);
+f32 exp10    (const f32 &x);
 f32 log      (const f32 &x);
 f32 log2     (const f32 &x);
 f32 log10    (const f32 &x);
@@ -67,6 +81,7 @@ f64 mod      (const f64 &x, const f64 &y);
 f64 remainder(const f64 &x, const f64 &y);
 f64 exp      (const f64 &x);
 f64 exp2     (const f64 &x);
+f32 exp10    (const f32 &x);
 f64 log      (const f64 &x);
 f64 log2     (const f64 &x);
 f64 log10    (const f64 &x);

@@ -60,6 +60,7 @@ const char *get_libdevice_function_name(
         case IntrinsicBasicMathFunctionType::remainder: return "__nv_remainderf";
         case IntrinsicBasicMathFunctionType::exp:       return "__nv_expf";
         case IntrinsicBasicMathFunctionType::exp2:      return "__nv_exp2f";
+        case IntrinsicBasicMathFunctionType::exp10:     return "__nv_exp10f";
         case IntrinsicBasicMathFunctionType::log:       return "__nv_logf";
         case IntrinsicBasicMathFunctionType::log2:      return "__nv_log2f";
         case IntrinsicBasicMathFunctionType::log10:     return "__nv_log10f";
@@ -91,6 +92,7 @@ const char *get_libdevice_function_name(
         case IntrinsicBasicMathFunctionType::remainder: return "__nv_remainder";
         case IntrinsicBasicMathFunctionType::exp:       return "__nv_exp";
         case IntrinsicBasicMathFunctionType::exp2:      return "__nv_exp2";
+        case IntrinsicBasicMathFunctionType::exp10:     return "__nv_exp10";
         case IntrinsicBasicMathFunctionType::log:       return "__nv_log";
         case IntrinsicBasicMathFunctionType::log2:      return "__nv_log2";
         case IntrinsicBasicMathFunctionType::log10:     return "__nv_log10";
