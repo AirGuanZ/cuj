@@ -74,7 +74,7 @@ f32 intersect_light(const Vec3f &pos, const Vec3f &dir)
 Vec3f out_dir(const Vec3f &n, Pointer<LCG> rng)
 {
     Vec3f u(1.0f, 0.0f, 0.0f);
-    $if(abs(n[1]) < 1 - EPS)
+    $if(abs(n.y) < 1 - EPS)
     {
         u = cross(n, Vec3f(0.0f, 1.0f, 0.0f)).normalize();
     };
@@ -100,26 +100,26 @@ f32 make_nested(f32 f)
             f = floor(f) + 1 - f;
         };
     };
-    f = (f - 0.2) / 40;
+    f = (f - 0.2) * (1.0f / 40);
     return f;
 }
 
 f32 sdf(Vec3f o)
 {
-    f32 wall = min(o[1] + 0.1f, o[2] + 0.4f);
+    f32 wall = min(o.y + 0.1f, o.z + 0.4f);
     f32 sphere = (o - Vec3f(0.0f, 0.35f, 0.0f)).length() - 0.36f;
 
     Vec3f q = abs(o - Vec3f(0.8f, 0.3f, 0.0f)) - Vec3f(0.3f, 0.3f, 0.3f);
-    f32 box = Vec3f(max(f32(0), q[0]), max(f32(0), q[1]), max(f32(0), q[2])).length()
+    f32 box = Vec3f(max(f32(0), q.x), max(f32(0), q.y), max(f32(0), q.z)).length()
         + min(q.max_elem(), f32(0));
 
     Vec3f O = o - Vec3f(-0.8f, 0.3f, 0.0f);
-    Vec2f d = Vec2f(Vec2f(O[0], O[2]).length() - 0.3f, abs(O[1]) - 0.3f);
+    Vec2f d = Vec2f(Vec2f(O.x, O.z).length() - 0.3f, abs(O.y) - 0.3f);
     f32 cylinder = min(d.max_elem(), f32(0))
-        + Vec2f(max(f32(0), d[0]), max(f32(0), d[1])).length();
+        + Vec2f(max(f32(0), d.x), max(f32(0), d.y)).length();
 
     f32 geometry = make_nested(min(sphere, min(box, cylinder)));
-    geometry = max(geometry, -(0.32f - (o[1] * 0.6f + o[2] * 0.8f)));
+    geometry = max(geometry, -(0.32f - (o.y * 0.6f + o.z * 0.8f)));
     return min(wall, geometry);
 }
 
@@ -150,42 +150,56 @@ f32 ray_march(const Vec3f &p, const Vec3f &d)
 
 Vec3f sdf_normal(const Vec3f &p)
 {
-    f32 d = 1e-3f;
+    constexpr float d = 1e-3f;
     Vec3f n(0.0f, 0.0f, 0.0f);
     f32 sdf_center = sdf(p);
-    for(int i = 0; i < 3; ++i)
+
     {
         Vec3f inc = p;
-        inc[i] = inc[i] + d;
-        n[i] = (1 / d) * (sdf(inc) - sdf_center);
+        inc.x = inc.x + d;
+        n.x = (1 / d) * (sdf(inc) - sdf_center);
     }
+
+    {
+        Vec3f inc = p;
+        inc.y = inc.y + d;
+        n.y = (1 / d) * (sdf(inc) - sdf_center);
+    }
+
+    {
+        Vec3f inc = p;
+        inc.z = inc.z + d;
+        n.z = (1 / d) * (sdf(inc) - sdf_center);
+    }
+    
     return n.normalize();
 }
 
-void next_hit(
-    const Vec3f &pos,
-    const Vec3f &d,
-    Pointer<f32>   closest,
+f32 next_hit(
+    const Vec3f   &pos,
+    const Vec3f   &d,
     Pointer<Vec3f> normal,
     Pointer<Vec3f> c)
 {
-    *closest = INF;
+    f32 closest = INF;
     *normal = Vec3f(0.0f, 0.0f, 0.0f);
     *c = Vec3f(0.0f, 0.0f, 0.0f);
 
     f32 ray_march_dist = ray_march(pos, d);
     $if(ray_march_dist < DIST_LIMIT)
     {
-        *closest = ray_march_dist;
-        *normal = sdf_normal(pos + d * *closest);
+        closest = ray_march_dist;
+        *normal = sdf_normal(pos + d * closest);
 
-        Vec3f hit_pos = pos + d * *closest;
-        i32 t = cast<i32>((hit_pos[0] + 10) * 1.1f + 0.5f) % 3;
+        Vec3f hit_pos = pos + d * closest;
+        i32 t = cast<i32>((hit_pos.x + 10) * 1.1f + 0.5f) % 3;
         *c = Vec3f(
             0.4f + 0.3f * select(t == 0, f32(1), f32(0)),
             0.4f + 0.2f * select(t == 1, f32(1), f32(0)),
             0.4f + 0.3f * select(t == 2, f32(1), f32(0)));
     };
+
+    return closest;
 }
 
 void render_pixel(
@@ -194,8 +208,8 @@ void render_pixel(
     Vec3f pos(CAMERA_POS[0], CAMERA_POS[1], CAMERA_POS[2]);
 
     Vec3f d;
-    d.x = 2 * FOV * (x + rng.deref().uniform_float()) / HEIGHT - FOV * ASPECT - 1e-5f;
-    d.y = 2 * FOV * (y + rng.deref().uniform_float()) / HEIGHT - FOV - 1e-5f;
+    d.x = 2 * FOV * (x + rng.deref().uniform_float()) * (1.0f / HEIGHT) - FOV * ASPECT - 1e-5f;
+    d.y = 2 * FOV * (y + rng.deref().uniform_float()) * (1.0f / HEIGHT) - FOV - 1e-5f;
     d.z = -1.0f;
     d = d.normalize();
 
@@ -208,9 +222,8 @@ void render_pixel(
     {
         depth = depth + 1;
 
-        f32 closest;
         Vec3f normal, c;
-        next_hit(pos, d, closest.address(), normal.address(), c.address());
+        f32 closest = next_hit(pos, d, normal.address(), c.address());
         f32 dist_to_light = intersect_light(pos, d);
 
         $if(dist_to_light < closest)
@@ -272,12 +285,6 @@ std::string generate_ptx()
             x = x + x_thread_count;
         };
     });
-
-    gen::LLVMIRGenerator gen;
-    gen.set_target(gen::LLVMIRGenerator::Target::PTX);
-    gen.use_fast_math();
-    gen.generate(ctx.gen_ir());
-    std::cout << gen.get_string() << std::endl;
 
     return ctx.gen_ptx(gen::OptLevel::O3, true);
 }

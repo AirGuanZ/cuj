@@ -171,7 +171,8 @@ llvm::Value *process_cuda_intrinsic_op(
     llvm::Module                     *top_module,
     llvm::IRBuilder<>                &ir,
     const std::string                &name,
-    const std::vector<llvm::Value *> &args);
+    const std::vector<llvm::Value *> &args,
+    bool                              approx_math_funcs);
 #endif
 
 bool process_host_intrinsic_stat(
@@ -1300,7 +1301,8 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::IntrinsicOp &v)
     if(target_ == Target::PTX)
     {
         auto ret = process_cuda_intrinsic_op(
-            data_->top_module.get(), *data_->ir_builder, v.name, args);
+            data_->top_module.get(), *data_->ir_builder,
+            v.name, args, fast_math_);
         if(ret)
             return ret;
     }

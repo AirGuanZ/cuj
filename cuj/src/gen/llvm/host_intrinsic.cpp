@@ -65,6 +65,7 @@ namespace
         TRY_REGISTER_FUNC("host.math.log10.f32",     true, f32, f32);
         TRY_REGISTER_FUNC("host.math.pow.f32",       true, f32, f32, f32);
         TRY_REGISTER_FUNC("host.math.sqrt.f32",      true, f32, f32);
+        TRY_REGISTER_FUNC("host.math.rsqrt.f32",     true, f32, f32);
         TRY_REGISTER_FUNC("host.math.sin.f32",       true, f32, f32);
         TRY_REGISTER_FUNC("host.math.cos.f32",       true, f32, f32);
         TRY_REGISTER_FUNC("host.math.tan.f32",       true, f32, f32);
@@ -90,6 +91,7 @@ namespace
         TRY_REGISTER_FUNC("host.math.log10.f64",     true, f64, f64);
         TRY_REGISTER_FUNC("host.math.pow.f64",       true, f64, f64, f64);
         TRY_REGISTER_FUNC("host.math.sqrt.f64",      true, f64, f64);
+        TRY_REGISTER_FUNC("host.math.rsqrt.f64",     true, f64, f64);
         TRY_REGISTER_FUNC("host.math.sin.f64",       true, f64, f64);
         TRY_REGISTER_FUNC("host.math.cos.f64",       true, f64, f64);
         TRY_REGISTER_FUNC("host.math.tan.f64",       true, f64, f64);
@@ -203,6 +205,7 @@ llvm::Value *process_host_intrinsic_op(
     CUJ_HOST_MATH_INTRINSIC("math.log10.f32");
     CUJ_HOST_MATH_INTRINSIC("math.pow.f32");
     CUJ_HOST_MATH_INTRINSIC("math.sqrt.f32");
+    CUJ_HOST_MATH_INTRINSIC("math.rsqrt.f32");
     CUJ_HOST_MATH_INTRINSIC("math.sin.f32");
     CUJ_HOST_MATH_INTRINSIC("math.cos.f32");
     CUJ_HOST_MATH_INTRINSIC("math.tan.f32");
@@ -228,6 +231,7 @@ llvm::Value *process_host_intrinsic_op(
     CUJ_HOST_MATH_INTRINSIC("math.log10.f64");
     CUJ_HOST_MATH_INTRINSIC("math.pow.f64");
     CUJ_HOST_MATH_INTRINSIC("math.sqrt.f64");
+    CUJ_HOST_MATH_INTRINSIC("math.rsqrt.f64");
     CUJ_HOST_MATH_INTRINSIC("math.sin.f64");
     CUJ_HOST_MATH_INTRINSIC("math.cos.f64");
     CUJ_HOST_MATH_INTRINSIC("math.tan.f64");

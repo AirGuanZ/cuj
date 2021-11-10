@@ -164,6 +164,9 @@ namespace
     int is_inf_f64   (double x) { return std::isinf(x); }
     int is_nan_f64   (double x) { return std::isnan(x); }
 
+    float  rsqrt_f32(float x)  { return 1 / std::sqrt(x); }
+    double rsqrt_f64(double x) { return 1 / std::sqrt(x); }
+
     void print(const char *msg)
     {
         std::cout << msg;
@@ -232,6 +235,7 @@ void NativeJIT::generate(const ir::Program &prog, const Options &opts)
     ADD_HOST_FUNC("host.math.log10.f32",     &::log10f);
     ADD_HOST_FUNC("host.math.pow.f32",       &::powf);
     ADD_HOST_FUNC("host.math.sqrt.f32",      &::sqrtf);
+    ADD_HOST_FUNC("host.math.rsqrt.f32",     &rsqrt_f32);
     ADD_HOST_FUNC("host.math.sin.f32",       &::sinf);
     ADD_HOST_FUNC("host.math.cos.f32",       &::cosf);
     ADD_HOST_FUNC("host.math.tan.f32",       &::tanf);
@@ -260,6 +264,7 @@ void NativeJIT::generate(const ir::Program &prog, const Options &opts)
     ADD_HOST_FUNC("host.math.log10.f64",     static_cast<DD> (&::log10));
     ADD_HOST_FUNC("host.math.pow.f64",       static_cast<DD2>(&::pow));
     ADD_HOST_FUNC("host.math.sqrt.f64",      static_cast<DD> (&::sqrt));
+    ADD_HOST_FUNC("host.math.rsqrt.f64",     &rsqrt_f64);
     ADD_HOST_FUNC("host.math.sin.f64",       static_cast<DD> (&::sin));
     ADD_HOST_FUNC("host.math.cos.f64",       static_cast<DD> (&::cos));
     ADD_HOST_FUNC("host.math.tan.f64",       static_cast<DD> (&::tan));

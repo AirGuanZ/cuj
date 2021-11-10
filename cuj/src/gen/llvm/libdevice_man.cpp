@@ -65,6 +65,7 @@ const char *get_libdevice_function_name(
         case IntrinsicBasicMathFunctionType::log10:     return "__nv_log10f";
         case IntrinsicBasicMathFunctionType::pow:       return "__nv_powf";
         case IntrinsicBasicMathFunctionType::sqrt:      return "__nv_sqrtf";
+        case IntrinsicBasicMathFunctionType::rsqrt:     return "__nv_rsqrtf";
         case IntrinsicBasicMathFunctionType::sin:       return "__nv_sinf";
         case IntrinsicBasicMathFunctionType::cos:       return "__nv_cosf";
         case IntrinsicBasicMathFunctionType::tan:       return "__nv_tanf";
@@ -95,6 +96,7 @@ const char *get_libdevice_function_name(
         case IntrinsicBasicMathFunctionType::log10:     return "__nv_log10";
         case IntrinsicBasicMathFunctionType::pow:       return "__nv_pow";
         case IntrinsicBasicMathFunctionType::sqrt:      return "__nv_sqrt";
+        case IntrinsicBasicMathFunctionType::rsqrt:     return "__nv_rsqrt";
         case IntrinsicBasicMathFunctionType::sin:       return "__nv_sin";
         case IntrinsicBasicMathFunctionType::cos:       return "__nv_cos";
         case IntrinsicBasicMathFunctionType::tan:       return "__nv_tan";

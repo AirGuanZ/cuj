@@ -24,7 +24,7 @@ CUJ_PROXY_CLASS(NAME, BASE, x, y, z, w)                                         
     auto max_elem() const { return max(max(x, y), max(z, w)); }                 \
     auto normalize() const                                                      \
     {                                                                           \
-        COMP f = 1 / length();                                                  \
+        COMP f = rsqrt(length_square());                                        \
         return NAME(f * x, f * y, f * z, f * w);                                \
     }                                                                           \
 };

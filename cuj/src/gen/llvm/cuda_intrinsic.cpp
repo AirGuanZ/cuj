@@ -275,7 +275,8 @@ llvm::Value *process_cuda_intrinsic_op(
     llvm::Module                     *top_module,
     llvm::IRBuilder<>                &ir,
     const std::string                &name,
-    const std::vector<llvm::Value *> &args)
+    const std::vector<llvm::Value *> &args,
+    bool                              approx_math_funcs)
 {
 #define CUJ_CUDA_INTRINSIC_SREG(NAME, ID)                                       \
     do {                                                                        \
@@ -313,6 +314,42 @@ llvm::Value *process_cuda_intrinsic_op(
         }                                                                       \
     } while(false)
 
+    if(approx_math_funcs && name == "math.sin.f32")
+    {
+        return ir.CreateIntrinsic(
+            llvm::Intrinsic::nvvm_sin_approx_ftz_f, {}, args);
+    }
+
+    if(approx_math_funcs && name == "math.cos.f32")
+    {
+        return ir.CreateIntrinsic(
+            llvm::Intrinsic::nvvm_cos_approx_ftz_f, {}, args);
+    }
+
+    if(approx_math_funcs && name == "math.sqrt.f32")
+    {
+        return ir.CreateIntrinsic(
+            llvm::Intrinsic::nvvm_sqrt_approx_ftz_f, {}, args);
+    }
+
+    if(approx_math_funcs && name == "math.floor.f32")
+    {
+        return ir.CreateIntrinsic(
+            llvm::Intrinsic::nvvm_floor_f, {}, args);
+    }
+
+    if(approx_math_funcs && name == "math.ceil.f32")
+    {
+        return ir.CreateIntrinsic(
+            llvm::Intrinsic::nvvm_ceil_f, {}, args);
+    }
+
+    if(approx_math_funcs && name == "math.rsqrt.f32")
+    {
+        return ir.CreateIntrinsic(
+            llvm::Intrinsic::nvvm_rsqrt_approx_ftz_f, {}, args);
+    }
+
     CUJ_CALL_LIBDEVICE(abs,       true);
     CUJ_CALL_LIBDEVICE(mod,       true);
     CUJ_CALL_LIBDEVICE(remainder, true);
@@ -323,6 +360,7 @@ llvm::Value *process_cuda_intrinsic_op(
     CUJ_CALL_LIBDEVICE(log10,     true);
     CUJ_CALL_LIBDEVICE(pow,       true);
     CUJ_CALL_LIBDEVICE(sqrt,      true);
+    CUJ_CALL_LIBDEVICE(rsqrt,     true);
     CUJ_CALL_LIBDEVICE(sin,       true);
     CUJ_CALL_LIBDEVICE(cos,       true);
     CUJ_CALL_LIBDEVICE(tan,       true);
@@ -348,6 +386,7 @@ llvm::Value *process_cuda_intrinsic_op(
     CUJ_CALL_LIBDEVICE(log10,     false);
     CUJ_CALL_LIBDEVICE(pow,       false);
     CUJ_CALL_LIBDEVICE(sqrt,      false);
+    CUJ_CALL_LIBDEVICE(rsqrt,     false);
     CUJ_CALL_LIBDEVICE(sin,       false);
     CUJ_CALL_LIBDEVICE(cos,       false);
     CUJ_CALL_LIBDEVICE(tan,       false);

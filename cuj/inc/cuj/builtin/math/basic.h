@@ -16,6 +16,7 @@ enum class IntrinsicBasicMathFunctionType
     log10,
     pow,
     sqrt,
+    rsqrt,
     sin,
     cos,
     tan,
@@ -45,6 +46,7 @@ f32 log2     (const f32 &x);
 f32 log10    (const f32 &x);
 f32 pow      (const f32 &x, const f32 &y);
 f32 sqrt     (const f32 &x);
+f32 rsqrt    (const f32 &x);
 f32 sin      (const f32 &x);
 f32 cos      (const f32 &x);
 f32 tan      (const f32 &x);
@@ -70,6 +72,7 @@ f64 log2     (const f64 &x);
 f64 log10    (const f64 &x);
 f64 pow      (const f64 &x, const f64 &y);
 f64 sqrt     (const f64 &x);
+f64 rsqrt    (const f64 &x);
 f64 sin      (const f64 &x);
 f64 cos      (const f64 &x);
 f64 tan      (const f64 &x);
@@ -85,7 +88,9 @@ i32 isfinite (const f64 &x);
 i32 isinf    (const f64 &x);
 i32 isnan    (const f64 &x);
 
+inline i32 abs(i32 x) { return select(x >= 0, x, -x); }
 inline i32 sqrt(i32 x) { return cast<i32>(sqrt(cast<f64>(x))); }
+inline i32 rsqrt(i32 x) { return 0; }
 
 template<typename T>
 ArithmeticValue<T> min(

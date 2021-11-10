@@ -20,7 +20,7 @@ CUJ_PROXY_CLASS(NAME, BASE, x)                                                  
     auto operator[](const Value<size_t> &idx) const                             \
     { return Value<COMP>((x.address() + idx).deref().get_impl()); }             \
     auto length_square() const { return x * x; }                                \
-    auto length() const { return sqrt(length_square()); }                       \
+    auto length() const { return abs(x); }                                      \
     auto min_elem() const { return x; }                                         \
     auto max_elem() const { return x; }                                         \
     auto normalize() const { return NAME(x / length()); }                       \
