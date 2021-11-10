@@ -91,8 +91,6 @@ namespace
         machine->adjustPassManager(pass_mgr_builder);
 
         llvm::legacy::PassManager passes;
-        passes.add(
-            createTargetTransformInfoWrapperPass(machine->getTargetIRAnalysis()));
         pass_mgr_builder.populateModulePassManager(passes);
 
         passes.run(*llvm_module);

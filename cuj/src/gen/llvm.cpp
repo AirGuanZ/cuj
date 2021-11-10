@@ -256,6 +256,12 @@ void LLVMIRGenerator::generate(const ir::Program &prog, llvm::DataLayout *dl)
     {
         data_->top_module->setTargetTriple("nvptx64-nvidia-cuda");
         link_with_libdevice(llvm_ctx.get(), data_->top_module.get());
+
+        if(fast_math_)
+        {
+            data_->top_module->addModuleFlag(
+                llvm::Module::Override, "nvvm-reflect-ftz", 1);
+        }
     }
 #endif
 
@@ -289,6 +295,11 @@ void LLVMIRGenerator::generate(const ir::Program &prog, llvm::DataLayout *dl)
         {
             auto llvm_func = generate_func(*func);
             all_funcs.insert(llvm_func);
+
+#ifdef CUJ_ENABLE_CUDA
+            if(fast_math_ && target_ == Target::PTX)
+                llvm_func->addFnAttr("nvptx-f32ftz", "true");
+#endif
         },
             [&](const RC<ir::ImportedHostFunction> &func)
         {
