@@ -209,23 +209,23 @@ auto another_function = to_callable<float>([&]
 #### Define Arithmetic Variables
 
 ```cpp
-Value<int32_t> x = 0;
+Var<int32_t> x = 0;
 i32            y = x + 1;
 ```
 
-You can use `cuj::Value<T>` for converting a C++ arithmetic type `T` to its corresponding CUJ type. You can also use following aliases for convenience
+You can use `cuj::Var<T>` for converting a C++ arithmetic type `T` to its corresponding CUJ type. You can also use following aliases for convenience
 
 ```cpp
-f32/f64        -> Value<float/double>
-i8/i16/i32/i64 -> Value<int8_t/int16_t/int32_t/int64_t>
-u8/u16/u32/u64 -> Value<uint8_t/uint16_t/uint32_t/uint64_t>
-boolean        -> Value<bool>
+f32/f64        -> Var<float/double>
+i8/i16/i32/i64 -> Var<int8_t/int16_t/int32_t/int64_t>
+u8/u16/u32/u64 -> Var<uint8_t/uint16_t/uint32_t/uint64_t>
+boolean        -> Var<bool>
 ```
 
 #### Define Pointers
 
 ```cpp
-Value<float*>  px = nullptr;
+Var<float*>  px = nullptr;
 Pointer<float> py = px;
 
 f32 z = 0.0f;

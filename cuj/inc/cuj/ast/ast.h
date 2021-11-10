@@ -36,6 +36,9 @@ using ast::Pointer;
 using ast::Value;
 using ast::Variable;
 
+template<typename T>
+using Var = Variable<T>;
+
 using ast::import_function;
 using ast::to_callable;
 using ast::to_kernel;
