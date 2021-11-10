@@ -125,7 +125,7 @@ CUJ_NAMESPACE_END(cuj)
 
 #define $return(...)                                                            \
     do {                                                                        \
-        ::cuj::ast::ReturnBuilder t(__VA_ARGS__);                               \
+        ::cuj::ast::ReturnBuilder t{__VA_ARGS__};                               \
     } while(false)
 
 #define $switch(VALUE) ::cuj::ast::SwitchBuilder(VALUE)+[&]

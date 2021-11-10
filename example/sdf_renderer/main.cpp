@@ -58,7 +58,7 @@ std::string generate_ptx()
     ScopedContext ctx;
 
     auto intersect_light = to_callable<f32>(
-        [](const Vec3f &pos, const Vec3f &dir)
+        "intersect_light", [](const Vec3f &pos, const Vec3f &dir)
     {
         Vec3f light_loc(LIGHT_POS[0], LIGHT_POS[1], LIGHT_POS[2]);
         f32 dotv = -dot(dir, Vec3f(LIGHT_NOR[0], LIGHT_NOR[1], LIGHT_NOR[2]));
@@ -67,8 +67,8 @@ std::string generate_ptx()
         $if(dotv > 0 && dist > 0)
         {
             f32 D = dist / dotv;
-            f32 dist_to_center = (light_loc - (pos + D * dir)).length();
-            $if(dist_to_center < LIGHT_RADIUS *LIGHT_RADIUS)
+            f32 dist_to_center = (light_loc - (pos + D * dir)).length_square();
+            $if(dist_to_center < LIGHT_RADIUS * LIGHT_RADIUS)
             {
                 dist_to_light = D;
             };
@@ -76,7 +76,8 @@ std::string generate_ptx()
         $return(dist_to_light);
     });
 
-    auto out_dir = to_callable<Vec3f>([](const Vec3f &n, Pointer<PCG> pcg)
+    auto out_dir = to_callable<Vec3f>(
+        "out_dir", [](const Vec3f &n, Pointer<PCG> pcg)
     {
         Vec3f u(1.0f, 0.0f, 0.0f);
         $if(abs(n[1]) < 1 - EPS)
@@ -90,7 +91,8 @@ std::string generate_ptx()
         $return(ax * (cos(phi) * u + sin(phi) * v) + ay * n);
     });
 
-    auto make_nested = to_callable<f32>([](f32 f)
+    auto make_nested = to_callable<f32>(
+        "make_nested", [](f32 f)
     {
         f = f * 40;
         i32 i = cast<i32>(f);
@@ -109,7 +111,8 @@ std::string generate_ptx()
         $return(f);
     });
 
-    auto sdf = to_callable<f32>([&](Vec3f o)
+    auto sdf = to_callable<f32>(
+        "sdf", [&](Vec3f o)
     {
         f32 wall = min(o[1] + 0.1f, o[2] + 0.4f);
         f32 sphere = (o - Vec3f(0.0f, 0.35f, 0.0f)).length() - 0.36f;
@@ -128,19 +131,34 @@ std::string generate_ptx()
         $return(min(wall, geometry));
     });
 
-    auto ray_march = to_callable<f32>([&](const Vec3f &p, const Vec3f &d)
+    auto ray_march = to_callable<f32>(
+        "ray_march", [&](const Vec3f &p, const Vec3f &d)
     {
         i32 j = 0;
         f32 dist = 0.0f;
-        $while(j < 100 && sdf(p + dist * d) > 1e-6f && dist < INF)
+
+        $while(true)
         {
+            $if(j >= 100 || dist >= INF)
+            {
+                $break;
+            };
+
+            f32 s = sdf(p + dist * d);
+            $if(s <= 1e-6f)
+            {
+                $break;
+            };
+
             dist = dist + sdf(p + dist * d);
             j = j + 1;
         };
+        
         $return(min(f32(INF), dist));
     });
 
-    auto sdf_normal = to_callable<Vec3f>([&](const Vec3f &p)
+    auto sdf_normal = to_callable<Vec3f>(
+        "sdf_normal", [&](const Vec3f &p)
     {
         f32 d = 1e-3f;
         Vec3f n(0.0f, 0.0f, 0.0f);
@@ -154,7 +172,7 @@ std::string generate_ptx()
         $return(n.normalize());
     });
 
-    auto next_hit = to_callable<void>([&](
+    auto next_hit = to_callable<void>("next_hit", [&](
         const Vec3f   &pos,
         const Vec3f   &d, 
         Pointer<f32>   closest,
@@ -180,7 +198,7 @@ std::string generate_ptx()
         };
     });
 
-    auto render_pixel = to_callable<void>([&](
+    auto render_pixel = to_callable<void>("render_pixel", [&](
         Pointer<Vec3f> color_buffer, i32 x, i32 y, Pointer<PCG> rng)
     {
         Vec3f pos(CAMERA_POS[0], CAMERA_POS[1], CAMERA_POS[2]);
@@ -194,7 +212,7 @@ std::string generate_ptx()
         Vec3f throughput(1.0f, 1.0f, 1.0f);
 
         i32 depth = 0;
-        boolean hit_light = true;
+        boolean hit_light = false;
 
         $while(depth < MAX_DEPTH)
         {
@@ -216,7 +234,7 @@ std::string generate_ptx()
                 $if(normal.length_square() != 0.0f)
                 {
                     d = out_dir(normal, rng);
-                    pos = hit_pos + 1e-4 * d;
+                    pos = hit_pos + 1e-3 * d;
                     throughput = c * throughput;
                 }
                 $else
@@ -235,11 +253,18 @@ std::string generate_ptx()
     });
 
     auto render = to_kernel(
-        "render", [&](Pointer<Vec3f> color_buffer, i32 spp, i32 iter)
+        "render", [&](
+            Pointer<Vec3f> color_buffer, i32 x_thread_count, i32 spp, i32 iter)
     {
         i32 x = block_index_x() * block_dim_x() + thread_index_x();
         i32 y = block_index_y() * block_dim_y() + thread_index_y();
-        $if(x < WIDTH && y < HEIGHT)
+
+        $if(y >= HEIGHT)
+        {
+            $return();
+        };
+
+        $while(x < WIDTH)
         {
             PCG pcg(cast<u64>((iter + 1) * (y * WIDTH + x)));
 
@@ -249,6 +274,8 @@ std::string generate_ptx()
                 i = i + 1;
                 render_pixel(color_buffer, x, y, pcg.address());
             };
+
+            x = x + x_thread_count;
         };
     });
 
@@ -281,21 +308,22 @@ void run()
     constexpr int BLOCK_SIZE_X = 8;
     constexpr int BLOCK_SIZE_Y = 8;
 
-    constexpr int BLOCK_COUNT_X = (WIDTH + BLOCK_SIZE_X  - 1) / BLOCK_SIZE_X;
+    constexpr int BLOCK_COUNT_X = 16;
     constexpr int BLOCK_COUNT_Y = (HEIGHT + BLOCK_SIZE_Y - 1) / BLOCK_SIZE_Y;
 
     std::cout << "start rendering" << std::endl;
     const auto start_time = std::chrono::steady_clock::now();
 
-    int iters = 16;
-    int spp   = 10;
+    int x_thread_count = BLOCK_SIZE_X * BLOCK_COUNT_X;
+    int iters = 4;
+    int spp = 10;
     for(int i = 0; i < iters; ++i)
     {
         cuda_module.launch(
             "render",
             { BLOCK_COUNT_X, BLOCK_COUNT_Y, 1 },
             { BLOCK_SIZE_X, BLOCK_SIZE_Y, 1 },
-            device_color_buffer, spp, i);
+            device_color_buffer, x_thread_count, spp, i);
     }
 
     cudaDeviceSynchronize();
@@ -312,19 +340,26 @@ void run()
         sizeof(float) * color_buffer.size(),
         cudaMemcpyDeviceToHost));
 
+    float mean = 0;
+    for(float x : color_buffer)
+        mean += x;
+    mean /= color_buffer.size();
+    for(float &x : color_buffer)
+        x = x / mean * 0.24f;
+
     std::ofstream fout("output.ppm");
     if(!fout)
     {
         throw std::runtime_error(
             "failed to create output image: output.ppm");
     }
-
+    
     fout << "P3\n" << WIDTH << " " << HEIGHT << std::endl << 255 << std::endl;
     for(int i = 0, j = 0; i < WIDTH * HEIGHT; ++i, j += 3)
     {
-        const float rf = color_buffer[j]     / (iters * spp);
-        const float gf = color_buffer[j + 1] / (iters * spp);
-        const float bf = color_buffer[j + 2] / (iters * spp);
+        const float rf = color_buffer[j];
+        const float gf = color_buffer[j + 1];
+        const float bf = color_buffer[j + 2];
 
         const int ri = std::min(255, static_cast<int>(std::pow(rf, 1 / 2.2f) * 255));
         const int gi = std::min(255, static_cast<int>(std::pow(gf, 1 / 2.2f) * 255));

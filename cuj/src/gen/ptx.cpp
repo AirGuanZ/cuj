@@ -78,6 +78,7 @@ namespace
         }
         pass_mgr_builder.Inliner = llvm::createFunctionInliningPass(
             pass_mgr_builder.OptLevel, 0, false);
+        pass_mgr_builder.SLPVectorize = true;
         pass_mgr_builder.MergeFunctions = true;
 
         {
