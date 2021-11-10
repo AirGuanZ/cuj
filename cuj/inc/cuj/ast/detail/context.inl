@@ -329,19 +329,20 @@ inline std::string Context::gen_llvm_string(
     return llvm_gen.get_string();
 }
 
-inline gen::NativeJIT Context::gen_native_jit(gen::OptLevel opt) const
+inline gen::NativeJIT Context::gen_native_jit(
+    gen::OptLevel opt, bool fast_math) const
 {
     gen::NativeJIT jit;
-    jit.generate(gen_ir(), opt);
+    jit.generate(gen_ir(), { opt, fast_math, true });
     return jit;
 }
 
 #if CUJ_ENABLE_CUDA
 
-inline std::string Context::gen_ptx(gen::OptLevel opt) const
+inline std::string Context::gen_ptx(gen::OptLevel opt, bool fast_math) const
 {
     gen::PTXGenerator generator;
-    generator.generate(gen_ir(), opt);
+    generator.generate(gen_ir(), { opt, fast_math, true });
     return generator.get_result();
 }
 

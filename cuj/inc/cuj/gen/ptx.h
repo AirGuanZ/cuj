@@ -10,10 +10,16 @@ class PTXGenerator
 {
 public:
 
-    static std::string generate_llvm_ir(
-        const ir::Program &prog, OptLevel opt = OptLevel::Default);
+    struct Options
+    {
+        OptLevel opt_level  = OptLevel::Default;
+        bool     fast_math  = false;
+        bool     enable_slp = true;
+    };
     
     void generate(const ir::Program &prog, OptLevel opt = OptLevel::Default);
+
+    void generate(const ir::Program &prog, const Options &opts);
 
     const std::string &get_result() const;
 

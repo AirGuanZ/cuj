@@ -44,6 +44,8 @@ public:
 
     void set_target(Target target);
 
+    void use_fast_math();
+
     void generate(const ir::Program &prog, llvm::DataLayout *dl = nullptr);
 
     llvm::Module *get_module() const;
@@ -161,9 +163,9 @@ private:
     ir::BuiltinType get_arithmetic_type(const ir::BasicValue &v);
 
     llvm::Value *i1_to_bool(llvm::Value *val);
-    
-    Target target_ = Target::Host;
 
+    bool fast_math_       = false;
+    Target target_        = Target::Host;
     llvm::DataLayout *dl_ = nullptr;
     
     Data *data_ = nullptr;

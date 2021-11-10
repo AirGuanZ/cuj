@@ -279,7 +279,7 @@ std::string generate_ptx()
         };
     });
 
-    return ctx.gen_ptx(gen::OptLevel::O3);
+    return ctx.gen_ptx(gen::OptLevel::O3, true);
 }
 
 void run()

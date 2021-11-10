@@ -14,6 +14,7 @@ public:
     struct Options
     {
         OptLevel opt_level  = OptLevel::Default;
+        bool     fast_math  = false;
         bool     enable_slp = true;
     };
 

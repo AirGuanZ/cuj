@@ -9,8 +9,6 @@
 #pragma warning(disable: 4996)
 #endif
 
-#include <llvm/Target/TargetLoweringObjectFile.h>
-
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/CodeGen/MachineModuleInfo.h>
@@ -42,7 +40,7 @@ namespace
     };
 
     IntermediateModule construct_intermediate_module(
-        const ir::Program &prog, OptLevel opt)
+        const ir::Program &prog, const PTXGenerator::Options opts)
     {
         LLVMInitializeNVPTXTargetInfo();
         LLVMInitializeNVPTXTarget();
@@ -56,11 +54,13 @@ namespace
             throw CUJException(err);
 
         auto machine = target->createTargetMachine(
-            target_triple, "sm_20", "+ptx63", {}, {},
+            target_triple, "sm_60", "+ptx63", {}, {},
             {}, llvm::CodeGenOpt::Aggressive);
         auto data_layout = machine->createDataLayout();
 
         LLVMIRGenerator ir_gen;
+        if(opts.fast_math)
+            ir_gen.use_fast_math();
         ir_gen.set_target(LLVMIRGenerator::Target::PTX);
         ir_gen.generate(prog, &data_layout);
 
@@ -69,7 +69,7 @@ namespace
         llvm_module->setDataLayout(data_layout);
 
         llvm::PassManagerBuilder pass_mgr_builder;
-        switch(opt)
+        switch(opts.opt_level)
         {
         case OptLevel::O0: pass_mgr_builder.OptLevel = 0; break;
         case OptLevel::O1: pass_mgr_builder.OptLevel = 1; break;
@@ -78,7 +78,7 @@ namespace
         }
         pass_mgr_builder.Inliner = llvm::createFunctionInliningPass(
             pass_mgr_builder.OptLevel, 0, false);
-        pass_mgr_builder.SLPVectorize = true;
+        pass_mgr_builder.SLPVectorize = opts.enable_slp;
         pass_mgr_builder.MergeFunctions = true;
 
         {
@@ -106,22 +106,15 @@ namespace
 
 } // namespace anonymouos
 
-std::string PTXGenerator::generate_llvm_ir(
-    const ir::Program &prog, OptLevel opt)
-{
-    auto im = construct_intermediate_module(prog, opt);
-
-    std::string result;
-    llvm::raw_string_ostream ss(result);
-    ss << *im.llvm_module;
-    ss.flush();
-    return result;
-}
-
 void PTXGenerator::generate(const ir::Program &prog, OptLevel opt)
 {
-    auto im = construct_intermediate_module(prog, opt);
-    
+    generate(prog, Options{ opt, false, true });
+}
+
+void PTXGenerator::generate(const ir::Program &prog, const Options &opts)
+{
+    auto im = construct_intermediate_module(prog, opts);
+
     llvm::legacy::PassManager passes;
     llvm::SmallString<8> output_buf;
     llvm::raw_svector_ostream output_stream(output_buf);

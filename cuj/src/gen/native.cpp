@@ -69,6 +69,8 @@ namespace
         auto data_layout = machine->createDataLayout();
         
         LLVMIRGenerator llvm_gen;
+        if(opts.fast_math)
+            llvm_gen.use_fast_math();
         llvm_gen.set_target(LLVMIRGenerator::Target::Host);
         llvm_gen.generate(prog, &data_layout);
 
@@ -181,7 +183,7 @@ namespace
 
 void NativeJIT::generate(const ir::Program &prog, OptLevel opt)
 {
-    generate(prog, { opt, true });
+    generate(prog, { opt, false, true });
 }
 
 void NativeJIT::generate(const ir::Program &prog, const Options &opts)

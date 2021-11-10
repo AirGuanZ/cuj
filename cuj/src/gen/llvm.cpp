@@ -220,6 +220,11 @@ LLVMIRGenerator::~LLVMIRGenerator()
     delete data_;
 }
 
+void LLVMIRGenerator::use_fast_math()
+{
+    fast_math_ = true;
+}
+
 void LLVMIRGenerator::set_target(Target target)
 {
     target_ = target;
@@ -238,6 +243,13 @@ void LLVMIRGenerator::generate(const ir::Program &prog, llvm::DataLayout *dl)
     
     data_->ir_builder = newBox<llvm::IRBuilder<>>(*llvm_ctx);
     data_->top_module = newBox<llvm::Module>("cuj", *llvm_ctx);
+
+    if(fast_math_)
+    {
+        llvm::FastMathFlags flags;
+        flags.setFast(true);
+        data_->ir_builder->setFastMathFlags(flags);
+    }
 
 #if CUJ_ENABLE_CUDA
     if(target_ == Target::PTX)

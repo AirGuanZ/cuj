@@ -106,12 +106,12 @@ public:
         gen::LLVMIRGenerator::Target target) const;
     
     gen::NativeJIT gen_native_jit(
-        gen::OptLevel opt = gen::OptLevel::Default) const;
+        gen::OptLevel opt = gen::OptLevel::Default, bool fast_math = false) const;
     
 #if CUJ_ENABLE_CUDA
     
     std::string gen_ptx(
-        gen::OptLevel opt = gen::OptLevel::Default) const;
+        gen::OptLevel opt = gen::OptLevel::Default, bool fast_math = false) const;
 
 #endif
 
