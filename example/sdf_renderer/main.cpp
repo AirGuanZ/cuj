@@ -157,30 +157,12 @@ Vec3f sdf_normal(const Vec3f &p)
     constexpr float d = 1e-3f;
     Vec3f n(0.0f, 0.0f, 0.0f);
     f32 sdf_center = sdf(p);
-
-    $if(sdf_center > 1e-3f)
+    for(int i = 0; i < 3; ++i)
     {
-        n = Vec3f(0.0f, 0.0f, 0.0f);
+        Vec3f inc = p;
+        inc[i] = inc[i] + d;
+        n[i] = 1 / d * (sdf(inc) - sdf_center);
     }
-    $else
-    {
-        {
-            Vec3f inc = p;
-            inc.x = inc.x + d;
-            n.x = (1 / d) * (sdf(inc) - sdf_center);
-        }
-        {
-            Vec3f inc = p;
-            inc.y = inc.y + d;
-            n.y = (1 / d) * (sdf(inc) - sdf_center);
-        }
-        {
-            Vec3f inc = p;
-            inc.z = inc.z + d;
-            n.z = (1 / d) * (sdf(inc) - sdf_center);
-        }
-    };
-
     return n.normalize();
 }
 
@@ -281,8 +263,7 @@ std::string generate_ptx()
         };
     });
 
-    //return ctx.gen_ptx(gen::OptLevel::O3, true);
-    return ctx.gen_ptx_nvrtc(false, true);
+    return ctx.gen_ptx(gen::OptLevel::O3, true);
 }
 
 void run()

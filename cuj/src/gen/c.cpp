@@ -92,7 +92,7 @@ std::string CGenerator::get_string() const
         std::string result;
         for(auto b : data)
         {
-            char chs[5];
+            char chs[10];
             sprintf(chs, "0x%02x, ", b);
             result += chs;
         }
@@ -637,20 +637,20 @@ void CGenerator::generate_value(const ir::BasicValue &val)
 
 void CGenerator::generate_value(const ir::BasicImmediateValue &val)
 {
-#define CUJ_GENERATE_IMMEDIATE_VAL(TYPE) \
-    [&](TYPE v) { str_.append("(" #TYPE ")", v); }
+#define CUJ_GENERATE_IMMEDIATE_VAL(OLD_TYPE, LITERAL_TYPE) \
+    [&](OLD_TYPE v) { str_.append("(" #LITERAL_TYPE ")", v); }
     val.value.match(
-        CUJ_GENERATE_IMMEDIATE_VAL(unsigned char),
-        CUJ_GENERATE_IMMEDIATE_VAL(unsigned short),
-        CUJ_GENERATE_IMMEDIATE_VAL(unsigned int),
-        CUJ_GENERATE_IMMEDIATE_VAL(unsigned long long),
-        CUJ_GENERATE_IMMEDIATE_VAL(signed char),
-        CUJ_GENERATE_IMMEDIATE_VAL(signed short),
-        CUJ_GENERATE_IMMEDIATE_VAL(signed int),
-        CUJ_GENERATE_IMMEDIATE_VAL(signed long long),
-        CUJ_GENERATE_IMMEDIATE_VAL(float),
-        CUJ_GENERATE_IMMEDIATE_VAL(double),
-        CUJ_GENERATE_IMMEDIATE_VAL(char),
+        CUJ_GENERATE_IMMEDIATE_VAL(uint8_t,  unsigned char),
+        CUJ_GENERATE_IMMEDIATE_VAL(uint16_t, unsigned short),
+        CUJ_GENERATE_IMMEDIATE_VAL(uint32_t, unsigned int),
+        CUJ_GENERATE_IMMEDIATE_VAL(uint64_t, unsigned long long),
+        CUJ_GENERATE_IMMEDIATE_VAL(int8_t,   signed char),
+        CUJ_GENERATE_IMMEDIATE_VAL(int16_t,  signed short),
+        CUJ_GENERATE_IMMEDIATE_VAL(int32_t,  signed int),
+        CUJ_GENERATE_IMMEDIATE_VAL(int64_t,  signed long long),
+        CUJ_GENERATE_IMMEDIATE_VAL(float,    float),
+        CUJ_GENERATE_IMMEDIATE_VAL(double,   double),
+        CUJ_GENERATE_IMMEDIATE_VAL(char,     char),
         [&](bool v)
     {
         str_.append(v ? 1 : 0);
