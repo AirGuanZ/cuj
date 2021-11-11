@@ -23,7 +23,7 @@ TEST_CASE("function")
 
         to_callable<int>("add_ints_1", define_add_ints);
 
-        ctx.begin_function<int(int*, int)>("add_ints_2");
+        ctx.begin_function<i32(Pointer<i32>, i32)>("add_ints_2");
         {
             $arg(int *, int_ptr);
             $arg(int,   num);
@@ -104,7 +104,7 @@ TEST_CASE("function")
             $return(math::make_vec2f(x, y));
         });
 
-        auto test_make_vec2f = to_callable<float>(
+        auto test_make_vec2f = to_callable<f32>(
             [&](f32 x, f32 y)
         {
             math::Vec2f v = my_make_vec2f(x, y);
@@ -134,7 +134,7 @@ TEST_CASE("function")
             $return(arr);
         });
 
-        auto test_make_arr4 = to_callable<int>(
+        auto test_make_arr4 = to_callable<i32>(
             [&](i32 x, i32 y, i32 z, i32 w)
         {
             Array<int, 4> arr = my_make_arr4(x, y, z, w);
@@ -195,7 +195,7 @@ TEST_CASE("function")
     {
         ScopedContext ctx;
 
-        auto func = to_callable<int>([](i32 n)
+        auto func = to_callable<i32>([](i32 n)
         {
             i32 c = 0, i = 0;
 
@@ -294,6 +294,43 @@ TEST_CASE("function")
             entry_func(2, &a, &b);
             REQUIRE(a == 1);
             REQUIRE(b == 1);
+        }
+    }
+
+    SECTION("recursive function")
+    {
+        ScopedContext ctx;
+
+        auto fib = declare<i32(i32)>();
+
+        fib.define([&](i32 i)
+        {
+            $if(i <= 0)
+            {
+                $return(0);
+            }
+            $elif(i == 1)
+            {
+                $return(1);
+            }
+            $else
+            {
+                $return(fib(i - 1) + fib(i - 2));
+            };
+        });
+
+        auto jit = ctx.gen_native_jit();
+        auto fib_func = jit.get_function(fib);
+
+        REQUIRE(fib_func);
+        if(fib_func)
+        {
+            REQUIRE(fib_func(0) == 0);
+            REQUIRE(fib_func(1) == 1);
+            REQUIRE(fib_func(2) == 1);
+            REQUIRE(fib_func(3) == 2);
+            REQUIRE(fib_func(4) == 3);
+            REQUIRE(fib_func(5) == 5);
         }
     }
 }

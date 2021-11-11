@@ -354,11 +354,6 @@ std::string IRPrinter::get_typename(const ir::ArrayType &type) const
     return get_typename(type.elem_type) + "[" + std::to_string(type.size) + "]";
 }
 
-std::string IRPrinter::get_typename(const ir::IntrinsicType &type) const
-{
-    return "intrinsic " + type.name;
-}
-
 std::string IRPrinter::get_typename(const ir::PointerType &type) const
 {
     return "ptr<" + get_typename(type.pointed_type) + ">";

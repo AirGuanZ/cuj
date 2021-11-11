@@ -60,7 +60,6 @@ private:
     
     static llvm::Type *create_llvm_type_record(      ir::BuiltinType    type);
     static llvm::Type *create_llvm_type_record(const ir::ArrayType     &type);
-    static llvm::Type *create_llvm_type_record(const ir::IntrinsicType &type);
     static llvm::Type *create_llvm_type_record(const ir::PointerType   &type);
     static llvm::Type *create_llvm_type_record(const ir::StructType    &type);
 

@@ -402,11 +402,6 @@ llvm::Type *LLVMIRGenerator::create_llvm_type_record(const ir::ArrayType &type)
     return result;
 }
 
-llvm::Type *LLVMIRGenerator::create_llvm_type_record(const ir::IntrinsicType &type)
-{
-    throw CUJException("unknown intrinsic type: " + type.name);
-}
-
 llvm::Type *LLVMIRGenerator::create_llvm_type_record(const ir::PointerType &type)
 {
     llvm::Type *elem_type;
@@ -1018,26 +1013,6 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::BinaryOp &v)
 {
     auto lhs = get_value(v.lhs);
     auto rhs = get_value(v.rhs);
-
-    if(v.type == ir::BinaryOp::Type::LeftShift)
-    {
-        const auto ltype = get_arithmetic_type(v.lhs);
-        const auto rtype = get_arithmetic_type(v.rhs);
-        CUJ_INTERNAL_ASSERT(is_builtin_integral(ltype));
-        CUJ_INTERNAL_ASSERT(!is_builtin_signed(ltype));
-        CUJ_INTERNAL_ASSERT(is_builtin_integral(rtype));
-        return data_->ir_builder->CreateShl(lhs, rhs);
-    }
-
-    if(v.type == ir::BinaryOp::Type::RightShift)
-    {
-        const auto ltype = get_arithmetic_type(v.lhs);
-        const auto rtype = get_arithmetic_type(v.rhs);
-        CUJ_INTERNAL_ASSERT(is_builtin_integral(ltype));
-        CUJ_INTERNAL_ASSERT(!is_builtin_signed(ltype));
-        CUJ_INTERNAL_ASSERT(is_builtin_integral(rtype));
-        return data_->ir_builder->CreateLShr(lhs, rhs);
-    }
     
     const ir::BuiltinType operand_type = get_arithmetic_type(v.lhs);
     CUJ_INTERNAL_ASSERT(operand_type == get_arithmetic_type(v.rhs));
@@ -1111,6 +1086,18 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::BinaryOp &v)
         CUJ_INTERNAL_ASSERT(is_integral);
         return data_->ir_builder->CreateXor(lhs, rhs);
     }
+    case ir::BinaryOp::Type::LeftShift:
+    {
+        CUJ_INTERNAL_ASSERT(is_builtin_integral(operand_type));
+        CUJ_INTERNAL_ASSERT(!is_builtin_signed(operand_type));
+        return data_->ir_builder->CreateShl(lhs, rhs);
+    }
+    case ir::BinaryOp::Type::RightShift:
+    {
+        CUJ_INTERNAL_ASSERT(is_builtin_integral(operand_type));
+        CUJ_INTERNAL_ASSERT(!is_builtin_signed(operand_type));
+        return data_->ir_builder->CreateLShr(lhs, rhs);
+    }
     case ir::BinaryOp::Type::Equal:
     {
         if(is_integral)
@@ -1163,9 +1150,9 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::BinaryOp &v)
         }
         return i1_to_bool(data_->ir_builder->CreateFCmpOGE(lhs, rhs));
     }
-    default:
-        unreachable();
     }
+
+    unreachable();
 }
 
 llvm::Value *LLVMIRGenerator::get_value(const ir::UnaryOp &v)
@@ -1197,10 +1184,10 @@ llvm::Value *LLVMIRGenerator::get_value(const ir::UnaryOp &v)
             unreachable();
         }
     case ir::UnaryOp::Type::Not:
-        CUJ_INTERNAL_ASSERT(input_type == ir::BuiltinType::Bool);
-        return data_->ir_builder->CreateNot(input);
     case ir::UnaryOp::Type::BitwiseNot:
-        CUJ_INTERNAL_ASSERT(is_builtin_integral(input_type));
+        CUJ_INTERNAL_ASSERT(
+            (v.type == ir::UnaryOp::Type::Not && input_type == ir::BuiltinType::Bool) ||
+            is_builtin_integral(input_type));
         return data_->ir_builder->CreateNot(input);
     }
 

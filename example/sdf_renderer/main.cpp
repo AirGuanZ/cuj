@@ -209,6 +209,8 @@ f32 next_hit(
 void render_pixel(
     Pointer<Vec3f> color_buffer, i32 x, i32 y, Pointer<LCG> rng)
 {
+    Var<Vec3f[3][4][5]> arr;
+
     Vec3f pos(CAMERA_POS[0], CAMERA_POS[1], CAMERA_POS[2]);
 
     Vec3f d;
@@ -284,6 +286,10 @@ std::string generate_ptx()
             render_pixel(color_buffer, x, y, rng.address());
         };
     });
+
+    gen::CGenerator cg;
+    cg.print(ctx.gen_ir());
+    std::cout << cg.get_string() << std::endl;
 
     return ctx.gen_ptx(gen::OptLevel::O3, true);
 }

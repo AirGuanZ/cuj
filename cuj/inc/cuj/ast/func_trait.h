@@ -69,6 +69,7 @@ template<typename UsrRet, typename T>
 using func_ret_t = typename func_trait_detail::FunctionTrait<UsrRet, T>::RetType;
 
 template<typename UsrRet, typename T>
-using func_t = typename func_trait_detail::FunctionTrait<UsrRet, T>::FuncType;
+using func_t = detail::deval_func_t<
+    typename func_trait_detail::FunctionTrait<UsrRet, T>::FuncType>;
 
 CUJ_NAMESPACE_END(cuj::ast)

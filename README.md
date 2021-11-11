@@ -151,6 +151,23 @@ We can also use scoped guard provided by CUJ. The following two pieces of codes 
 
 ### Define Functions
 
+#### Declare Regular Functions
+
+```cpp
+auto func = ctx.declare_function<i32(i32, f32)>(/* optional name */ "func_name");
+
+// define func's body later
+func.define([&](i32 x, f32 y) { ... });
+
+// or:
+to_callable<i32>(func.get_name(), [&](i32 x, f32 y) { ... });
+
+// or any syntax that can define a regular function:
+ctx.begin_function<i32(i32, i32)>(func.get_name());
+...
+ctx.end_function();
+```
+
 #### Define Regular Functions
 
 ```cpp
@@ -158,6 +175,28 @@ auto my_add_float = to_callable<float>(
     "add_float", // (optional) symbol name
     [](f32 a, f32 b) { $return(a + b); });
 ```
+#### Recursive Function
+
+```cpp
+// just declare it before use
+auto fib = declare<i32(i32)>();
+fib.define([&](i32 i)
+{
+    $if(i <= 0)
+    {
+        $return(0);
+    }
+    $elif(i == 1)
+    {
+        $return(1);
+    }
+    $else
+    {
+        $return(fib(i - 1) + fib(i - 2));
+    };
+});
+```
+
 #### Define CUDA Kernels
 
 ```cpp

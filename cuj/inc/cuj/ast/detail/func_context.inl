@@ -84,6 +84,11 @@ inline void FunctionContext::set_type(ir::Function::Type type)
     type_ = type;
 }
 
+inline ir::Function::Type FunctionContext::get_type() const
+{
+    return type_;
+}
+
 inline void FunctionContext::append_statement(RC<Statement> stat)
 {
     blocks_.top()->append(std::move(stat));

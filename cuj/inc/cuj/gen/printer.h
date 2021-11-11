@@ -59,8 +59,6 @@ private:
 
     std::string get_typename(const ir::ArrayType &type) const;
 
-    std::string get_typename(const ir::IntrinsicType &type) const;
-
     std::string get_typename(const ir::PointerType &type) const;
 
     std::string get_typename(const ir::StructType &type) const;

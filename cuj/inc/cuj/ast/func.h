@@ -138,6 +138,21 @@ namespace detail
     using c_func_arg_t = rm_cvref_t<std::remove_pointer_t<decltype(
         CFunctionArgTypeAux<T>())>>;
 
+    template<typename T>
+    struct DeValFuncAux
+    {
+        
+    };
+
+    template<typename R, typename...Args>
+    struct DeValFuncAux<R(Args...)>
+    {
+        using Type = deval_t<to_cuj_t<R>>(deval_t<to_cuj_t<Args>>...);
+    };
+
+    template<typename Func>
+    using deval_func_t = typename DeValFuncAux<Func>::Type;
+
 } // namespace detail
 
 template<typename ForcedCFunctionType, typename Ret, typename...Args>
@@ -165,6 +180,9 @@ public:
     std::string get_name() const;
 
     int get_index() const;
+
+    template<typename Callable>
+    void define(Callable &&callable);
 
 private:
 

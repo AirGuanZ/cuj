@@ -49,22 +49,16 @@ template<typename T>
 constexpr BuiltinType to_builtin_type_value = detail::BuiltinTypeAux<T>::Value;
 
 struct ArrayType;
-struct IntrinsicType;
 struct PointerType;
 struct StructType;
 
 using Type = Variant<
-    BuiltinType, ArrayType, IntrinsicType, PointerType, StructType>;
+    BuiltinType, ArrayType, PointerType, StructType>;
 
 struct ArrayType
 {
     int         size;
     const Type *elem_type;
-};
-
-struct IntrinsicType
-{
-    std::string name;
 };
 
 struct PointerType

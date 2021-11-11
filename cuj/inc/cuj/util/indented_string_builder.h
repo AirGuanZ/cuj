@@ -60,9 +60,7 @@ private:
     {
         if constexpr(std::is_same_v<T, std::string>)
             append_single_string(s);
-        else if constexpr(std::is_same_v<T, const char *>)
-            append_single_string(std::string(s));
-        else if constexpr(std::is_array_v<T>)
+        else if constexpr(std::is_same_v<T, const char *> || std::is_array_v<T>)
             append_single_string(std::string(s));
         else
             append_single_string(std::to_string(s));

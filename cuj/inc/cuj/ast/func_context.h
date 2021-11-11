@@ -43,6 +43,8 @@ public:
 
     void set_type(ir::Function::Type type);
 
+    ir::Function::Type get_type() const;
+
     void append_statement(RC<Statement> stat);
 
     void push_block(RC<Block> block);

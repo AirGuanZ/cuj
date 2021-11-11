@@ -39,6 +39,7 @@ using ast::Variable;
 template<typename T>
 using Var = Variable<T>;
 
+using ast::declare;
 using ast::import_function;
 using ast::to_callable;
 using ast::to_kernel;

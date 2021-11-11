@@ -56,8 +56,6 @@ const ir::Type *Context::get_type()
         is_pointer<T>           ||
         is_cuj_class<T>);
 
-    static int struct_name_index = 0;
-
     const auto type_idx = std::type_index(typeid(T));
     if(auto it = all_types().find(type_idx); it != all_types().end())
     {
@@ -110,7 +108,7 @@ const ir::Type *Context::get_type()
         type = newRC<ir::Type>(ir::StructType{});
         auto &s_type = type->as<ir::StructType>();
 
-        s_type.name = "CUJStruct" + std::to_string(struct_name_index++);
+        s_type.name = "CUJStruct" + std::to_string(struct_count_++);
 
         detail::StructMemberRecorder recorder{ this, s_type.mem_types };
         T::foreach_member(recorder);
@@ -118,6 +116,50 @@ const ir::Type *Context::get_type()
         used_types_[type_idx] = type;
         return type.get();
     }
+}
+
+template<typename FuncType>
+Function<void, detail::deval_func_t<FuncType>>
+    Context::declare_function(std::string name)
+{
+    if(auto it = func_name_to_index_.find(name); it != func_name_to_index_.end())
+    {
+        auto &ctx = funcs_.at(it->second);
+        if(!ctx.is<Box<FunctionContext>>())
+            throw CUJException("imported function cannot be redeclared");
+        return Function<void, detail::deval_func_t<FuncType>>(it->second);
+    }
+
+    auto ret_type =
+        get_type<typename Function<void, detail::deval_func_t<FuncType>>::ReturnType>();
+
+    std::vector<const ir::Type *> arg_types;
+    Function<void, detail::deval_func_t<FuncType>>::get_arg_types(arg_types);
+
+    const int index = static_cast<int>(funcs_.size());
+    func_name_to_index_[name] = index;
+
+    funcs_.insert(
+        {
+            index,
+            ContextFunc
+            {
+                newBox<FunctionContext>(
+                    std::move(name),
+                    ir::Function::Type::Default,
+                    ret_type, arg_types)
+            }
+        });
+
+    return Function<void, detail::deval_func_t<FuncType>>(index);
+}
+
+template<typename FuncType>
+Function<void, detail::deval_func_t<FuncType>> Context::declare_function()
+{
+    std::string name =
+        "_cuj_auto_named_func_" + std::to_string(funcs_.size());
+    return declare_function<FuncType>(std::move(name));
 }
 
 template<typename Ret, typename Callable>
@@ -174,12 +216,13 @@ Function<FuncType, FuncType> Context::import_raw_host_function(
     std::vector<const ir::Type *> arg_types;
     Function<FuncType, FuncType>::get_arg_types(arg_types);
 
-    funcs_.push_back(newRC<ir::ImportedHostFunction>());
-    auto &func = *funcs_.back().as<RC<ir::ImportedHostFunction>>();
-
-    const int index = static_cast<int>(funcs_.size() - 1);
+    const int index = static_cast<int>(funcs_.size());
     func_name_to_index_[name] = index;
 
+    auto &func = *funcs_.insert(
+        { index, ContextFunc{ newRC<ir::ImportedHostFunction>() } })
+            .first->second.as<RC<ir::ImportedHostFunction>>();
+    
     func.context_data = ctx_data;
     func.address      = func_ptr;
     func.is_external  = true;
@@ -272,33 +315,57 @@ Function<Ret(Args...), func_trait_detail::to_cuj_func_t<Ret, Args...>>
 }
 
 template<typename FuncType>
-Function<void, FuncType> Context::begin_function(ir::Function::Type type)
+Function<void, detail::deval_func_t<FuncType>>
+    Context::begin_function(ir::Function::Type type)
 {
     const std::string name =
         "_cuj_auto_named_func_" + std::to_string(funcs_.size());
-    return begin_function<FuncType>(std::move(name), type);
+    return begin_function<detail::deval_func_t<FuncType>>(
+        std::move(name), type);
 }
 
 template<typename FuncType>
-Function<void, FuncType> Context::begin_function(
+Function<void, detail::deval_func_t<FuncType>> Context::begin_function(
     std::string name, ir::Function::Type type)
 {
-    if(func_name_to_index_.count(name))
-        throw CUJException("repeated function name");
+    if(auto it = func_name_to_index_.find(name); it != func_name_to_index_.end())
+    {
+        auto &ctx = funcs_.at(it->second);
+        auto func_ctx = ctx.as_if<Box<FunctionContext>>();
+        if(!func_ctx)
+            throw CUJException("imported function cannot be redefined");
+        if(func_ctx->get()->get_type() != type)
+        {
+            throw CUJException(
+                "function.definition.type != function.declaration.type");
+        }
+        func_stack_.push(func_ctx->get());
+        return Function<void, detail::deval_func_t<FuncType>>(it->second);
+    }
 
-    auto ret_type = get_type<typename Function<void, FuncType>::ReturnType>();
+    auto ret_type =
+        get_type<typename Function<
+            void, detail::deval_func_t<FuncType>>::ReturnType>();
 
     std::vector<const ir::Type*> arg_types;
-    Function<void, FuncType>::get_arg_types(arg_types);
+    Function<void, detail::deval_func_t<FuncType>>::get_arg_types(arg_types);
 
-    funcs_.push_back(
-        newBox<FunctionContext>(std::move(name), type, ret_type, arg_types));
-    func_stack_.push(funcs_.back().as<Box<FunctionContext>>().get());
-
-    const int index = static_cast<int>(funcs_.size() - 1);
+    const int index = static_cast<int>(funcs_.size());
     func_name_to_index_[name] = index;
 
-    return Function<void, FuncType>(index);
+    auto &ctx = funcs_.insert(
+        {
+            index,
+            ContextFunc
+            {
+                newBox<FunctionContext>(
+                    std::move(name), type, ret_type, arg_types)
+            }
+        }).first->second;
+
+    func_stack_.push(ctx.as<Box<FunctionContext>>().get());
+
+    return Function<void, detail::deval_func_t<FuncType>>(index);
 }
 
 inline void Context::end_function()
@@ -349,19 +416,21 @@ inline std::string Context::gen_ptx(gen::OptLevel opt, bool fast_math) const
 #endif // #if CUJ_ENABLE_CUDA
 
 template<typename FuncType>
-Function<void, FuncType> Context::get_function(std::string_view name) const
+Function<void, detail::deval_func_t<FuncType>>
+    Context::get_function(std::string_view name) const
 {
     const auto it = func_name_to_index_.find(name);
     if(it == func_name_to_index_.end())
         throw CUJException("unknown function name: " + std::string(name));
-    return get_function<FuncType>(it->second);
+    return get_function<detail::deval_func_t<FuncType>>(it->second);
 }
 
 template<typename FuncType>
-Function<void, FuncType> Context::get_function(int index) const
+Function<void, detail::deval_func_t<FuncType>>
+    Context::get_function(int index) const
 {
     CUJ_INTERNAL_ASSERT(0 <= index && index < static_cast<int>(funcs_.size()));
-    return Function<void, FuncType>(index);
+    return Function<void, detail::deval_func_t<FuncType>>(index);
 }
 
 template<typename Ret, typename Callable, typename...Args, size_t...Is>
@@ -395,7 +464,7 @@ inline void Context::gen_ir_impl(ir::IRBuilder &builder) const
 
     for(auto &f : funcs_)
     {
-        f.match(
+        f.second.match(
             [&](const Box<FunctionContext> &func)
         {
             func->gen_ir(builder);

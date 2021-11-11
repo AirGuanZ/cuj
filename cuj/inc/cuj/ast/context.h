@@ -32,6 +32,14 @@ public:
 
     // function definition
 
+    template<typename FuncType>
+    Function<void, detail::deval_func_t<FuncType>>
+        declare_function(std::string name);
+
+    template<typename FuncType>
+    Function<void, detail::deval_func_t<FuncType>>
+        declare_function();
+
     template<typename Ret, typename Callable>
     Function<void, func_t<to_cuj_t<Ret>, Callable>> add_function(
         std::string name, Callable &&callable);
@@ -86,11 +94,11 @@ public:
     }
 
     template<typename FuncType>
-    Function<void, FuncType> begin_function(
+    Function<void, detail::deval_func_t<FuncType>> begin_function(
         ir::Function::Type type = ir::Function::Type::Default);
 
     template<typename FuncType>
-    Function<void, FuncType> begin_function(
+    Function<void, detail::deval_func_t<FuncType>> begin_function(
         std::string        name,
         ir::Function::Type type = ir::Function::Type::Default);
 
@@ -118,10 +126,12 @@ public:
 private:
 
     template<typename FuncType>
-    Function<void, FuncType> get_function(std::string_view name) const;
+    Function<void, detail::deval_func_t<FuncType>>
+        get_function(std::string_view name) const;
 
     template<typename FuncType>
-    Function<void, FuncType> get_function(int index) const;
+    Function<void, detail::deval_func_t<FuncType>>
+        get_function(int index) const;
 
     template<typename Ret, typename Callable, typename...Args, size_t...Is>
     Function<void, func_t<to_cuj_t<Ret>, Callable>> add_function_impl(
@@ -138,10 +148,11 @@ private:
     std::map<std::type_index, RC<ir::Type>> used_types_;
 
     using ContextFunc = Variant<Box<FunctionContext>, RC<ir::ImportedHostFunction>>;
-
-    std::vector<ContextFunc>     funcs_;
+    
+    std::map<int, ContextFunc>   funcs_;
     std::stack<FunctionContext*> func_stack_;
 
+    int                                     struct_count_ = 0;
     std::map<std::string, int, std::less<>> func_name_to_index_;
 };
 
@@ -152,6 +163,18 @@ inline void pop_context();
 inline Context *get_current_context();
 
 inline FunctionContext *get_current_function();
+
+template<typename FuncType>
+auto declare()
+{
+    return get_current_context()->declare_function<FuncType>();
+}
+
+template<typename FuncType>
+auto declare(std::string name)
+{
+    return get_current_context()->declare_function<FuncType>(std::move(name));
+}
 
 template<typename Ret, typename Callable>
 auto to_callable(Callable &&callable)

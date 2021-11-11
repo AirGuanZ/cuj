@@ -205,6 +205,13 @@ int Function<ForcedCFunctionType, Ret(Args ...)>::get_index() const
     return impl_->get_index();
 }
 
+template<typename ForcedCFunctionType, typename Ret, typename ... Args>
+template<typename Callable>
+void Function<ForcedCFunctionType, Ret(Args ...)>::define(Callable &&callable)
+{
+    to_callable<Ret>(get_name(), std::forward<Callable>(callable));
+}
+
 template<typename ForcedCFunctionType, typename Ret, typename...Args>
 void Function<ForcedCFunctionType, Ret(Args...)>::get_arg_types(std::vector<const ir::Type*> &output)
 {
