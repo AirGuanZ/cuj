@@ -42,19 +42,14 @@ namespace
         unreachable();
     }
 
-    const char *PROG_PREFIX = R"___(#include <math.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
-#ifdef __CUDACC__
+    const char *PROG_PREFIX = R"___(#ifdef __CUDACC__
 #define CUJ_DEVICE_FUNCTION __device__
 #define CUJ_KERNEL_FUNCTION __global__
 #else
 #define CUJ_DEVICE_FUNCTION
 #define CUJ_KERNEL_FUNCTION
 #endif
-CUJ_DEVICE_FUNCTION void CUJAssertFail(const void *message, const void *file, uint32_t line, const void *function)
+CUJ_DEVICE_FUNCTION void CUJAssertFail(const void *message, const void *file, unsigned line, const void *function)
 {
     printf("cuj.assert.fail.%s.%s.%s.%d", (const char *)message, (const char *)file, (const char *)function, line);
 }
@@ -224,19 +219,33 @@ void CGenerator::define_builtin_type(ir::BuiltinType type, TypeInfo &info)
 
     switch(type)
     {
-        CUJ_DEFINE_BUILTIN_TYPE(void,     Void);
-        CUJ_DEFINE_BUILTIN_TYPE(char,     Char);
-        CUJ_DEFINE_BUILTIN_TYPE(uint8_t,  U8);
-        CUJ_DEFINE_BUILTIN_TYPE(uint16_t, U16);
-        CUJ_DEFINE_BUILTIN_TYPE(uint32_t, U32);
-        CUJ_DEFINE_BUILTIN_TYPE(uint64_t, U64);
-        CUJ_DEFINE_BUILTIN_TYPE(int8_t,   S8);
-        CUJ_DEFINE_BUILTIN_TYPE(int16_t,  S16);
-        CUJ_DEFINE_BUILTIN_TYPE(int32_t,  S32);
-        CUJ_DEFINE_BUILTIN_TYPE(int64_t,  S64);
-        CUJ_DEFINE_BUILTIN_TYPE(float,    F32);
-        CUJ_DEFINE_BUILTIN_TYPE(double,   F64);
-        CUJ_DEFINE_BUILTIN_TYPE(int32_t,  Bool);
+        CUJ_DEFINE_BUILTIN_TYPE(void,               Void);
+        CUJ_DEFINE_BUILTIN_TYPE(char,               Char);
+        CUJ_DEFINE_BUILTIN_TYPE(unsigned char,      U8);
+        CUJ_DEFINE_BUILTIN_TYPE(unsigned short,     U16);
+        CUJ_DEFINE_BUILTIN_TYPE(unsigned int,       U32);
+        CUJ_DEFINE_BUILTIN_TYPE(unsigned long long, U64);
+        CUJ_DEFINE_BUILTIN_TYPE(signed char,        S8);
+        CUJ_DEFINE_BUILTIN_TYPE(signed short,       S16);
+        CUJ_DEFINE_BUILTIN_TYPE(signed int,         S32);
+        CUJ_DEFINE_BUILTIN_TYPE(signed long long,   S64);
+        CUJ_DEFINE_BUILTIN_TYPE(int,                Bool);
+        CUJ_DEFINE_BUILTIN_TYPE(float,              F32);
+        CUJ_DEFINE_BUILTIN_TYPE(double,             F64);
+
+        static_assert(sizeof(short)     == 2);
+        static_assert(sizeof(int)       == 4);
+        static_assert(sizeof(long long) == 8);
+
+        //CUJ_DEFINE_BUILTIN_TYPE(uint8_t,  U8);
+        //CUJ_DEFINE_BUILTIN_TYPE(uint16_t, U16);
+        //CUJ_DEFINE_BUILTIN_TYPE(uint32_t, U32);
+        //CUJ_DEFINE_BUILTIN_TYPE(uint64_t, U64);
+        //CUJ_DEFINE_BUILTIN_TYPE(int8_t,   S8);
+        //CUJ_DEFINE_BUILTIN_TYPE(int16_t,  S16);
+        //CUJ_DEFINE_BUILTIN_TYPE(int32_t,  S32);
+        //CUJ_DEFINE_BUILTIN_TYPE(int64_t,  S64);
+        //CUJ_DEFINE_BUILTIN_TYPE(int32_t,  Bool);
     }
 
 #undef CUJ_DEFINE_BUILTIN_TYPE
@@ -631,14 +640,14 @@ void CGenerator::generate_value(const ir::BasicImmediateValue &val)
 #define CUJ_GENERATE_IMMEDIATE_VAL(TYPE) \
     [&](TYPE v) { str_.append("(" #TYPE ")", v); }
     val.value.match(
-        CUJ_GENERATE_IMMEDIATE_VAL(uint8_t),
-        CUJ_GENERATE_IMMEDIATE_VAL(uint16_t),
-        CUJ_GENERATE_IMMEDIATE_VAL(uint32_t),
-        CUJ_GENERATE_IMMEDIATE_VAL(uint64_t),
-        CUJ_GENERATE_IMMEDIATE_VAL(int8_t),
-        CUJ_GENERATE_IMMEDIATE_VAL(int16_t),
-        CUJ_GENERATE_IMMEDIATE_VAL(int32_t),
-        CUJ_GENERATE_IMMEDIATE_VAL(int64_t),
+        CUJ_GENERATE_IMMEDIATE_VAL(unsigned char),
+        CUJ_GENERATE_IMMEDIATE_VAL(unsigned short),
+        CUJ_GENERATE_IMMEDIATE_VAL(unsigned int),
+        CUJ_GENERATE_IMMEDIATE_VAL(unsigned long long),
+        CUJ_GENERATE_IMMEDIATE_VAL(signed char),
+        CUJ_GENERATE_IMMEDIATE_VAL(signed short),
+        CUJ_GENERATE_IMMEDIATE_VAL(signed int),
+        CUJ_GENERATE_IMMEDIATE_VAL(signed long long),
         CUJ_GENERATE_IMMEDIATE_VAL(float),
         CUJ_GENERATE_IMMEDIATE_VAL(double),
         CUJ_GENERATE_IMMEDIATE_VAL(char),

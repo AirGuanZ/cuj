@@ -7,6 +7,7 @@
 #include <cuj/gen/printer.h>
 
 #if CUJ_ENABLE_CUDA
+#include <cuj/gen/nvrtc.h>
 #include <cuj/gen/ptx.h>
 #endif
 
@@ -399,7 +400,7 @@ inline gen::NativeJIT Context::gen_native_jit(
     gen::OptLevel opt, bool fast_math) const
 {
     gen::NativeJIT jit;
-    jit.generate(gen_ir(), { opt, fast_math, true });
+    jit.generate(gen_ir(), { opt, fast_math });
     return jit;
 }
 
@@ -417,8 +418,15 @@ inline std::string Context::gen_c(bool cuda) const
 inline std::string Context::gen_ptx(gen::OptLevel opt, bool fast_math) const
 {
     gen::PTXGenerator generator;
-    generator.generate(gen_ir(), { opt, fast_math, true });
+    generator.generate(gen_ir(), { opt, fast_math });
     return generator.get_result();
+}
+
+inline std::string Context::gen_ptx_nvrtc(bool reloc, bool fast_math) const
+{
+    gen::NVRTC generator;
+    generator.generate(gen_ir(), { reloc, fast_math });
+    return generator.get_ptx();
 }
 
 #endif // #if CUJ_ENABLE_CUDA

@@ -42,25 +42,25 @@ public:
         auto fail_cond = !calc_cond_func();
         func->pop_block();
 
-        auto message_consts = string_literial(message);
-        auto file_consts = string_literial(file);
-        auto function_consts = string_literial(function);
+        auto message_consts = string_literal(message);
+        auto file_consts = string_literal(file);
+        auto function_consts = string_literal(function);
 
-        auto line_literial = ast::create_literial(line);
+        auto line_literal = ast::create_literal(line);
 
         if constexpr(std::is_same_v<decltype(fail_cond), bool>)
         {
             builtin::assert_impl(
-                cond_block, ast::create_literial(fail_cond).get_impl(),
+                cond_block, ast::create_literal(fail_cond).get_impl(),
                 message_consts, file_consts,
-                line_literial, function_consts);
+                line_literal, function_consts);
         }
         else
         {
             builtin::assert_impl(
                 cond_block, fail_cond.get_impl(),
                 message_consts, file_consts,
-                line_literial, function_consts);
+                line_literal, function_consts);
         }
     }
 };

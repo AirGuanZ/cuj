@@ -65,7 +65,12 @@ private:
                           std::is_same_v<T, std::string_view>)
             append_single_string(std::string(s));
         else
-            append_single_string(std::to_string(s));
+        {
+            std::stringstream ss;
+            ss.precision(40);
+            ss << std::hexfloat << s;
+            append_single_string(ss.str());
+        }
     }
 
     void append_single_string(const std::string &s)

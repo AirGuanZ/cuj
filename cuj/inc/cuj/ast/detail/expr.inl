@@ -206,7 +206,7 @@ ir::BasicValue InternalArithmeticLoad<T>::gen_ir(ir::IRBuilder &builder) const
 template<typename T>
 ir::BasicValue InternalArithmeticLiterial<T>::gen_ir(ir::IRBuilder &builder) const
 {
-    return ir::BasicImmediateValue{ literial };
+    return ir::BasicImmediateValue{ literal };
 }
 
 template<typename T>
@@ -435,10 +435,10 @@ ir::BasicValue InternalUnaryOperator<T, I>::gen_ir(ir::IRBuilder &builder) const
 
 template<typename T>
 std::enable_if_t<std::is_arithmetic_v<T>, ArithmeticValue<T>>
-    create_literial(T val)
+    create_literal(T val)
 {
     auto impl = newRC<InternalArithmeticLiterial<T>>();
-    impl->literial = val;
+    impl->literal = val;
     return ArithmeticValue<T>(std::move(impl));
 }
 

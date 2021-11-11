@@ -17,12 +17,12 @@ CUJ_CLASS(Node, left, right, key, value) { using CUJBase::CUJBase; };
 Pointer<Node> find_node(const Node *node, i32 value)
 {
     if(!node)
-        return ptr_literial<Node>(nullptr);
+        return ptr_literal<Node>(nullptr);
 
     Pointer<Node> result;
     $if(node->key == value)
     {
-        result = ptr_literial(node);
+        result = ptr_literal(node);
     }
     $elif(node->key < value)
     {

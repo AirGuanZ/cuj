@@ -13,9 +13,8 @@ public:
 
     struct Options
     {
-        OptLevel opt_level  = OptLevel::Default;
-        bool     fast_math  = false;
-        bool     enable_slp = true;
+        OptLevel opt_level = OptLevel::Default;
+        bool     fast_math = false;
     };
 
     static std::string generate_llvm_ir(

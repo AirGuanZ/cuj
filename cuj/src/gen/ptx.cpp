@@ -95,6 +95,7 @@ namespace
         pass_mgr_builder.Inliner = llvm::createFunctionInliningPass(
             pass_mgr_builder.OptLevel, 0, false);
         pass_mgr_builder.SLPVectorize = false;
+        pass_mgr_builder.LoopVectorize = false;
         pass_mgr_builder.MergeFunctions = true;
 
         {
@@ -128,7 +129,7 @@ namespace
 
 void PTXGenerator::generate(const ir::Program &prog, OptLevel opt)
 {
-    generate(prog, Options{ opt, false, true });
+    generate(prog, Options{ opt, false });
 }
 
 void PTXGenerator::generate(const ir::Program &prog, const Options &opts)

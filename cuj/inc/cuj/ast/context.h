@@ -123,6 +123,8 @@ public:
     std::string gen_ptx(
         gen::OptLevel opt = gen::OptLevel::Default, bool fast_math = false) const;
 
+    std::string gen_ptx_nvrtc(bool reloc, bool fast_math = false) const;
+
 #endif
 
 private:

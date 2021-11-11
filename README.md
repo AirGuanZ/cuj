@@ -376,7 +376,7 @@ Variable<size_t> ip = ptr_to_uint(p);
 Pointer<f32> pip = uint_to_ptr<f32>(ip);
 
 float float_value = 1.0f;
-Pointer<f32> pl = ptr_literial(&float_value); // pl can only be dereferenced when using host backend
+Pointer<f32> pl = ptr_literal(&float_value); // pl can only be dereferenced when using host backend
 ```
 
 #### Define Constant Data
@@ -496,7 +496,13 @@ assert(add_float_func_pointer1(1.0f, 2.0f) == 3.0f);
 ```cpp
 ScopedContext context;
 // ...define functions/kernels
-const std::string ptx = context.gen_ptx();
+
+// enable O3 optimization; enable fast math
+const std::string ptx = context.gen_ptx(gen::OptLevel::O3, true);
+
+// another ptx backend using nvrtc
+// disable reloc; enable fast math
+const std::string ptx2 = context.gen_ptx_nvrtc(false, true);
 ```
 
 ### Builtin Functions

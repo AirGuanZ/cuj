@@ -12,9 +12,8 @@ public:
 
     struct Options
     {
-        OptLevel opt_level  = OptLevel::Default;
-        bool     fast_math  = false;
-        bool     enable_slp = true;
+        OptLevel opt_level = OptLevel::Default;
+        bool     fast_math = false;
     };
     
     void generate(const ir::Program &prog, OptLevel opt = OptLevel::Default);

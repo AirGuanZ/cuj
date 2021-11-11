@@ -115,7 +115,7 @@ void WhileBuilder::init_cond(const PointerImpl<T> &cond)
 template<typename T, typename>
 void WhileBuilder::init_cond(T cond)
 {
-    this->init_cond(create_literial(cond));
+    this->init_cond(create_literal(cond));
 }
 
 template<typename F>
@@ -248,7 +248,7 @@ ReturnBuilder::ReturnBuilder(const ArrayImpl<T, N> &val)
 template<typename T, typename>
 ReturnBuilder::ReturnBuilder(T val)
 {
-    (void)ReturnBuilder(create_literial(val));
+    (void)ReturnBuilder(create_literal(val));
 }
 
 inline SwitchBuilderInterface *SwitchBuilderInterface::get_current_builder()

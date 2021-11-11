@@ -158,24 +158,29 @@ Vec3f sdf_normal(const Vec3f &p)
     Vec3f n(0.0f, 0.0f, 0.0f);
     f32 sdf_center = sdf(p);
 
+    $if(sdf_center > 1e-3f)
     {
-        Vec3f inc = p;
-        inc.x = inc.x + d;
-        n.x = (1 / d) * (sdf(inc) - sdf_center);
+        n = Vec3f(0.0f, 0.0f, 0.0f);
     }
+    $else
+    {
+        {
+            Vec3f inc = p;
+            inc.x = inc.x + d;
+            n.x = (1 / d) * (sdf(inc) - sdf_center);
+        }
+        {
+            Vec3f inc = p;
+            inc.y = inc.y + d;
+            n.y = (1 / d) * (sdf(inc) - sdf_center);
+        }
+        {
+            Vec3f inc = p;
+            inc.z = inc.z + d;
+            n.z = (1 / d) * (sdf(inc) - sdf_center);
+        }
+    };
 
-    {
-        Vec3f inc = p;
-        inc.y = inc.y + d;
-        n.y = (1 / d) * (sdf(inc) - sdf_center);
-    }
-
-    {
-        Vec3f inc = p;
-        inc.z = inc.z + d;
-        n.z = (1 / d) * (sdf(inc) - sdf_center);
-    }
-    
     return n.normalize();
 }
 
@@ -238,7 +243,7 @@ void render_pixel(
         $else
         {
             Vec3f hit_pos = pos + closest * d;
-            $if(normal.length_square() != 0.0f)
+            $if(normal.length_square() > 0.0f)
             {
                 d = out_dir(normal, rng);
                 pos = hit_pos + 1e-3f * d;
@@ -246,6 +251,7 @@ void render_pixel(
             }
             $else
             {
+                throughput = 0.8f * throughput;
                 depth = MAX_DEPTH;
             };
         };
@@ -264,33 +270,24 @@ std::string generate_ptx()
     ScopedContext ctx;
 
     auto render = to_kernel(
-        "render", [&](
-            Pointer<Vec3f> color_buffer, i32 spp, i32 iter)
+        "render", [&](Pointer<Vec3f> color_buffer, Pointer<LCG> rngs)
     {
         i32 x = block_index_x() * block_dim_x() + thread_index_x();
         i32 y = block_index_y() * block_dim_y() + thread_index_y();
 
-        $if(x >= WIDTH || y >= HEIGHT)
+        $if(x < WIDTH && y < HEIGHT)
         {
-            $return();
-        };
-
-        LCG rng(cast<u32>((iter + 1) *(y * WIDTH + x)));
-
-        i32 i = 0;
-        $while(i < spp)
-        {
-            i = i + 1;
-            render_pixel(color_buffer, x, y, rng.address());
+            render_pixel(color_buffer, x, y, rngs + y * WIDTH + x);
         };
     });
 
-    return ctx.gen_ptx(gen::OptLevel::O3, true);
+    //return ctx.gen_ptx(gen::OptLevel::O3, true);
+    return ctx.gen_ptx_nvrtc(false, true);
 }
 
 void run()
 {
-    const std::string ptx = generate_ptx();
+    std::string ptx = generate_ptx();
     std::cout << ptx << std::endl;
 
     CUdevice cuDevice;
@@ -311,6 +308,21 @@ void run()
     check_cuda_error(cudaMemset(
         device_color_buffer, 0, sizeof(float) * 3 * WIDTH * HEIGHT));
 
+    uint32_t *device_rng_buffer = nullptr;
+    check_cuda_error(cudaMalloc(
+        &device_rng_buffer, sizeof(uint32_t) * WIDTH * HEIGHT));
+    CUJ_SCOPE_GUARD({ cudaFree(device_rng_buffer); });
+
+    {
+        std::vector<uint32_t> rng_data(WIDTH * HEIGHT);
+        uint32_t i = 1;
+        for(uint32_t &s : rng_data)
+            s = i++;
+        check_cuda_error(cudaMemcpy(
+            device_rng_buffer, rng_data.data(),
+            sizeof(uint32_t) * rng_data.size(), cudaMemcpyHostToDevice));
+    }
+
     constexpr int BLOCK_SIZE_X = 16;
     constexpr int BLOCK_SIZE_Y = 8;
 
@@ -320,14 +332,13 @@ void run()
     std::cout << "start rendering" << std::endl;
     const auto start_time = std::chrono::steady_clock::now();
 
-    int iters = 400; int spp = 1;
-    for(int i = 0; i < iters; ++i)
+    for(int i = 0; i < 400; ++i)
     {
         cuda_module.launch(
             "render",
             { BLOCK_COUNT_X, BLOCK_COUNT_Y, 1 },
             { BLOCK_SIZE_X, BLOCK_SIZE_Y, 1 },
-            device_color_buffer, spp, i);
+            device_color_buffer, device_rng_buffer, i);
     }
 
     cudaDeviceSynchronize();

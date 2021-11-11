@@ -84,10 +84,20 @@ namespace
         }
         pass_mgr_builder.Inliner = llvm::createFunctionInliningPass(
             pass_mgr_builder.OptLevel, 0, false);
-        pass_mgr_builder.SLPVectorize = opts.enable_slp;
 
-        pass_mgr_builder.MergeFunctions = true;
-
+        if(opts.opt_level == OptLevel::O2 || opts.opt_level == OptLevel::O3)
+        {
+            pass_mgr_builder.SLPVectorize = true;
+            pass_mgr_builder.LoopVectorize = true;
+            pass_mgr_builder.MergeFunctions = true;
+        }
+        else
+        {
+            pass_mgr_builder.SLPVectorize = false;
+            pass_mgr_builder.LoopVectorize = false;
+            pass_mgr_builder.MergeFunctions = false;
+        }
+        
         {
             llvm::legacy::FunctionPassManager fp_mgr(llvm_gen.get_module());
             pass_mgr_builder.populateFunctionPassManager(fp_mgr);
@@ -189,7 +199,7 @@ namespace
 
 void NativeJIT::generate(const ir::Program &prog, OptLevel opt)
 {
-    generate(prog, { opt, false, true });
+    generate(prog, { opt, false });
 }
 
 void NativeJIT::generate(const ir::Program &prog, const Options &opts)

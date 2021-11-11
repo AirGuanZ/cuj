@@ -349,7 +349,7 @@ class InternalArithmeticLiterial : public InternalArithmeticValue<T>
 {
 public:
 
-    T literial;
+    T literal;
 
     ir::BasicValue gen_ir(ir::IRBuilder &builder) const override;
 };
@@ -461,7 +461,7 @@ public:
 
 template<typename T>
 std::enable_if_t<std::is_arithmetic_v<T>, ArithmeticValue<T>>
-    create_literial(T val);
+    create_literal(T val);
 
 template<typename T, typename L, typename R>
 RC<InternalArithmeticValue<T>> create_binary_operator(

@@ -29,7 +29,7 @@ namespace detail
             if constexpr(is_cuj_class<T>)
                 return val;
             else
-                return create_literial(val);
+                return create_literal(val);
         }
     };
 

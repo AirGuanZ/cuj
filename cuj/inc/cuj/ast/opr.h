@@ -21,13 +21,13 @@ template<typename L, typename R,                                                
          typename = std::enable_if_t<std::is_arithmetic_v<R>>>                  \
 auto operator SYM(const ArithmeticValue<L> &lhs, R rhs)                         \
 {                                                                               \
-    return lhs SYM create_literial(rhs);                                        \
+    return lhs SYM create_literal(rhs);                                         \
 }                                                                               \
 template<typename L, typename R,                                                \
          typename = std::enable_if_t<std::is_arithmetic_v<L>>>                  \
 auto operator SYM(L lhs, const ArithmeticValue<R> &rhs)                         \
 {                                                                               \
-    return create_literial(lhs) SYM rhs;                                        \
+    return create_literal(lhs) SYM rhs;                                         \
 }
 
 CUJ_OVERLOAD_BINARY_ARITHMETIC_OP(Add, +)
@@ -102,13 +102,13 @@ CUJ_OVERLOAD_BINARY_POINTER_OP(GreaterEqual, >=)
              typename = std::enable_if_t<std::is_arithmetic_v<R>>>              \
     Value<bool> operator SYM(const PointerImpl<L> &lhs, R rhs)                  \
     {                                                                           \
-        return lhs SYM create_literial(rhs);                                    \
+        return lhs SYM create_literal(rhs);                                     \
     }                                                                           \
     template<typename L, typename R,                                            \
              typename = std::enable_if_t<std::is_arithmetic_v<L>>>              \
     Value<bool> operator SYM(L lhs, const PointerImpl<R> &rhs)                  \
     {                                                                           \
-        return create_literial(lhs) SYM rhs;                                    \
+        return create_literal(lhs) SYM rhs;                                     \
     }
 
 CUJ_OVERLOAD_POINTER_ARITH_BOOL_OP(&&)
@@ -134,7 +134,7 @@ template<typename L, typename R,
          typename = std::enable_if_t<std::is_arithmetic_v<R>>>
 auto operator+(const PointerImpl<L> &lhs, R rhs)
 {
-    return lhs.offset(create_literial(rhs));
+    return lhs.offset(create_literal(rhs));
 }
 
 template<typename L, typename R,
@@ -147,14 +147,14 @@ auto operator+(L lhs, const PointerImpl<R> &rhs)
 template<typename L, typename R>
 auto operator-(const PointerImpl<L> &lhs, const ArithmeticValue<R> &rhs)
 {
-    return lhs + (create_literial(R(0)) - rhs);
+    return lhs + (create_literal(R(0)) - rhs);
 }
 
 template<typename L, typename R,
          typename = std::enable_if_t<std::is_arithmetic_v<R>>>
 auto operator-(const PointerImpl<L> &lhs, R rhs)
 {
-    return lhs - create_literial(rhs);
+    return lhs - create_literal(rhs);
 }
 
 template<typename T>
@@ -230,13 +230,13 @@ ArithmeticValue<size_t> ptr_to_uint(const PointerImpl<T> &ptr)
 }
 
 template<typename T>
-auto ptr_literial(T *raw)
+auto ptr_literal(T *raw)
 {
     return uint_to_ptr<T>(reinterpret_cast<size_t>(raw));
 }
 
 template<typename T>
-auto ptr_literial(const T *raw)
+auto ptr_literal(const T *raw)
 {
     return uint_to_ptr<T>(reinterpret_cast<size_t>(raw));
 }
@@ -265,9 +265,9 @@ auto const_data(const std::vector<T> &data)
     return const_data<T>(data.data(), data.size() * sizeof(T));
 }
 
-// string literial
+// string literal
 
-inline auto string_literial(std::string_view s)
+inline auto string_literal(std::string_view s)
 {
     std::vector<char> data(s.size() + 1);
     std::memcpy(data.data(), s.data(), s.size());
@@ -276,7 +276,7 @@ inline auto string_literial(std::string_view s)
 
 inline auto operator ""_cuj(const char *s, size_t size)
 {
-    return string_literial(std::string_view(s, size));
+    return string_literal(std::string_view(s, size));
 }
 
 // select

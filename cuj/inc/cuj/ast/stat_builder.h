@@ -54,7 +54,7 @@ public:
     explicit WhileBuilder(const F &calc_cond_func);
 
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
-    explicit WhileBuilder(T cond) : WhileBuilder(create_literial(cond)) { }
+    explicit WhileBuilder(T cond) : WhileBuilder(create_literal(cond)) { }
 
     ~WhileBuilder();
 

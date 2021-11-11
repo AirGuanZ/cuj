@@ -55,10 +55,10 @@ using ast::cast;
 
 using ast::ptr_to_uint;
 using ast::uint_to_ptr;
-using ast::ptr_literial;
+using ast::ptr_literal;
 
 using ast::const_data;
-using ast::string_literial;
+using ast::string_literal;
 
 using ast::select;
 

@@ -51,10 +51,10 @@ ArithmeticValue<T> &ArithmeticValue<T>::operator=(const U &rhs)
 {
     if constexpr(std::is_arithmetic_v<U>)
     {
-        auto literial_impl = newRC<InternalArithmeticLiterial<U>>();
-        literial_impl->literial = rhs;
-        auto literial = ArithmeticValue<U>(std::move(literial_impl));
-        this->operator=(literial);
+        auto literal_impl = newRC<InternalArithmeticLiterial<U>>();
+        literal_impl->literal = rhs;
+        auto literal = ArithmeticValue<U>(std::move(literal_impl));
+        this->operator=(literal);
     }
     else
     {
@@ -197,7 +197,7 @@ template<typename T, size_t N>
 template<typename I, typename>
 Value<T> ArrayImpl<T, N>::operator[](I index) const
 {
-    return get_element_ptr(create_literial(index)).deref();
+    return get_element_ptr(create_literal(index)).deref();
 }
 
 template<typename T, size_t N>
@@ -387,7 +387,7 @@ template<typename T>
 template<typename I, typename>
 Value<T> PointerImpl<T>::operator[](I index) const
 {
-    return this->operator[](create_literial(index));
+    return this->operator[](create_literal(index));
 }
 
 template<typename T>
