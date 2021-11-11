@@ -18,9 +18,30 @@ const Program &IRBuilder::get_prog() const
     return prog_;
 }
 
-void IRBuilder::add_type(std::type_index type_index, RC<Type> type)
+void IRBuilder::add_type(const Type *type)
 {
-    prog_.types.insert({ type_index, std::move(type) });
+    if(prog_.types.count(type))
+        return;
+
+    type->match(
+        [](BuiltinType)
+    {
+
+    },
+        [&](const ArrayType &t)
+    {
+        add_type(t.elem_type);
+    },
+        [&](const PointerType &t)
+    {
+        add_type(t.pointed_type);
+    },
+        [&](const StructType &t)
+    {
+        for(auto m : t.mem_types)
+            add_type(m);
+    });
+    prog_.types.insert(type);
 }
 
 void IRBuilder::begin_function(
@@ -47,7 +68,7 @@ void IRBuilder::end_function()
     CUJ_INTERNAL_ASSERT(blocks_.size() == 1);
     prog_.funcs.push_back(cur_func_);
     cur_func_ = {};
-    blocks_   = {};
+    blocks_ = {};
 }
 
 void IRBuilder::add_function_arg(int alloc_index)

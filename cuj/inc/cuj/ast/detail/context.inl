@@ -2,6 +2,7 @@
 
 #include <cuj/ast/context.h>
 
+#include <cuj/gen/c.h>
 #include <cuj/gen/llvm.h>
 #include <cuj/gen/printer.h>
 
@@ -68,7 +69,6 @@ const ir::Type *Context::get_type()
     {
         auto &type = all_types()[type_idx];
         type = newRC<ir::Type>(ir::to_builtin_type_value<T>);
-
         used_types_[type_idx] = type;
         return type.get();
     }
@@ -76,29 +76,28 @@ const ir::Type *Context::get_type()
     {
         auto &type = all_types()[type_idx];
         type = newRC<ir::Type>(ir::ArrayType{ 0, nullptr });
+        used_types_[type_idx] = type;
 
         auto elem_type = this->get_type<typename T::ElementType>();
         type->as<ir::ArrayType>() = { T::ElementCount, elem_type };
 
-        used_types_[type_idx] = type;
         return type.get();
     }
     else if constexpr(is_pointer<T>)
     {
         auto &type = all_types()[type_idx];
         type = newRC<ir::Type>(ir::PointerType{ nullptr });
+        used_types_[type_idx] = type;
 
         auto pointed_type = this->get_type<typename T::PointedType>();
         type->as<ir::PointerType>().pointed_type = pointed_type;
 
-        used_types_[type_idx] = type;
         return type.get();
     }
     else if constexpr(is_intrinsic<T>)
     {
         auto &type = all_types()[type_idx];
         type = newRC<ir::Type>(T::get_type());
-
         used_types_[type_idx] = type;
         return type.get();
     }
@@ -106,14 +105,14 @@ const ir::Type *Context::get_type()
     {
         auto &type = all_types()[type_idx];
         type = newRC<ir::Type>(ir::StructType{});
-        auto &s_type = type->as<ir::StructType>();
+        used_types_[type_idx] = type;
 
+        auto &s_type = type->as<ir::StructType>();
         s_type.name = "CUJStruct" + std::to_string(struct_count_++);
 
         detail::StructMemberRecorder recorder{ this, s_type.mem_types };
         T::foreach_member(recorder);
 
-        used_types_[type_idx] = type;
         return type.get();
     }
 }
@@ -404,6 +403,15 @@ inline gen::NativeJIT Context::gen_native_jit(
     return jit;
 }
 
+inline std::string Context::gen_c(bool cuda) const
+{
+    gen::CGenerator gen;
+    if(cuda)
+        gen.set_cuda();
+    gen.print(gen_ir());
+    return gen.get_string();
+}
+
 #if CUJ_ENABLE_CUDA
 
 inline std::string Context::gen_ptx(gen::OptLevel opt, bool fast_math) const
@@ -459,9 +467,6 @@ inline void Context::gen_ir_impl(ir::IRBuilder &builder) const
 {
     CUJ_INTERNAL_ASSERT(func_stack_.empty());
 
-    for(auto &p : used_types_)
-        builder.add_type(p.first, p.second);
-
     for(auto &f : funcs_)
     {
         f.second.match(
@@ -474,6 +479,9 @@ inline void Context::gen_ir_impl(ir::IRBuilder &builder) const
             builder.add_host_imported_function(func);
         });
     }
+
+    for(auto &p : used_types_)
+        builder.add_type(p.second.get());
 }
 
 inline std::map<std::type_index, RC<ir::Type>> &Context::all_types()

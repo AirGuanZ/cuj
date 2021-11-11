@@ -115,6 +115,8 @@ public:
     
     gen::NativeJIT gen_native_jit(
         gen::OptLevel opt = gen::OptLevel::Default, bool fast_math = false) const;
+
+    std::string gen_c(bool cuda) const;
     
 #if CUJ_ENABLE_CUDA
     

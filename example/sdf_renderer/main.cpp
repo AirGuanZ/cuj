@@ -209,8 +209,6 @@ f32 next_hit(
 void render_pixel(
     Pointer<Vec3f> color_buffer, i32 x, i32 y, Pointer<LCG> rng)
 {
-    Var<Vec3f[3][4][5]> arr;
-
     Vec3f pos(CAMERA_POS[0], CAMERA_POS[1], CAMERA_POS[2]);
 
     Vec3f d;
@@ -287,10 +285,6 @@ std::string generate_ptx()
         };
     });
 
-    gen::CGenerator cg;
-    cg.print(ctx.gen_ir());
-    std::cout << cg.get_string() << std::endl;
-
     return ctx.gen_ptx(gen::OptLevel::O3, true);
 }
 
@@ -326,7 +320,7 @@ void run()
     std::cout << "start rendering" << std::endl;
     const auto start_time = std::chrono::steady_clock::now();
 
-    int iters = 10; int spp = 4;
+    int iters = 400; int spp = 1;
     for(int i = 0; i < iters; ++i)
     {
         cuda_module.launch(

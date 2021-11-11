@@ -67,7 +67,7 @@ void IRPrinter::print(const ir::Program &prog)
 
     for(auto &p : prog.types)
     {
-        if(auto struct_type = p.second->as_if<ir::StructType>())
+        if(auto struct_type = p->as_if<ir::StructType>())
         {
             has_struct = true;
             CUJ_INTERNAL_ASSERT(!struct_names_.count(struct_type));
@@ -77,7 +77,7 @@ void IRPrinter::print(const ir::Program &prog)
 
     for(auto &p : prog.types)
     {
-        if(auto struct_type = p.second->as_if<ir::StructType>())
+        if(auto struct_type = p->as_if<ir::StructType>())
             print(struct_type);
     }
 

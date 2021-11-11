@@ -270,10 +270,10 @@ void LLVMIRGenerator::generate(const ir::Program &prog, llvm::DataLayout *dl)
         data_->top_module->setDataLayout(*dl_);
 
     for(auto &p : prog.types)
-        find_llvm_type(p.second.get());
+        find_llvm_type(p);
 
     for(auto &p : prog.types)
-        construct_struct_type_body(p.second.get());
+        construct_struct_type_body(p);
 
     for(auto &f : prog.funcs)
     {

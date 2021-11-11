@@ -19,7 +19,7 @@ public:
 
     // type desc
 
-    void add_type(std::type_index type_index, RC<Type> type);
+    void add_type(const Type *type);
 
     // function signature
 
