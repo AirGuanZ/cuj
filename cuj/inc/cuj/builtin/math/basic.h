@@ -94,16 +94,26 @@ i32 isfinite (const f64 &x);
 i32 isinf    (const f64 &x);
 i32 isnan    (const f64 &x);
 
-template<typename T>
+template<typename T, typename = std::enable_if_t<
+    !std::disjunction_v<
+        std::is_same<T, int32_t>,
+        std::is_same<T, int64_t>,
+        std::is_same<T, float>,
+        std::is_same<T, double>>>>
 ArithmeticValue<T> min(
-    const ast::ArithmeticVariable<T> &lhs, const ast::ArithmeticVariable<T> &rhs)
+    const ArithmeticValue<T> &lhs, const ArithmeticValue<T> &rhs)
 {
     return select(lhs < rhs, lhs, rhs);
 }
 
-template<typename T>
+template<typename T, typename = std::enable_if_t<
+    !std::disjunction_v<
+        std::is_same<T, int32_t>,
+        std::is_same<T, int64_t>,
+        std::is_same<T, float>,
+        std::is_same<T, double>>>>
 ArithmeticValue<T> max(
-    const ast::ArithmeticVariable<T> &lhs, const ast::ArithmeticVariable<T> &rhs)
+    const ArithmeticValue<T> &lhs, const ArithmeticValue<T> &rhs)
 {
     return select(lhs > rhs, lhs, rhs);
 }
@@ -120,9 +130,9 @@ f64 max(const f64 &a, const f64 &b);
 
 template<typename T>
 ArithmeticValue<T> clamp(
-    const ast::ArithmeticVariable<T> &x,
-    const ast::ArithmeticVariable<T> &min_x,
-    const ast::ArithmeticVariable<T> &max_x)
+    const ArithmeticValue<T> &x,
+    const ArithmeticValue<T> &min_x,
+    const ArithmeticValue<T> &max_x)
 {
     return math::max(min_x, math::min(max_x, x));
 }
