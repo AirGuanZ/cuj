@@ -47,11 +47,11 @@ std::unique_ptr<llvm::Module> new_libdevice10_module(llvm::LLVMContext *context)
 }
 
 const char *get_libdevice_function_name(
-    builtin::math::IntrinsicBasicMathFunctionType func, bool f32)
+    builtin::math::IntrinsicBasicMathFunctionType func, IntrinsicParamType type)
 {
     using builtin::math::IntrinsicBasicMathFunctionType;
 
-    if(f32)
+    if(type == F32)
     {
         switch(func)
         {
@@ -81,9 +81,11 @@ const char *get_libdevice_function_name(
         case IntrinsicBasicMathFunctionType::isfinite:  return "__nv_finitef";
         case IntrinsicBasicMathFunctionType::isinf:     return "__nv_isinff";
         case IntrinsicBasicMathFunctionType::isnan:     return "__nv_isnanf";
+        case IntrinsicBasicMathFunctionType::min:       return "__nv_fminf";
+        case IntrinsicBasicMathFunctionType::max:       return "__nv_fmaxf";
         }
     }
-    else
+    else if(type == F64)
     {
         switch(func)
         {
@@ -113,9 +115,27 @@ const char *get_libdevice_function_name(
         case IntrinsicBasicMathFunctionType::isfinite:  return "__nv_isfinited";
         case IntrinsicBasicMathFunctionType::isinf:     return "__nv_isinfd";
         case IntrinsicBasicMathFunctionType::isnan:     return "__nv_isnand";
+        case IntrinsicBasicMathFunctionType::min:       return "__nv_fmin";
+        case IntrinsicBasicMathFunctionType::max:       return "__nv_fmax";
         }
     }
-    unreachable();
+    else if(type == S32)
+    {
+        if(func == IntrinsicBasicMathFunctionType::min)
+            return "__nv_min";
+        if(func == IntrinsicBasicMathFunctionType::max)
+            return "__nv_max";
+    }
+    else
+    {
+        CUJ_INTERNAL_ASSERT(type == S64);
+        if(func == IntrinsicBasicMathFunctionType::min)
+            return "__nv_llmin";
+        if(func == IntrinsicBasicMathFunctionType::max)
+            return "__nv_llmax";
+    }
+
+    throw CUJException("libdevice: unknown function");
 }
 
 CUJ_NAMESPACE_END(cuj::gen::libdev)

@@ -26,6 +26,7 @@
 #pragma warning(pop)
 #endif
 
+#include <cuj/gen/llvm.h>
 #include <cuj/gen/ptx.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
@@ -40,7 +41,7 @@ namespace
     };
 
     IntermediateModule construct_intermediate_module(
-        const ir::Program &prog, const PTXGenerator::Options opts)
+        const ir::Program &prog, const Options opts)
     {
         LLVMInitializeNVPTXTargetInfo();
         LLVMInitializeNVPTXTarget();
@@ -69,14 +70,19 @@ namespace
             options.NoNaNsFPMath = 0;
         }
 
+        llvm::Optional<llvm::Reloc::Model> reloc_model = {};
+        if(opts.relocatable_code)
+            reloc_model = llvm::Reloc::PIC_;
+
         auto machine = target->createTargetMachine(
-            target_triple, "sm_60", "+ptx63", options, {},
+            target_triple, "sm_60", "+ptx63", options, reloc_model,
             llvm::CodeModel::Small, llvm::CodeGenOpt::Aggressive);
         auto data_layout = machine->createDataLayout();
 
         LLVMIRGenerator ir_gen;
         if(opts.fast_math)
             ir_gen.use_fast_math();
+        ir_gen.disable_basic_optimizations();
         ir_gen.set_target(LLVMIRGenerator::Target::PTX);
         ir_gen.generate(prog, &data_layout);
 
@@ -85,18 +91,20 @@ namespace
         llvm_module->setDataLayout(data_layout);
 
         llvm::PassManagerBuilder pass_mgr_builder;
-        switch(opts.opt_level)
+        switch(opts.optimize_level)
         {
-        case OptLevel::O0: pass_mgr_builder.OptLevel = 0; break;
-        case OptLevel::O1: pass_mgr_builder.OptLevel = 1; break;
-        case OptLevel::O2: pass_mgr_builder.OptLevel = 2; break;
-        case OptLevel::O3: pass_mgr_builder.OptLevel = 3; break;
+        case OptimizeLevel::O0: pass_mgr_builder.OptLevel = 0; break;
+        case OptimizeLevel::O1: pass_mgr_builder.OptLevel = 1; break;
+        case OptimizeLevel::O2: pass_mgr_builder.OptLevel = 2; break;
+        case OptimizeLevel::O3: pass_mgr_builder.OptLevel = 3; break;
         }
         pass_mgr_builder.Inliner = llvm::createFunctionInliningPass(
             pass_mgr_builder.OptLevel, 0, false);
-        pass_mgr_builder.SLPVectorize = false;
-        pass_mgr_builder.LoopVectorize = false;
+        pass_mgr_builder.SLPVectorize   = opts.auto_vectorization;
+        pass_mgr_builder.LoopVectorize  = opts.auto_vectorization;
         pass_mgr_builder.MergeFunctions = true;
+
+        machine->adjustPassManager(pass_mgr_builder);
 
         {
             llvm::legacy::FunctionPassManager fp_mgr(llvm_module);
@@ -109,14 +117,13 @@ namespace
             fp_mgr.doFinalization();
         }
 
-        machine->adjustPassManager(pass_mgr_builder);
-
-        llvm::legacy::PassManager passes;
-        passes.add(createTargetTransformInfoWrapperPass(
-            machine->getTargetIRAnalysis()));
-        pass_mgr_builder.populateModulePassManager(passes);
-
-        passes.run(*llvm_module);
+        {
+            llvm::legacy::PassManager passes;
+            passes.add(createTargetTransformInfoWrapperPass(
+                machine->getTargetIRAnalysis()));
+            pass_mgr_builder.populateModulePassManager(passes);
+            passes.run(*llvm_module);
+        }
 
         IntermediateModule result;
         result.llvm_module = ir_gen.get_module_ownership();
@@ -126,11 +133,6 @@ namespace
     }
 
 } // namespace anonymouos
-
-void PTXGenerator::generate(const ir::Program &prog, OptLevel opt)
-{
-    generate(prog, Options{ opt, false });
-}
 
 void PTXGenerator::generate(const ir::Program &prog, const Options &opts)
 {

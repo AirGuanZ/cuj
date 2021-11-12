@@ -225,9 +225,9 @@ bool process_cuda_intrinsic_stat(
         auto line      = args[2];
         auto func_name = args[3];
 
-        auto tp_type = sizeof(void *) == 8 ?
-            llvm::IntegerType::getInt64Ty(ctx) :
-            llvm::IntegerType::getInt32Ty(ctx);
+        auto tp_type = llvm::IntegerType::getInt64Ty(ctx);
+        if constexpr(sizeof(void*) == 4)
+            tp_type = llvm::IntegerType::getInt32Ty(ctx);
 
         message   = ir.CreatePtrToInt(message, tp_type);
         file      = ir.CreatePtrToInt(file, tp_type);
@@ -300,12 +300,27 @@ llvm::Value *process_cuda_intrinsic_op(
 
 #undef CUJ_CUDA_INTRINSIC_SREG
 
-#define CUJ_CALL_LIBDEVICE(TYPE, IS_F32)                                        \
+    auto intrinsic_param_type_to_name = [](libdev::IntrinsicParamType type)
+    {
+        switch(type)
+        {
+        case libdev::S32: return "i32";
+        case libdev::S64: return "i64";
+        case libdev::F32: return "f32";
+        case libdev::F64: return "f64";
+        }
+        unreachable();
+    };
+
+#define CUJ_CALL_LIBDEVICE(TYPE, PARAM_TYPE)                                    \
     do {                                                                        \
-        if(name == (IS_F32 ? ("math." #TYPE ".f32") : ("math." #TYPE ".f64")))  \
+        const std::string dst_name = "math." #TYPE "." +                        \
+            std::string(intrinsic_param_type_to_name(PARAM_TYPE));              \
+        if(name == dst_name)                                                    \
         {                                                                       \
             auto func_name = libdev::get_libdevice_function_name(               \
-                builtin::math::IntrinsicBasicMathFunctionType::TYPE, IS_F32);   \
+                builtin::math::IntrinsicBasicMathFunctionType::TYPE,            \
+                PARAM_TYPE);                                                    \
             auto func = top_module->getFunction(func_name);                     \
             CUJ_INTERNAL_ASSERT(func);                                          \
             if(!func->hasFnAttribute(llvm::Attribute::ReadNone))                \
@@ -344,59 +359,92 @@ llvm::Value *process_cuda_intrinsic_op(
             llvm::Intrinsic::nvvm_ceil_f, {}, args);
     }
 
-    CUJ_CALL_LIBDEVICE(abs,       true);
-    CUJ_CALL_LIBDEVICE(mod,       true);
-    CUJ_CALL_LIBDEVICE(remainder, true);
-    CUJ_CALL_LIBDEVICE(exp,       true);
-    CUJ_CALL_LIBDEVICE(exp2,      true);
-    CUJ_CALL_LIBDEVICE(exp10,     true);
-    CUJ_CALL_LIBDEVICE(log,       true);
-    CUJ_CALL_LIBDEVICE(log2,      true);
-    CUJ_CALL_LIBDEVICE(log10,     true);
-    CUJ_CALL_LIBDEVICE(pow,       true);
-    CUJ_CALL_LIBDEVICE(sqrt,      true);
-    CUJ_CALL_LIBDEVICE(rsqrt,     true);
-    CUJ_CALL_LIBDEVICE(sin,       true);
-    CUJ_CALL_LIBDEVICE(cos,       true);
-    CUJ_CALL_LIBDEVICE(tan,       true);
-    CUJ_CALL_LIBDEVICE(asin,      true);
-    CUJ_CALL_LIBDEVICE(acos,      true);
-    CUJ_CALL_LIBDEVICE(atan,      true);
-    CUJ_CALL_LIBDEVICE(atan2,     true);
-    CUJ_CALL_LIBDEVICE(ceil,      true);
-    CUJ_CALL_LIBDEVICE(floor,     true);
-    CUJ_CALL_LIBDEVICE(trunc,     true);
-    CUJ_CALL_LIBDEVICE(round,     true);
-    CUJ_CALL_LIBDEVICE(isfinite,  true);
-    CUJ_CALL_LIBDEVICE(isinf,     true);
-    CUJ_CALL_LIBDEVICE(isnan,     true);
+    if(name == "math.min.f32" || name == "math.min.f64")
+    {
+        auto comp = ir.CreateFCmpOLT(args[0], args[1]);
+        return ir.CreateSelect(comp, args[0], args[1]);
+    }
+
+    if(name == "math.max.f32" || name == "math.max.f64")
+    {
+        auto comp = ir.CreateFCmpOGT(args[0], args[1]);
+        return ir.CreateSelect(comp, args[0], args[1]);
+    }
+
+    if(name == "math.min.i32" || name == "math.min.i64")
+    {
+        auto comp = ir.CreateICmpSLT(args[0], args[1]);
+        return ir.CreateSelect(comp, args[0], args[1]);
+    }
+
+    if(name == "math.max.i32" || name == "math.max.i64")
+    {
+        auto comp = ir.CreateICmpSGT(args[0], args[1]);
+        return ir.CreateSelect(comp, args[0], args[1]);
+    }
+
+    CUJ_CALL_LIBDEVICE(abs,       libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(mod,       libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(remainder, libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(exp,       libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(exp2,      libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(exp10,     libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(log,       libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(log2,      libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(log10,     libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(pow,       libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(sqrt,      libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(rsqrt,     libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(sin,       libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(cos,       libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(tan,       libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(asin,      libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(acos,      libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(atan,      libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(atan2,     libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(ceil,      libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(floor,     libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(trunc,     libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(round,     libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(isfinite,  libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(isinf,     libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(isnan,     libdev::IntrinsicParamType::F32);
     
-    CUJ_CALL_LIBDEVICE(abs,       false);
-    CUJ_CALL_LIBDEVICE(mod,       false);
-    CUJ_CALL_LIBDEVICE(remainder, false);
-    CUJ_CALL_LIBDEVICE(exp,       false);
-    CUJ_CALL_LIBDEVICE(exp2,      false);
-    CUJ_CALL_LIBDEVICE(exp10,     false);
-    CUJ_CALL_LIBDEVICE(log,       false);
-    CUJ_CALL_LIBDEVICE(log2,      false);
-    CUJ_CALL_LIBDEVICE(log10,     false);
-    CUJ_CALL_LIBDEVICE(pow,       false);
-    CUJ_CALL_LIBDEVICE(sqrt,      false);
-    CUJ_CALL_LIBDEVICE(rsqrt,     false);
-    CUJ_CALL_LIBDEVICE(sin,       false);
-    CUJ_CALL_LIBDEVICE(cos,       false);
-    CUJ_CALL_LIBDEVICE(tan,       false);
-    CUJ_CALL_LIBDEVICE(asin,      false);
-    CUJ_CALL_LIBDEVICE(acos,      false);
-    CUJ_CALL_LIBDEVICE(atan,      false);
-    CUJ_CALL_LIBDEVICE(atan2,     false);
-    CUJ_CALL_LIBDEVICE(ceil,      false);
-    CUJ_CALL_LIBDEVICE(floor,     false);
-    CUJ_CALL_LIBDEVICE(trunc,     false);
-    CUJ_CALL_LIBDEVICE(round,     false);
-    CUJ_CALL_LIBDEVICE(isfinite,  false);
-    CUJ_CALL_LIBDEVICE(isinf,     false);
-    CUJ_CALL_LIBDEVICE(isnan,     false);
+    CUJ_CALL_LIBDEVICE(abs,       libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(mod,       libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(remainder, libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(exp,       libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(exp2,      libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(exp10,     libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(log,       libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(log2,      libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(log10,     libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(pow,       libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(sqrt,      libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(rsqrt,     libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(sin,       libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(cos,       libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(tan,       libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(asin,      libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(acos,      libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(atan,      libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(atan2,     libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(ceil,      libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(floor,     libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(trunc,     libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(round,     libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(isfinite,  libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(isinf,     libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(isnan,     libdev::IntrinsicParamType::F64);
+
+    CUJ_CALL_LIBDEVICE(min, libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(max, libdev::IntrinsicParamType::F32);
+    CUJ_CALL_LIBDEVICE(min, libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(max, libdev::IntrinsicParamType::F64);
+    CUJ_CALL_LIBDEVICE(min, libdev::IntrinsicParamType::S32);
+    CUJ_CALL_LIBDEVICE(max, libdev::IntrinsicParamType::S32);
+    CUJ_CALL_LIBDEVICE(min, libdev::IntrinsicParamType::S64);
+    CUJ_CALL_LIBDEVICE(max, libdev::IntrinsicParamType::S64);
 
     if(name == "atomic.add.f32" || name == "atomic.add.f64")
     {

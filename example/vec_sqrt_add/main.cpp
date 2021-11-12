@@ -35,9 +35,11 @@ std::string generate_ptx()
     
     std::cout << "=========== ptx ===========" << std::endl << std::endl;
 
-    auto ptx = context.gen_ptx_nvrtc(false, true);
-    std::cout << ptx << std::endl;
+    gen::Options options;
+    options.fast_math = true;
+    auto ptx = context.gen_ptx_nvrtc(options);
 
+    std::cout << ptx << std::endl;
     return ptx;
 }
 

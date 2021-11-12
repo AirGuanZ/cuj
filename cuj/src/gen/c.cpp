@@ -42,6 +42,11 @@ namespace
         unreachable();
     }
 
+    const char *PROG_INCLUDES = R"___(#include <math.h>
+#include <stdio.h>
+#include <string.h>
+)___";
+
     const char *PROG_PREFIX = R"___(#ifdef __CUDACC__
 #define CUJ_DEVICE_FUNCTION __device__
 #define CUJ_KERNEL_FUNCTION __global__
@@ -73,6 +78,8 @@ CUJ_DEVICE_FUNCTION double CUJExp10F64(double v)
 {
     return pow(10.0, v);
 }
+#define CUJ_GENERAL_MIN(A, B) ((A) < (B) ? (A) : (B))
+#define CUJ_GENERAL_MAX(A, B) ((A) > (B) ? (A) : (B))
 )___";
 
 } // namespace anonymous
@@ -84,26 +91,7 @@ void CGenerator::set_cuda()
 
 std::string CGenerator::get_string() const
 {
-    IndentedStringBuilder globals;
-    for(auto &[data, name] : global_const_data_)
-    {
-        globals.append("const unsigned char ", name, "[] = { ");
-
-        std::string result;
-        for(auto b : data)
-        {
-            char chs[10];
-            sprintf(chs, "0x%02x, ", b);
-            result += chs;
-        }
-
-        globals.append(result, " };");
-        globals.new_line();
-    }
-
-    const auto body = str_.get_result();
-
-    return PROG_PREFIX + globals.get_result() + str_.get_result();
+    return result_;
 }
 
 void CGenerator::print(const ir::Program &prog)
@@ -122,6 +110,13 @@ void CGenerator::print(const ir::Program &prog)
 
     for(auto &f : prog.funcs)
         define_function(f.as<RC<ir::Function>>().get());
+
+    const auto globals = generate_global_consts();
+    const auto body = str_.get_result();
+
+    result_ = PROG_PREFIX + generate_global_consts() + str_.get_result();
+    if(!is_cuda_)
+        result_ = PROG_INCLUDES + result_;
 }
 
 std::string CGenerator::generate_type_name(const ir::Type *type)
@@ -236,16 +231,6 @@ void CGenerator::define_builtin_type(ir::BuiltinType type, TypeInfo &info)
         static_assert(sizeof(short)     == 2);
         static_assert(sizeof(int)       == 4);
         static_assert(sizeof(long long) == 8);
-
-        //CUJ_DEFINE_BUILTIN_TYPE(uint8_t,  U8);
-        //CUJ_DEFINE_BUILTIN_TYPE(uint16_t, U16);
-        //CUJ_DEFINE_BUILTIN_TYPE(uint32_t, U32);
-        //CUJ_DEFINE_BUILTIN_TYPE(uint64_t, U64);
-        //CUJ_DEFINE_BUILTIN_TYPE(int8_t,   S8);
-        //CUJ_DEFINE_BUILTIN_TYPE(int16_t,  S16);
-        //CUJ_DEFINE_BUILTIN_TYPE(int32_t,  S32);
-        //CUJ_DEFINE_BUILTIN_TYPE(int64_t,  S64);
-        //CUJ_DEFINE_BUILTIN_TYPE(int32_t,  Bool);
     }
 
 #undef CUJ_DEFINE_BUILTIN_TYPE
@@ -737,6 +722,18 @@ void CGenerator::generate_intrinsic(const ir::IntrinsicOp &op)
     CUJ_GEN("math.isnan.f32", "isnan")
     CUJ_GEN("math.isnan.f64", "isnan")
 
+    CUJ_GEN("math.min.f32", "fminf")
+    CUJ_GEN("math.min.f64", "fmin")
+
+    CUJ_GEN("math.max.f32", "fmaxf")
+    CUJ_GEN("math.max.f64", "fmax")
+    
+    CUJ_GEN("math.max.i32", "CUJ_GENERAL_MIN")
+    CUJ_GEN("math.max.i64", "CUJ_GENERAL_MIN")
+
+    CUJ_GEN("math.max.i32", "CUJ_GENERAL_MAX")
+    CUJ_GEN("math.max.i64", "CUJ_GENERAL_MAX")
+
     throw CUJException("unknown intrinsic: " + op.name);
 }
 
@@ -879,6 +876,33 @@ const ir::Type *CGenerator::get_type(const ir::BasicValue &val)
     {
         throw CUJException("get_type(ConstData) is not supported");
     });
+}
+
+std::string CGenerator::generate_global_consts() const
+{
+
+    IndentedStringBuilder globals;
+    for(auto &[data, name] : global_const_data_)
+    {
+        globals.append("const unsigned char ", name, "[] = { ");
+
+        std::string result;
+        for(auto b : data)
+        {
+            char chs[10];
+#ifdef _MSC_VER
+            sprintf_s(chs, sizeof(chs), "0x%02x, ", b);
+#else
+            sprintf(chs, "0x%02x, ", b);
+#endif
+            result += chs;
+        }
+
+        globals.append(result, " };");
+        globals.new_line();
+    }
+
+    return globals.get_result();
 }
 
 CUJ_NAMESPACE_END(cuj::gen)

@@ -5,6 +5,22 @@ CUJ_NAMESPACE_BEGIN(cuj::builtin::math)
 namespace detail
 {
 
+    template<typename T>
+    const char *intrinsic_math_comp_name()
+    {
+        if constexpr(std::is_same_v<T, int32_t>)
+            return "i32";
+        else if constexpr(std::is_same_v<T, float>)
+            return "f32";
+        else if constexpr(std::is_same_v<T, double>)
+            return "f64";
+        else
+        {
+            static_assert(std::is_same_v<T, int64_t>);
+            return "i64";
+        }
+    }
+
     template<typename R, typename F>
     class InternalIntrinsicBasicMathFunction :
         public ast::InternalArithmeticValue<R>
@@ -26,8 +42,7 @@ namespace detail
 
         std::string name = intrinsic_basic_math_function_name(type);
         auto intrinsic = ir::IntrinsicOp{
-            name + (std::is_same_v<F, float> ? ".f32" : ".f64"),
-            { input1_val }
+            name + "." + intrinsic_math_comp_name<F>(), {input1_val}
         };
 
         if(input2)
@@ -49,7 +64,7 @@ namespace
 {
 
     template<typename R, typename F>
-    ast::Value<R> create(
+    Value<R> create(
         IntrinsicBasicMathFunctionType      type,
         RC<ast::InternalArithmeticValue<F>> input1,
         RC<ast::InternalArithmeticValue<F>> input2 = {})
@@ -97,6 +112,8 @@ const char *intrinsic_basic_math_function_name(
     CUJ_INTRINSIC_NAME(isfinite)
     CUJ_INTRINSIC_NAME(isinf)
     CUJ_INTRINSIC_NAME(isnan)
+    CUJ_INTRINSIC_NAME(min)
+    CUJ_INTRINSIC_NAME(max)
     }
     unreachable();
 
@@ -171,5 +188,15 @@ CUJ_MATH_FUNC_1_ARG(round,     double, double)
 CUJ_MATH_FUNC_1_ARG(isfinite,  int,   double)
 CUJ_MATH_FUNC_1_ARG(isinf,     int,   double)
 CUJ_MATH_FUNC_1_ARG(isnan,     int,   double)
+
+CUJ_MATH_FUNC_2_ARG(min, int32_t, int32_t, int32_t)
+CUJ_MATH_FUNC_2_ARG(min, int64_t, int64_t, int64_t)
+CUJ_MATH_FUNC_2_ARG(min, float,   float,   float)
+CUJ_MATH_FUNC_2_ARG(min, double,  double,  double)
+
+CUJ_MATH_FUNC_2_ARG(max, int32_t, int32_t, int32_t)
+CUJ_MATH_FUNC_2_ARG(max, int64_t, int64_t, int64_t)
+CUJ_MATH_FUNC_2_ARG(max, float,   float,   float)
+CUJ_MATH_FUNC_2_ARG(max, double,  double,  double)
 
 CUJ_NAMESPACE_END(cuj::builtin::math)

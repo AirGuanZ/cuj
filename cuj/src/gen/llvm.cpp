@@ -226,6 +226,11 @@ void LLVMIRGenerator::use_fast_math()
     fast_math_ = true;
 }
 
+void LLVMIRGenerator::disable_basic_optimizations()
+{
+    basic_optimizations_ = false;
+}
+
 void LLVMIRGenerator::set_target(Target target)
 {
     target_ = target;
@@ -315,21 +320,29 @@ void LLVMIRGenerator::generate(const ir::Program &prog, llvm::DataLayout *dl)
     llvm::legacy::FunctionPassManager fpm(data_->top_module.get());
     fpm.add(llvm::createPromoteMemoryToRegisterPass());
     fpm.add(llvm::createSROAPass());
-    fpm.add(llvm::createEarlyCSEPass());
-    fpm.add(llvm::createBasicAAWrapperPass());
-    fpm.add(llvm::createInstructionCombiningPass());
-    fpm.add(llvm::createReassociatePass());
-    fpm.add(llvm::createGVNPass());
-    fpm.add(llvm::createDeadCodeEliminationPass());
-    fpm.add(llvm::createCFGSimplificationPass());
-    fpm.doInitialization();
 
+    if(basic_optimizations_)
+    {
+        fpm.add(llvm::createEarlyCSEPass());
+        fpm.add(llvm::createBasicAAWrapperPass());
+        fpm.add(llvm::createInstructionCombiningPass());
+        fpm.add(llvm::createReassociatePass());
+        fpm.add(llvm::createGVNPass());
+        fpm.add(llvm::createDeadCodeEliminationPass());
+        fpm.add(llvm::createCFGSimplificationPass());
+    }
+
+    fpm.doInitialization();
     for(auto f : all_funcs)
         fpm.run(*f);
+    fpm.doFinalization();
 
-    // IMPROVE: module-level opt pipeline
-    llvm::ModuleAnalysisManager mam;
-    llvm::GlobalDCEPass().run(*data_->top_module, mam);
+    if(basic_optimizations_)
+    {
+        // IMPROVE: module-level opt pipeline
+        llvm::ModuleAnalysisManager mam;
+        llvm::GlobalDCEPass().run(*data_->top_module, mam);
+    }
 }
 
 llvm::Module *LLVMIRGenerator::get_module() const

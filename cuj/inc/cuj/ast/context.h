@@ -7,6 +7,7 @@
 #include <cuj/ast/func.h>
 #include <cuj/ast/func_context.h>
 #include <cuj/ast/func_trait.h>
+#include <cuj/gen/llvm.h>
 #include <cuj/gen/native.h>
 #include <cuj/ir/type.h>
 #include <cuj/util/scope_guard.h>
@@ -110,20 +111,17 @@ public:
 
     std::string gen_ir_string() const;
 
-    std::string gen_llvm_string(
-        gen::LLVMIRGenerator::Target target) const;
+    std::string gen_llvm_string(gen::LLVMIRGenerator::Target target) const;
     
-    gen::NativeJIT gen_native_jit(
-        gen::OptLevel opt = gen::OptLevel::Default, bool fast_math = false) const;
+    gen::NativeJIT gen_native_jit(const gen::Options &options = {}) const;
 
     std::string gen_c(bool cuda) const;
     
 #if CUJ_ENABLE_CUDA
     
-    std::string gen_ptx(
-        gen::OptLevel opt = gen::OptLevel::Default, bool fast_math = false) const;
+    std::string gen_ptx(const gen::Options &options = {}) const;
 
-    std::string gen_ptx_nvrtc(bool reloc, bool fast_math = false) const;
+    std::string gen_ptx_nvrtc(const gen::Options &options = {}) const;
 
 #endif
 

@@ -64,8 +64,12 @@ private:
 
     const ir::Type *get_type(const ir::BasicValue &val);
 
+    std::string generate_global_consts() const;
+
     bool is_cuda_ = false;
+
     IndentedStringBuilder str_;
+    std::string           result_;
 
     int generated_array_type_count_   = 0;
     int generated_pointer_type_count_ = 0;

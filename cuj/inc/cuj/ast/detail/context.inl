@@ -396,11 +396,10 @@ inline std::string Context::gen_llvm_string(
     return llvm_gen.get_string();
 }
 
-inline gen::NativeJIT Context::gen_native_jit(
-    gen::OptLevel opt, bool fast_math) const
+inline gen::NativeJIT Context::gen_native_jit(const gen::Options &options) const
 {
     gen::NativeJIT jit;
-    jit.generate(gen_ir(), { opt, fast_math });
+    jit.generate(gen_ir(), options);
     return jit;
 }
 
@@ -415,17 +414,17 @@ inline std::string Context::gen_c(bool cuda) const
 
 #if CUJ_ENABLE_CUDA
 
-inline std::string Context::gen_ptx(gen::OptLevel opt, bool fast_math) const
+inline std::string Context::gen_ptx(const gen::Options &options) const
 {
     gen::PTXGenerator generator;
-    generator.generate(gen_ir(), { opt, fast_math });
+    generator.generate(gen_ir(), options);
     return generator.get_result();
 }
 
-inline std::string Context::gen_ptx_nvrtc(bool reloc, bool fast_math) const
+inline std::string Context::gen_ptx_nvrtc(const gen::Options &options) const
 {
     gen::NVRTC generator;
-    generator.generate(gen_ir(), { reloc, fast_math });
+    generator.generate(gen_ir(), options);
     return generator.get_ptx();
 }
 

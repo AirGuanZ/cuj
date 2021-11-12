@@ -46,6 +46,7 @@ namespace
             return func;
 
         auto i32 = llvm::Type::getInt32Ty(*context);
+        auto i64 = llvm::Type::getInt64Ty(*context);
         auto f32 = llvm::Type::getFloatTy(*context);
         auto f64 = llvm::Type::getDoubleTy(*context);
     
@@ -108,6 +109,16 @@ namespace
         TRY_REGISTER_FUNC("host.math.isfinite.f64",  true, i32, f64);
         TRY_REGISTER_FUNC("host.math.isinf.f64",     true, i32, f64);
         TRY_REGISTER_FUNC("host.math.isnan.f64",     true, i32, f64);
+
+        TRY_REGISTER_FUNC("host.math.min.f32", true, f32, f32, f32);
+        TRY_REGISTER_FUNC("host.math.min.f64", true, f64, f64, f64);
+        TRY_REGISTER_FUNC("host.math.min.i32", true, i32, i32, i32);
+        TRY_REGISTER_FUNC("host.math.min.i64", true, i64, i64, i64);
+
+        TRY_REGISTER_FUNC("host.math.max.f32", true, f32, f32, f32);
+        TRY_REGISTER_FUNC("host.math.max.f64", true, f64, f64, f64);
+        TRY_REGISTER_FUNC("host.math.max.i32", true, i32, i32, i32);
+        TRY_REGISTER_FUNC("host.math.max.i64", true, i64, i64, i64);
     
         throw CUJException("unknown host math function: " + name);
     }
@@ -248,6 +259,16 @@ llvm::Value *process_host_intrinsic_op(
     CUJ_HOST_MATH_INTRINSIC("math.isfinite.f64");
     CUJ_HOST_MATH_INTRINSIC("math.isinf.f64");
     CUJ_HOST_MATH_INTRINSIC("math.isnan.f64");
+
+    CUJ_HOST_MATH_INTRINSIC("math.min.f32");
+    CUJ_HOST_MATH_INTRINSIC("math.min.f64");
+    CUJ_HOST_MATH_INTRINSIC("math.min.i32");
+    CUJ_HOST_MATH_INTRINSIC("math.min.i64");
+
+    CUJ_HOST_MATH_INTRINSIC("math.max.f32");
+    CUJ_HOST_MATH_INTRINSIC("math.max.f64");
+    CUJ_HOST_MATH_INTRINSIC("math.max.i32");
+    CUJ_HOST_MATH_INTRINSIC("math.max.i64");
 
 #undef CUJ_HOST_MATH_INTRINSIC
 

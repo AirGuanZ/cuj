@@ -6,8 +6,8 @@ Run-time program generator embedded in C++
 
 ### Requirements
 
-* LLVM 11.1.0 and (optional) CUDA 10.2/11.1 (other versions may work but haven't been tested)
-* A C++17 compiler
+* LLVM 11.1.0 and (optional) CUDA 11.1 (other versions may work but haven't been tested)
+* A C++17-compatible compiler
 
 ### Building with CMake
 
@@ -497,12 +497,27 @@ assert(add_float_func_pointer1(1.0f, 2.0f) == 3.0f);
 ScopedContext context;
 // ...define functions/kernels
 
+gen::Options options;
+options.fast_math = true;
+
 // enable O3 optimization; enable fast math
-const std::string ptx = context.gen_ptx(gen::OptLevel::O3, true);
+const std::string ptx = context.gen_ptx(options);
 
 // another ptx backend using nvrtc
-// disable reloc; enable fast math
-const std::string ptx2 = context.gen_ptx_nvrtc(false, true);
+const std::string ptx2 = context.gen_ptx_nvrtc(options);
+```
+
+#### C
+
+```cpp
+ScopedContext context;
+// ...define functions/kernels
+
+// generate c source code
+const std::string c_src = context.gen_c(false);
+
+// generate cuda source code
+const std::string cu_src = context.gen_c(true);
 ```
 
 ### Builtin Functions
@@ -524,11 +539,13 @@ f32 mod      (const f32 &x, const f32 &y);
 f32 remainder(const f32 &x, const f32 &y);
 f32 exp      (const f32 &x);
 f32 exp2     (const f32 &x);
+f32 exp10    (const f32 &x);
 f32 log      (const f32 &x);
 f32 log2     (const f32 &x);
 f32 log10    (const f32 &x);
 f32 pow      (const f32 &x, const f32 &y);
 f32 sqrt     (const f32 &x);
+f32 rsqrt    (const f32 &x);
 f32 sin      (const f32 &x);
 f32 cos      (const f32 &x);
 f32 tan      (const f32 &x);
@@ -549,11 +566,13 @@ f64 mod      (const f64 &x, const f64 &y);
 f64 remainder(const f64 &x, const f64 &y);
 f64 exp      (const f64 &x);
 f64 exp2     (const f64 &x);
+f64 exp10    (const f64 &x);
 f64 log      (const f64 &x);
 f64 log2     (const f64 &x);
 f64 log10    (const f64 &x);
 f64 pow      (const f64 &x, const f64 &y);
 f64 sqrt     (const f64 &x);
+f64 rsqrt    (const f64 &x);
 f64 sin      (const f64 &x);
 f64 cos      (const f64 &x);
 f64 tan      (const f64 &x);
@@ -571,12 +590,11 @@ i32 isnan    (const f64 &x);
 
 // static_assert(std::is_arithmetic_v<T>);
 template<typename T>
-Value<T> min(const Value<T> &lhs, const Value<T> &rhs);
+Var<T> min(const Var<T> &lhs, const Var<T> &rhs);
 template<typename T>
-Value<T> max(const Value<T> &lhs, const Value<T> &rhs);
+Var<T> max(const Var<T> &lhs, const Var<T> &rhs);
 template<typename T>
-Value<T> clamp(const Value<T> &x, const Value<T> &min_x, const Value<T> &max_x);
-
+Var<T> clamp(const Var<T> &x, const Var<T> &min_x, const Var<T> &max_x);
 ```
 
 ##### Vec1/2/3/4
@@ -589,13 +607,13 @@ class Vec3
 {
 public:
     
-    Value<T> x;
-    Value<T> y;
-    Value<T> z;
+    Var<T> x;
+    Var<T> y;
+    Var<T> z;
     
     Vec3();
-    Vec3(Value<T> value);
-    Vec3(Value<T> x, Value<T> y, Value<T> z);
+    Vec3(Var<T> value);
+    Vec3(Var<T> x, Var<T> y, Var<T> z);
     Value<T> length_square() const;
 
     Value<T> length() const;
@@ -603,7 +621,7 @@ public:
     Value<T> max_elem() const;
     
     // returned value is a reference
-    Value<T> operator[](const ArithmeticValue<size_t> &i) const;
+    Value<T> operator[](const Var<size_t> &i) const;
     
     Vec3<T> normalize() const;
 };
@@ -680,7 +698,7 @@ Pointer<void> malloc(const Value<size_t> &bytes);
 void free(const ast::Pointer<void> &ptr);
 ```
 
-**Note**: `malloc` and `free` are only available on NativeJIT backend.
+**Note**: `malloc` and `free` are only available on NativeJIT/C backends.
 
 #### Assertion
 

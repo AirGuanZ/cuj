@@ -2,7 +2,7 @@
 
 #include <cuj/ast/func.h>
 #include <cuj/ir/prog.h>
-#include <cuj/gen/llvm.h>
+#include <cuj/gen/option.h>
 #include <cuj/util/uncopyable.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
@@ -10,15 +10,6 @@ CUJ_NAMESPACE_BEGIN(cuj::gen)
 class NativeJIT : public Uncopyable
 {
 public:
-
-    struct Options
-    {
-        OptLevel opt_level = OptLevel::Default;
-        bool     fast_math = false;
-    };
-
-    static std::string generate_llvm_ir(
-        const ir::Program &prog, OptLevel opt = OptLevel::Default);
 
     static std::string generate_llvm_ir(
         const ir::Program &prog, const Options &opts);
@@ -30,8 +21,6 @@ public:
     NativeJIT &operator=(NativeJIT &&rhs) noexcept;
 
     ~NativeJIT();
-
-    void generate(const ir::Program &prog, OptLevel opt = OptLevel::Default);
 
     void generate(const ir::Program &prog, const Options &opts);
 

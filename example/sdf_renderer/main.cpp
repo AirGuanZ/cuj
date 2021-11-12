@@ -157,13 +157,17 @@ Vec3f sdf_normal(const Vec3f &p)
     constexpr float d = 1e-3f;
     Vec3f n(0.0f, 0.0f, 0.0f);
     f32 sdf_center = sdf(p);
-    for(int i = 0; i < 3; ++i)
+    $if(sdf_center < 1e-3f)
     {
-        Vec3f inc = p;
-        inc[i] = inc[i] + d;
-        n[i] = 1 / d * (sdf(inc) - sdf_center);
-    }
-    return n.normalize();
+        for(int i = 0; i < 3; ++i)
+        {
+            Vec3f inc = p;
+            inc[i] = inc[i] + d;
+            n[i] = 1 / d * (sdf(inc) - sdf_center);
+        }
+        n = n.normalize();
+    };
+    return n;
 }
 
 f32 next_hit(
@@ -251,6 +255,8 @@ std::string generate_ptx()
 {
     ScopedContext ctx;
 
+    const auto start_time = std::chrono::steady_clock::now();
+
     auto render = to_kernel(
         "render", [&](Pointer<Vec3f> color_buffer, Pointer<LCG> rngs)
     {
@@ -263,14 +269,31 @@ std::string generate_ptx()
         };
     });
 
-    return ctx.gen_ptx(gen::OptLevel::O3, true);
+    const auto end_record_time = std::chrono::steady_clock::now();
+
+    gen::Options options;
+    options.fast_math = true;
+    auto ptx = ctx.gen_ptx(options);
+
+    const auto end_compile_time = std::chrono::steady_clock::now();
+
+    std::cout << "record time: "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(
+                    end_record_time - start_time).count()
+              << "ms" << std::endl;
+    
+    std::cout << "compile time: "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(
+                    end_compile_time - end_record_time).count()
+              << "ms" << std::endl;
+
+    return ptx;
 }
 
 void run()
 {
     std::string ptx = generate_ptx();
-    std::cout << ptx << std::endl;
-
+    
     CUdevice cuDevice;
     CUcontext context;
     cuInit(0);
@@ -325,7 +348,7 @@ void run()
     cudaDeviceSynchronize();
 
     const auto end_time = std::chrono::steady_clock::now();
-    std::cout << "rendering time: "
+    std::cout << "render time: "
               << std::chrono::duration_cast<std::chrono::milliseconds>(
                     end_time - start_time).count()
               << "ms" << std::endl;

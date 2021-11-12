@@ -2,21 +2,14 @@
 
 #if CUJ_ENABLE_CUDA
 
-#include <cuj/gen/llvm.h>
+#include <cuj/gen/option.h>
+#include <cuj/ir/prog.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 
 class PTXGenerator
 {
 public:
-
-    struct Options
-    {
-        OptLevel opt_level = OptLevel::Default;
-        bool     fast_math = false;
-    };
-    
-    void generate(const ir::Program &prog, OptLevel opt = OptLevel::Default);
 
     void generate(const ir::Program &prog, const Options &opts);
 

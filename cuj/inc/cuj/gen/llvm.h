@@ -17,15 +17,6 @@ namespace llvm
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 
-enum class OptLevel
-{
-    O0,
-    O1,
-    O2,
-    O3,
-    Default = O2,
-};
-
 class LLVMIRGenerator : public Uncopyable
 {
 public:
@@ -45,6 +36,8 @@ public:
     void set_target(Target target);
 
     void use_fast_math();
+
+    void disable_basic_optimizations();
 
     void generate(const ir::Program &prog, llvm::DataLayout *dl = nullptr);
 
@@ -163,9 +156,10 @@ private:
 
     llvm::Value *i1_to_bool(llvm::Value *val);
 
-    bool fast_math_       = false;
-    Target target_        = Target::Host;
-    llvm::DataLayout *dl_ = nullptr;
+    bool fast_math_           = false;
+    bool basic_optimizations_ = true;
+    Target target_            = Target::Host;
+    llvm::DataLayout *dl_     = nullptr;
     
     Data *data_ = nullptr;
 };

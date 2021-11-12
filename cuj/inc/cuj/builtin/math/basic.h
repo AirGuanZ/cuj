@@ -33,17 +33,8 @@ enum class IntrinsicBasicMathFunctionType
     isinf,
     isnan,
 
-    fast_cos,
-    fast_sin,
-    fast_pow,
-    fast_exp,
-    fast_exp10,
-    fast_div,
-    fast_log,
-    fast_log2,
-    fast_log10,
-    fast_tan,
-    fast_sincos,
+    min,
+    max
 };
 
 const char *intrinsic_basic_math_function_name(
@@ -103,31 +94,41 @@ i32 isfinite (const f64 &x);
 i32 isinf    (const f64 &x);
 i32 isnan    (const f64 &x);
 
-inline i32 abs(i32 x) { return select(x >= 0, x, -x); }
-inline i32 sqrt(i32 x) { return cast<i32>(sqrt(cast<f64>(x))); }
-inline i32 rsqrt(i32 x) { return 0; }
-
 template<typename T>
 ArithmeticValue<T> min(
-    const ArithmeticValue<T> &lhs, const ArithmeticValue<T> &rhs)
+    const ast::ArithmeticVariable<T> &lhs, const ast::ArithmeticVariable<T> &rhs)
 {
     return select(lhs < rhs, lhs, rhs);
 }
 
 template<typename T>
 ArithmeticValue<T> max(
-    const ArithmeticValue<T> &lhs, const ArithmeticValue<T> &rhs)
+    const ast::ArithmeticVariable<T> &lhs, const ast::ArithmeticVariable<T> &rhs)
 {
     return select(lhs > rhs, lhs, rhs);
 }
 
+i32 min(const i32 &a, const i32 &b);
+i64 min(const i64 &a, const i64 &b);
+f32 min(const f32 &a, const f32 &b);
+f64 min(const f64 &a, const f64 &b);
+
+i32 max(const i32 &a, const i32 &b);
+i64 max(const i64 &a, const i64 &b);
+f32 max(const f32 &a, const f32 &b);
+f64 max(const f64 &a, const f64 &b);
+
 template<typename T>
 ArithmeticValue<T> clamp(
-    const ArithmeticValue<T> &x,
-    const ArithmeticValue<T> &min_x,
-    const ArithmeticValue<T> &max_x)
+    const ast::ArithmeticVariable<T> &x,
+    const ast::ArithmeticVariable<T> &min_x,
+    const ast::ArithmeticVariable<T> &max_x)
 {
     return math::max(min_x, math::min(max_x, x));
 }
+
+inline i32 abs  (i32 x) { return select(x >= 0, x, -x);           }
+inline i32 sqrt (i32 x) { return cast<i32>(sqrt(cast<f64>(x))); }
+inline i32 rsqrt(i32)   { return 0;                               }
 
 CUJ_NAMESPACE_END(cuj::builtin::math)

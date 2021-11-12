@@ -19,11 +19,6 @@ namespace
     }
 }
 
-void NVRTC::generate(const ir::Program &prog)
-{
-    generate(prog, { true, false });
-}
-
 void NVRTC::generate(const ir::Program &prog, const Options &opts)
 {
     std::string c_src;
@@ -43,37 +38,29 @@ void NVRTC::generate(const ir::Program &prog, const Options &opts)
     std::array<const char *, 4> options;
 
     options[option_count++] = "--std=c++17";
-    options[option_count++] = "--extra-device-vectorization";
-
-    if(opts.reloc)
+    if(opts.auto_vectorization)
+        options[option_count++] = "--extra-device-vectorization";
+    if(opts.relocatable_code)
         options[option_count++] = "-rdc=true";
-    
     if(opts.fast_math)
         options[option_count++] = "--use_fast_math";
 
     const auto result = nvrtcCompileProgram(
         program, option_count, options.data());
+
+    {
+
+        size_t log_size;
+        check_nvrtc_error(nvrtcGetProgramLogSize(program, &log_size));
+
+        std::vector<char> log(log_size);
+        check_nvrtc_error(nvrtcGetProgramLog(program, log.data()));
+
+        log_ = log.data();
+    }
+
     if(result != NVRTC_SUCCESS)
-    {
-        size_t log_size;
-        check_nvrtc_error(nvrtcGetProgramLogSize(program, &log_size));
-
-        std::vector<char> log(log_size);
-        check_nvrtc_error(nvrtcGetProgramLog(program, log.data()));
-
-        throw CUJException(log.data());
-    }
-
-    {
-
-        size_t log_size;
-        check_nvrtc_error(nvrtcGetProgramLogSize(program, &log_size));
-
-        std::vector<char> log(log_size);
-        check_nvrtc_error(nvrtcGetProgramLog(program, log.data()));
-
-        printf("%s\n", log.data());
-    }
+        throw CUJException(log_);
 
     size_t ptx_size;
     check_nvrtc_error(nvrtcGetPTXSize(program, &ptx_size));
@@ -87,6 +74,11 @@ void NVRTC::generate(const ir::Program &prog, const Options &opts)
 const std::string &NVRTC::get_ptx() const
 {
     return ptx_;
+}
+
+const std::string &NVRTC::get_log() const
+{
+    return log_;
 }
 
 CUJ_NAMESPACE_END(cuj::gen)
