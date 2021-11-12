@@ -100,8 +100,10 @@ namespace
         {
             llvm::legacy::FunctionPassManager fp_mgr(llvm_gen.get_module());
             pass_mgr_builder.populateFunctionPassManager(fp_mgr);
+            fp_mgr.doInitialization();
             for(auto &f : llvm_gen.get_module()->functions())
                 fp_mgr.run(f);
+            fp_mgr.doFinalization();
         }
 
         {

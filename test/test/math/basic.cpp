@@ -137,7 +137,7 @@ TEST_CASE("builtin.math.basic")
         [](f64 x, f64 min_x, f64 max_x) { $return(math::clamp(x, min_x, max_x)); });
     
     auto jit = ctx.gen_native_jit();
-    
+
     REQUIRE(jit.get_function(abs32)(-4) == Approx(std::abs(-4)));
     REQUIRE(jit.get_function(abs64)(-5) == Approx(std::abs(-5)));
     
