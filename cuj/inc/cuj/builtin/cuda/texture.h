@@ -6,7 +6,7 @@
 
 CUJ_NAMESPACE_BEGIN(cuj::builtin::cuda)
 
-using TextureObject = i64;
+using TextureObject = u64;
 
 math::Vec1f sample_texture2d_1f(TextureObject tex, f32 u, f32 v);
 math::Vec2f sample_texture2d_2f(TextureObject tex, f32 u, f32 v);

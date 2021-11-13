@@ -1,4 +1,3 @@
-#include <chrono>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -12,82 +11,161 @@ using namespace cuj;
 using namespace builtin::math;
 using namespace builtin::cuda;
 
+constexpr int OUTPUT_WIDTH  = 512;
+constexpr int OUTPUT_HEIGHT = 512;
+
+constexpr int TEX_WIDTH  = 3;
+constexpr int TEX_HEIGHT = 3;
+
 void check_cuda_error(cudaError_t err)
 {
     if(err != cudaSuccess)
         throw std::runtime_error(cudaGetErrorString(err));
 }
 
-void record_kernel()
+void check_cuda_error(CUresult result)
 {
-
+    if(result != CUDA_SUCCESS)
+    {
+        const char *str = nullptr;
+        if(cuGetErrorString(result, &str) == CUDA_SUCCESS)
+            throw std::runtime_error(str);
+        throw std::runtime_error("an unknown cuda error occurred");
+    }
 }
 
 std::string generate_ptx()
 {
     ScopedContext ctx;
 
-    const auto start_time = std::chrono::steady_clock::now();
-    record_kernel();
-    const auto end_record_time = std::chrono::steady_clock::now();
+    to_kernel("entry", [&](TextureObject tex, Pointer<Vec4f> output)
+    {
+        i32 x = block_index_x() * block_dim_x() + thread_index_x();
+        i32 y = block_index_y() * block_dim_y() + thread_index_y();
+        $if(x < OUTPUT_WIDTH && y < OUTPUT_HEIGHT)
+        {
+            f32 u = (x + 0.5f) * (1.0f / OUTPUT_WIDTH)  * TEX_WIDTH;
+            f32 v = (y + 0.5f) * (1.0f / OUTPUT_HEIGHT) * TEX_HEIGHT;
+            output[y * OUTPUT_WIDTH + x] = sample_texture2d_4f(tex, u, v);
+        };
+    });
 
     gen::Options options;
     options.fast_math = true;
-    auto ptx = ctx.gen_ptx(options);
-
-    const auto end_compile_time = std::chrono::steady_clock::now();
-
-    std::cout << "record time: "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(
-                    end_record_time - start_time).count()
-              << "ms" << std::endl;
-    
-    std::cout << "compile time: "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(
-                    end_compile_time - end_record_time).count()
-              << "ms" << std::endl;
-
-    return ptx;
+    return ctx.gen_ptx(options);
 }
 
 void run()
 {
-    std::string ptx = generate_ptx();
-    
-    CUdevice cuDevice;
-    CUcontext context;
+    const std::string ptx = generate_ptx();
+    std::cout << ptx << std::endl;
+
     cuInit(0);
-    cuDeviceGet(&cuDevice, 0);
-    cuCtxCreate(&context, 0, cuDevice);
-    CUJ_SCOPE_GUARD({ cuCtxDestroy(context); });
+
+    CUdevice cuda_device;
+    check_cuda_error(cuDeviceGet(&cuda_device, 0));
+
+    CUcontext cuda_context;
+    check_cuda_error(cuCtxCreate(&cuda_context, 0, cuda_device));
+    CUJ_SCOPE_GUARD({ cuCtxDestroy(cuda_context); });
 
     CUDAModule cuda_module;
     cuda_module.load_ptx_from_memory(ptx.data(), ptx.size());
-    
-    constexpr int BLOCK_SIZE_X = 16;
-    constexpr int BLOCK_SIZE_Y = 8;
 
-    constexpr int BLOCK_COUNT_X = (WIDTH  + BLOCK_SIZE_X - 1) / BLOCK_SIZE_X;
-    constexpr int BLOCK_COUNT_Y = (HEIGHT + BLOCK_SIZE_Y - 1) / BLOCK_SIZE_Y;
+    cudaChannelFormatDesc channel_format_desc;
+    channel_format_desc.x = 32;
+    channel_format_desc.y = 32;
+    channel_format_desc.z = 32;
+    channel_format_desc.w = 32;
+    channel_format_desc.f = cudaChannelFormatKindFloat;
 
-    std::cout << "start rendering" << std::endl;
-    const auto start_time = std::chrono::steady_clock::now();
+    cudaArray_t tex_arr;
+    check_cuda_error(cudaMallocArray(
+        &tex_arr, &channel_format_desc, TEX_WIDTH, TEX_HEIGHT));
+    CUJ_SCOPE_GUARD({ cudaFreeArray(tex_arr); });
 
-    for(int i = 0; i < 400; ++i)
+    std::vector<float> tex_data =
     {
-        cuda_module.launch(
-            "render",
-            { BLOCK_COUNT_X, BLOCK_COUNT_Y, 1 },
-            { BLOCK_SIZE_X, BLOCK_SIZE_Y, 1 });
+        1, 0, 0, 1,
+        0, 1, 0, 1,
+        0, 0, 1, 1,
+        
+        0, 1, 0, 1,
+        0, 0, 1, 1,
+        1, 0, 0, 1,
+        
+        0, 0, 1, 1,
+        1, 0, 0, 1,
+        0, 1, 0, 1,
+    };
+    assert(tex_data.size() == TEX_WIDTH * TEX_HEIGHT * 4);
+    check_cuda_error(cudaMemcpy2DToArray(
+        tex_arr, 0, 0, tex_data.data(), TEX_WIDTH * 4 * sizeof(float),
+        TEX_WIDTH * 4 * sizeof(float), TEX_HEIGHT, cudaMemcpyHostToDevice));
+    
+    cudaResourceDesc tex_rsc_desc;
+    tex_rsc_desc.resType         = cudaResourceTypeArray;
+    tex_rsc_desc.res.array.array = tex_arr;
+
+    cudaTextureDesc tex_desc = {};
+    tex_desc.addressMode[0] = cudaAddressModeClamp;
+    tex_desc.addressMode[1] = cudaAddressModeClamp;
+    tex_desc.filterMode     = cudaFilterModeLinear;
+    tex_desc.readMode       = cudaReadModeElementType;
+
+    cudaTextureObject_t tex;
+    check_cuda_error(cudaCreateTextureObject(
+        &tex, &tex_rsc_desc, &tex_desc, nullptr));
+    CUJ_SCOPE_GUARD({ cudaDestroyTextureObject(tex); });
+
+    float *device_output = nullptr;
+    check_cuda_error(cudaMalloc(
+        &device_output, sizeof(float) * 4 * OUTPUT_WIDTH * OUTPUT_HEIGHT));
+    CUJ_SCOPE_GUARD({ cudaFree(device_output); });
+
+    constexpr int BLOCK_SIZE = 16;
+    constexpr int BLOCK_CNT_X = (OUTPUT_WIDTH  + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    constexpr int BLOCK_CNT_Y = (OUTPUT_HEIGHT + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    cuda_module.launch(
+        "entry",
+        { BLOCK_CNT_X, BLOCK_CNT_Y, 1 },
+        { BLOCK_SIZE, BLOCK_SIZE, 1 },
+        tex, device_output);
+
+    check_cuda_error(cudaDeviceSynchronize());
+
+    std::vector<float> color_buffer(OUTPUT_WIDTH * OUTPUT_HEIGHT * 4);
+    check_cuda_error(cudaMemcpy(
+        color_buffer.data(), device_output,
+        sizeof(float) * color_buffer.size(),
+        cudaMemcpyDeviceToHost));
+
+    std::ofstream fout("output.ppm");
+    if(!fout)
+    {
+        throw std::runtime_error(
+            "failed to create output image: output.ppm");
     }
 
-    cudaDeviceSynchronize();
+    fout << "P3\n"
+         << OUTPUT_WIDTH << " "
+         << OUTPUT_HEIGHT << std::endl
+         << 255 << std::endl;
+    for(int i = 0, j = 0; i < OUTPUT_WIDTH * OUTPUT_HEIGHT; ++i, j += 4)
+    {
+        const float rf = color_buffer[j];
+        const float gf = color_buffer[j + 1];
+        const float bf = color_buffer[j + 2];
 
-    const auto end_time = std::chrono::steady_clock::now();
-    std::cout << "render time: "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(
-                    end_time - start_time).count()
-              << "ms" << std::endl;
+        const int ri = std::min(255, static_cast<int>(rf * 255));
+        const int gi = std::min(255, static_cast<int>(gf * 255));
+        const int bi = std::min(255, static_cast<int>(bf * 255));
+
+        fout << ri << " " << gi << " " << bi << " ";
+    }
+
+    fout.close();
+    std::cout << "result written to output.ppm" << std::endl;
 }
 
 int main()

@@ -262,7 +262,6 @@ std::string generate_ptx()
     {
         i32 x = block_index_x() * block_dim_x() + thread_index_x();
         i32 y = block_index_y() * block_dim_y() + thread_index_y();
-
         $if(x < WIDTH && y < HEIGHT)
         {
             render_pixel(color_buffer, x, y, rngs + y * WIDTH + x);
@@ -386,6 +385,9 @@ void run()
 
         fout << ri << " " << gi << " " << bi << " ";
     }
+
+    fout.close();
+    std::cout << "result written to output.ppm" << std::endl;
 }
 
 int main()
