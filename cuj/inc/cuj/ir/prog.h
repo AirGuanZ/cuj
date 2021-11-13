@@ -9,7 +9,7 @@ CUJ_NAMESPACE_BEGIN(cuj::ir)
 
 struct Program
 {
-    std::set<const Type *>                                       types;
+    std::set<RC<const Type>>                                     types;
     std::vector<Variant<RC<Function>, RC<ImportedHostFunction>>> funcs;
 };
 

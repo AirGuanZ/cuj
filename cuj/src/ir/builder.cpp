@@ -18,29 +18,8 @@ const Program &IRBuilder::get_prog() const
     return prog_;
 }
 
-void IRBuilder::add_type(const Type *type)
+void IRBuilder::add_type(RC<const Type> type)
 {
-    if(prog_.types.count(type))
-        return;
-
-    type->match(
-        [](BuiltinType)
-    {
-
-    },
-        [&](const ArrayType &t)
-    {
-        add_type(t.elem_type);
-    },
-        [&](const PointerType &t)
-    {
-        add_type(t.pointed_type);
-    },
-        [&](const StructType &t)
-    {
-        for(auto m : t.mem_types)
-            add_type(m);
-    });
     prog_.types.insert(type);
 }
 

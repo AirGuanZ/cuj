@@ -35,9 +35,10 @@ namespace
 
     struct IntermediateModule
     {
-        std::unique_ptr<llvm::Module> llvm_module;
-        llvm::TargetMachine          *machine;
-        llvm::CodeGenOpt::Level       codegen_opt;
+        Box<llvm::LLVMContext>  llvm_context;
+        Box<llvm::Module>       llvm_module;
+        llvm::TargetMachine     *machine;
+        llvm::CodeGenOpt::Level  codegen_opt;
     };
 
     IntermediateModule construct_llvm_module(
@@ -115,9 +116,10 @@ namespace
         }
 
         IntermediateModule result;
-        result.llvm_module = llvm_gen.get_module_ownership();
+        std::tie(result.llvm_context, result.llvm_module) =
+            llvm_gen.get_data_ownership();
         result.codegen_opt = codegen_opt;
-        result.machine     = machine;
+        result.machine = machine;
 
         return result;
     }
@@ -126,8 +128,8 @@ namespace
 
 struct NativeJIT::Impl
 {
-    std::unique_ptr<llvm::ExecutionEngine> exec_engine;
-
+    Box<llvm::LLVMContext>        llvm_context;
+    Box<llvm::ExecutionEngine>    exec_engine;
     std::vector<RC<UntypedOwner>> func_contexts;
 };
 
@@ -210,6 +212,7 @@ void NativeJIT::generate(const ir::Program &prog, const Options &opts)
     impl_ = new Impl;
 
     auto im = construct_llvm_module(prog, opts);
+    impl_->llvm_context = std::move(im.llvm_context);
 
     std::string err;
     llvm::EngineBuilder engine_builder(std::move(im.llvm_module));

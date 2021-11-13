@@ -36,8 +36,9 @@ namespace
 
     struct IntermediateModule
     {
-        std::unique_ptr<llvm::Module> llvm_module;
-        llvm::TargetMachine          *machine;
+        Box<llvm::LLVMContext> llvm_context;
+        Box<llvm::Module>      llvm_module;
+        llvm::TargetMachine    *machine;
     };
 
     IntermediateModule construct_intermediate_module(
@@ -126,8 +127,9 @@ namespace
         }
 
         IntermediateModule result;
-        result.llvm_module = ir_gen.get_module_ownership();
-        result.machine     = machine;
+        std::tie(result.llvm_context, result.llvm_module) =
+            ir_gen.get_data_ownership();
+        result.machine = machine;
 
         return result;
     }

@@ -165,9 +165,9 @@ void CGenerator::define_types(const ir::Program &prog)
 
     for(auto &type : prog.types)
     {
-        CUJ_INTERNAL_ASSERT(!types_.count(type));
-        std::string generated_name = generate_type_name(type);
-        types_.insert({ type, { std::move(generated_name) } });
+        CUJ_INTERNAL_ASSERT(!types_.count(type.get()));
+        std::string generated_name = generate_type_name(type.get());
+        types_.insert({ type.get(), { std::move(generated_name) } });
     }
 
     // declare structure types
@@ -186,7 +186,7 @@ void CGenerator::define_types(const ir::Program &prog)
     // define types
 
     for(auto &type : prog.types)
-        define_type(type);
+        define_type(type.get());
 }
 
 void CGenerator::define_type(const ir::Type *type)

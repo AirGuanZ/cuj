@@ -6,6 +6,7 @@
 namespace llvm
 {
 
+    class LLVMContext;
     class DataLayout;
     class Function;
     class FunctionType;
@@ -43,18 +44,18 @@ public:
 
     llvm::Module *get_module() const;
 
-    std::unique_ptr<llvm::Module> get_module_ownership();
+    std::pair<Box<llvm::LLVMContext>, Box<llvm::Module>> get_data_ownership();
 
     std::string get_string() const;
 
 private:
 
-    static llvm::Type *find_llvm_type(const ir::Type *type);
+    llvm::Type *find_llvm_type(const ir::Type *type);
     
-    static llvm::Type *create_llvm_type_record(      ir::BuiltinType    type);
-    static llvm::Type *create_llvm_type_record(const ir::ArrayType     &type);
-    static llvm::Type *create_llvm_type_record(const ir::PointerType   &type);
-    static llvm::Type *create_llvm_type_record(const ir::StructType    &type);
+    llvm::Type *create_llvm_type_record(      ir::BuiltinType  type);
+    llvm::Type *create_llvm_type_record(const ir::ArrayType   &type);
+    llvm::Type *create_llvm_type_record(const ir::PointerType &type);
+    llvm::Type *create_llvm_type_record(const ir::StructType  &type);
 
     void construct_struct_type_body(const ir::Type *type);
 

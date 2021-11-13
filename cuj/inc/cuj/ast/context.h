@@ -145,9 +145,7 @@ private:
 
     void gen_ir_impl(ir::IRBuilder &builder) const;
 
-    static std::map<std::type_index, RC<ir::Type>> &all_types();
-
-    std::map<std::type_index, RC<ir::Type>> used_types_;
+    std::map<std::type_index, RC<ir::Type>> types_;
 
     using ContextFunc = Variant<Box<FunctionContext>, RC<ir::ImportedHostFunction>>;
     

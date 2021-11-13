@@ -291,8 +291,9 @@ std::string generate_ptx()
 
 void run()
 {
-    std::string ptx = generate_ptx();
-    
+    const std::string ptx = generate_ptx();
+    std::cout << ptx << std::endl;
+
     CUdevice cuDevice;
     CUcontext context;
     cuInit(0);

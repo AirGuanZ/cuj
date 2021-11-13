@@ -19,7 +19,7 @@ public:
 
     // type desc
 
-    void add_type(const Type *type);
+    void add_type(RC<const Type> type);
 
     // function signature
 
