@@ -178,16 +178,6 @@ namespace
     float  exp10_f32(float x)  { return std::pow(10.0f, x); }
     double exp10_f64(double x) { return std::pow(10.0,  x); }
 
-    int32_t min_i32(int32_t a, int32_t b) { return std::min(a, b); }
-    int64_t min_i64(int64_t a, int64_t b) { return std::min(a, b); }
-    int32_t max_i32(int32_t a, int32_t b) { return std::max(a, b); }
-    int64_t max_i64(int64_t a, int64_t b) { return std::max(a, b); }
-
-    float  min_f32(float a,  float b)  { return std::min(a, b); }
-    double min_f64(double a, double b) { return std::min(a, b); }
-    float  max_f32(float a,  float b)  { return std::max(a, b); }
-    double max_f64(double a, double b) { return std::max(a, b); }
-
     void print(const char *msg)
     {
         std::cout << msg;
@@ -298,16 +288,6 @@ void NativeJIT::generate(const ir::Program &prog, const Options &opts)
     ADD_HOST_FUNC("host.math.isfinite.f64",  &is_finite_f64);
     ADD_HOST_FUNC("host.math.isinf.f64",     &is_inf_f64);
     ADD_HOST_FUNC("host.math.isnan.f64",     &is_nan_f64);
-
-    ADD_HOST_FUNC("host.math.min.i32", &min_i32);
-    ADD_HOST_FUNC("host.math.min.i64", &min_i64);
-    ADD_HOST_FUNC("host.math.min.f32", &min_f32);
-    ADD_HOST_FUNC("host.math.min.f64", &min_f64);
-
-    ADD_HOST_FUNC("host.math.max.i32", &max_i32);
-    ADD_HOST_FUNC("host.math.max.i64", &max_i64);
-    ADD_HOST_FUNC("host.math.max.f32", &max_f32);
-    ADD_HOST_FUNC("host.math.max.f64", &max_f64);
 
     ADD_HOST_FUNC("host.system.print",  &print);
     ADD_HOST_FUNC("host.system.malloc", &::malloc);

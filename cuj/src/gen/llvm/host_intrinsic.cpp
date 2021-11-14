@@ -213,6 +213,7 @@ llvm::Value *process_host_intrinsic_op(
     CUJ_HOST_MATH_INTRINSIC("math.remainder.f32");
     CUJ_HOST_MATH_INTRINSIC("math.exp.f32");
     CUJ_HOST_MATH_INTRINSIC("math.exp2.f32");
+    CUJ_HOST_MATH_INTRINSIC("math.exp10.f32");
     CUJ_HOST_MATH_INTRINSIC("math.log.f32");
     CUJ_HOST_MATH_INTRINSIC("math.log2.f32");
     CUJ_HOST_MATH_INTRINSIC("math.log10.f32");
@@ -239,6 +240,7 @@ llvm::Value *process_host_intrinsic_op(
     CUJ_HOST_MATH_INTRINSIC("math.remainder.f64");
     CUJ_HOST_MATH_INTRINSIC("math.exp.f64");
     CUJ_HOST_MATH_INTRINSIC("math.exp2.f64");
+    CUJ_HOST_MATH_INTRINSIC("math.exp10.f64");
     CUJ_HOST_MATH_INTRINSIC("math.log.f64");
     CUJ_HOST_MATH_INTRINSIC("math.log2.f64");
     CUJ_HOST_MATH_INTRINSIC("math.log10.f64");
@@ -260,17 +262,25 @@ llvm::Value *process_host_intrinsic_op(
     CUJ_HOST_MATH_INTRINSIC("math.isinf.f64");
     CUJ_HOST_MATH_INTRINSIC("math.isnan.f64");
 
-    CUJ_HOST_MATH_INTRINSIC("math.min.f32");
-    CUJ_HOST_MATH_INTRINSIC("math.min.f64");
-    CUJ_HOST_MATH_INTRINSIC("math.min.i32");
-    CUJ_HOST_MATH_INTRINSIC("math.min.i64");
-
-    CUJ_HOST_MATH_INTRINSIC("math.max.f32");
-    CUJ_HOST_MATH_INTRINSIC("math.max.f64");
-    CUJ_HOST_MATH_INTRINSIC("math.max.i32");
-    CUJ_HOST_MATH_INTRINSIC("math.max.i64");
-
 #undef CUJ_HOST_MATH_INTRINSIC
+
+    if(name == "math.max.f32" || name == "math.max.f64")
+        return ir.CreateMaxNum(args[0], args[1]);
+
+    if(name == "math.min.f32" || name == "math.min.f64")
+        return ir.CreateMinNum(args[0], args[1]);
+
+    if(name == "math.max.i32" || name == "math.max.i64")
+    {
+        auto cond = ir.CreateICmpSGE(args[0], args[1]);
+        return ir.CreateSelect(cond, args[0], args[1]);
+    }
+
+    if(name == "math.min.i32" || name == "math.min.i64")
+    {
+        auto cond = ir.CreateICmpSLE(args[0], args[1]);
+        return ir.CreateSelect(cond, args[0], args[1]);
+    }
 
     if(name == "atomic.add.f32" || name == "atomic.add.f64")
     {

@@ -72,7 +72,7 @@ f64 mod      (const f64 &x, const f64 &y);
 f64 remainder(const f64 &x, const f64 &y);
 f64 exp      (const f64 &x);
 f64 exp2     (const f64 &x);
-f32 exp10    (const f32 &x);
+f64 exp10    (const f64 &x);
 f64 log      (const f64 &x);
 f64 log2     (const f64 &x);
 f64 log10    (const f64 &x);
@@ -93,6 +93,16 @@ f64 round    (const f64 &x);
 i32 isfinite (const f64 &x);
 i32 isinf    (const f64 &x);
 i32 isnan    (const f64 &x);
+
+i32 min(const i32 &a, const i32 &b);
+i64 min(const i64 &a, const i64 &b);
+f32 min(const f32 &a, const f32 &b);
+f64 min(const f64 &a, const f64 &b);
+
+i32 max(const i32 &a, const i32 &b);
+i64 max(const i64 &a, const i64 &b);
+f32 max(const f32 &a, const f32 &b);
+f64 max(const f64 &a, const f64 &b);
 
 template<typename T, typename = std::enable_if_t<
     !std::disjunction_v<
@@ -117,16 +127,6 @@ ArithmeticValue<T> max(
 {
     return select(lhs > rhs, lhs, rhs);
 }
-
-i32 min(const i32 &a, const i32 &b);
-i64 min(const i64 &a, const i64 &b);
-f32 min(const f32 &a, const f32 &b);
-f64 min(const f64 &a, const f64 &b);
-
-i32 max(const i32 &a, const i32 &b);
-i64 max(const i64 &a, const i64 &b);
-f32 max(const f32 &a, const f32 &b);
-f64 max(const f64 &a, const f64 &b);
 
 template<typename T>
 ArithmeticValue<T> clamp(

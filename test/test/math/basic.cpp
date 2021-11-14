@@ -35,6 +35,11 @@ TEST_CASE("builtin.math.basic")
         [](f32 x) { $return(math::exp2(x)); });
     auto exp2_64 = to_callable<double>(
         [](f64 x) { $return(math::exp2(x)); });
+
+    auto exp10_32 = to_callable<float>(
+        [](f32 x) { $return(math::exp10(x)); });
+    auto exp10_64 = to_callable<double>(
+        [](f64 x) { $return(math::exp10(x)); });
     
     auto log32 = to_callable<float>(
         [](f32 x) { $return(math::log(x)); });
@@ -60,6 +65,11 @@ TEST_CASE("builtin.math.basic")
         [](f32 x) { $return(math::sqrt(x)); });
     auto sqrt64 = to_callable<double>(
         [](f64 x) { $return(math::sqrt(x)); });
+
+    auto rsqrt32 = to_callable<float>(
+        [](f32 x) { $return(math::rsqrt(x)); });
+    auto rsqrt64 = to_callable<double>(
+        [](f64 x) { $return(math::rsqrt(x)); });
     
     auto sin32 = to_callable<float>(
         [](f32 x) { $return(math::sin(x)); });
@@ -152,6 +162,9 @@ TEST_CASE("builtin.math.basic")
     
     REQUIRE(jit.get_function(exp2_32)(5) == Approx(std::exp2(5.0f)));
     REQUIRE(jit.get_function(exp2_64)(5) == Approx(std::exp2(5.0)));
+
+    REQUIRE(jit.get_function(exp10_32)(5) == Approx(std::pow(10.0f, 5.0f)));
+    REQUIRE(jit.get_function(exp10_64)(5) == Approx(std::pow(10.0, 5.0)));
     
     REQUIRE(jit.get_function(log32)(5) == Approx(std::log(5.0f)));
     REQUIRE(jit.get_function(log64)(5) == Approx(std::log(5.0)));
@@ -167,6 +180,9 @@ TEST_CASE("builtin.math.basic")
     
     REQUIRE(jit.get_function(sqrt32)(5) == Approx(std::sqrt(5.0f)));
     REQUIRE(jit.get_function(sqrt64)(5) == Approx(std::sqrt(5.0)));
+
+    REQUIRE(jit.get_function(rsqrt32)(5) == Approx(1 / std::sqrt(5.0f)));
+    REQUIRE(jit.get_function(rsqrt64)(5) == Approx(1 / std::sqrt(5.0)));
     
     REQUIRE(jit.get_function(sin32)(5) == Approx(std::sin(5.0f)));
     REQUIRE(jit.get_function(sin64)(5) == Approx(std::sin(5.0)));
