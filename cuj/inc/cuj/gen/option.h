@@ -4,21 +4,19 @@
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 
-enum class OptimizeLevel
+enum class OptimizationLevel
 {
     O0,
     O1,
     O2,
-    O3,
-    Default = O3
+    O3
 };
 
 struct Options
 {
-    OptimizeLevel optimize_level     = OptimizeLevel::Default;
-    bool          fast_math          = false;
-    bool          auto_vectorization = true;
-    bool          relocatable_code   = false;
+    OptimizationLevel opt_level        = OptimizationLevel::O3;
+    bool              fast_math        = false;
+    bool              approx_math_func = false;
 };
 
 CUJ_NAMESPACE_END(cuj::gen)

@@ -32,7 +32,7 @@ std::unique_ptr<llvm::Module> new_libdevice10_module(llvm::LLVMContext *context)
     if(!parse_result)
     {
         auto err = parse_result.takeError();
-        throw CUJException(toString(std::move(err)));
+        throw CujException(toString(std::move(err)));
     }
 
     std::unique_ptr<llvm::Module> result;
@@ -41,101 +41,74 @@ std::unique_ptr<llvm::Module> new_libdevice10_module(llvm::LLVMContext *context)
     std::string err;
     llvm::raw_string_ostream err_ss(err);
     if(verifyModule(*result, &err_ss))
-        throw CUJException(err);
+        throw CujException(err);
 
     return result;
 }
 
-const char *get_libdevice_function_name(
-    builtin::math::IntrinsicBasicMathFunctionType func, IntrinsicParamType type)
+const char *get_libdevice_function_name(core::Intrinsic intrinsic)
 {
-    using builtin::math::IntrinsicBasicMathFunctionType;
-
-    if(type == F32)
+    using enum core::Intrinsic;
+    switch(intrinsic)
     {
-        switch(func)
-        {
-        case IntrinsicBasicMathFunctionType::abs:       return "__nv_fabsf";
-        case IntrinsicBasicMathFunctionType::mod:       return "__nv_fmodf";
-        case IntrinsicBasicMathFunctionType::remainder: return "__nv_remainderf";
-        case IntrinsicBasicMathFunctionType::exp:       return "__nv_expf";
-        case IntrinsicBasicMathFunctionType::exp2:      return "__nv_exp2f";
-        case IntrinsicBasicMathFunctionType::exp10:     return "__nv_exp10f";
-        case IntrinsicBasicMathFunctionType::log:       return "__nv_logf";
-        case IntrinsicBasicMathFunctionType::log2:      return "__nv_log2f";
-        case IntrinsicBasicMathFunctionType::log10:     return "__nv_log10f";
-        case IntrinsicBasicMathFunctionType::pow:       return "__nv_powf";
-        case IntrinsicBasicMathFunctionType::sqrt:      return "__nv_sqrtf";
-        case IntrinsicBasicMathFunctionType::rsqrt:     return "__nv_rsqrtf";
-        case IntrinsicBasicMathFunctionType::sin:       return "__nv_sinf";
-        case IntrinsicBasicMathFunctionType::cos:       return "__nv_cosf";
-        case IntrinsicBasicMathFunctionType::tan:       return "__nv_tanf";
-        case IntrinsicBasicMathFunctionType::asin:      return "__nv_asinf";
-        case IntrinsicBasicMathFunctionType::acos:      return "__nv_acosf";
-        case IntrinsicBasicMathFunctionType::atan:      return "__nv_atanf";
-        case IntrinsicBasicMathFunctionType::atan2:     return "__nv_atan2f";
-        case IntrinsicBasicMathFunctionType::ceil:      return "__nv_ceilf";
-        case IntrinsicBasicMathFunctionType::floor:     return "__nv_floorf";
-        case IntrinsicBasicMathFunctionType::round:     return "__nv_roundf";
-        case IntrinsicBasicMathFunctionType::trunc:     return "__nv_truncf";
-        case IntrinsicBasicMathFunctionType::isfinite:  return "__nv_finitef";
-        case IntrinsicBasicMathFunctionType::isinf:     return "__nv_isinff";
-        case IntrinsicBasicMathFunctionType::isnan:     return "__nv_isnanf";
-        case IntrinsicBasicMathFunctionType::min:       return "__nv_fminf";
-        case IntrinsicBasicMathFunctionType::max:       return "__nv_fmaxf";
-        }
+    case f32_abs:      return "__nv_fabsf";
+    case f32_mod:      return "__nv_fmodf";
+    case f32_rem:      return "__nv_remainderf";
+    case f32_exp:      return "__nv_expf";
+    case f32_exp2:     return "__nv_exp2f";
+    case f32_exp10:    return "__nv_exp10f";
+    case f32_log:      return "__nv_logf";
+    case f32_log2:     return "__nv_log2f";
+    case f32_log10:    return "__nv_log10f";
+    case f32_pow:      return "__nv_powf";
+    case f32_sqrt:     return "__nv_sqrtf";
+    case f32_rsqrt:    return "__nv_rsqrtf";
+    case f32_sin:      return "__nv_sinf";
+    case f32_cos:      return "__nv_cosf";
+    case f32_tan:      return "__nv_tanf";
+    case f32_asin:     return "__nv_asinf";
+    case f32_acos:     return "__nv_acosf";
+    case f32_atan:     return "__nv_atanf";
+    case f32_atan2:    return "__nv_atan2f";
+    case f32_ceil:     return "__nv_ceilf";
+    case f32_floor:    return "__nv_floorf";
+    case f32_trunc:    return "__nv_truncf";
+    case f32_round:    return "__nv_roundf";
+    case f32_isfinite: return "__nv_finitef";
+    case f32_isinf:    return "__nv_isinff";
+    case f32_isnan:    return "__nv_isnanf";
+    case f32_min:      return "__nv_fminf";
+    case f32_max:      return "__nv_fmaxf";
+    case f64_abs:      return "__nv_fabs";
+    case f64_mod:      return "__nv_fmod";
+    case f64_rem:      return "__nv_remainder";
+    case f64_exp:      return "__nv_exp";
+    case f64_exp2:     return "__nv_exp2";
+    case f64_exp10:    return "__nv_exp10";
+    case f64_log:      return "__nv_log";
+    case f64_log2:     return "__nv_log2";
+    case f64_log10:    return "__nv_log10";
+    case f64_pow:      return "__nv_pow";
+    case f64_sqrt:     return "__nv_sqrt";
+    case f64_rsqrt:    return "__nv_rsqrt";
+    case f64_sin:      return "__nv_sin";
+    case f64_cos:      return "__nv_cos";
+    case f64_tan:      return "__nv_tan";
+    case f64_asin:     return "__nv_asin";
+    case f64_acos:     return "__nv_acos";
+    case f64_atan:     return "__nv_atan";
+    case f64_atan2:    return "__nv_atan2";
+    case f64_ceil:     return "__nv_ceil";
+    case f64_floor:    return "__nv_floor";
+    case f64_trunc:    return "__nv_trunc";
+    case f64_round:    return "__nv_round";
+    case f64_isfinite: return "__nv_finited";
+    case f64_isinf:    return "__nv_isinfd";
+    case f64_isnan:    return "__nv_isnand";
+    case f64_min:      return "__nv_fmin";
+    case f64_max:      return "__nv_fmax";
+    default:           return nullptr;
     }
-    else if(type == F64)
-    {
-        switch(func)
-        {
-        case IntrinsicBasicMathFunctionType::abs:       return "__nv_fabs";
-        case IntrinsicBasicMathFunctionType::mod:       return "__nv_fmod";
-        case IntrinsicBasicMathFunctionType::remainder: return "__nv_remainder";
-        case IntrinsicBasicMathFunctionType::exp:       return "__nv_exp";
-        case IntrinsicBasicMathFunctionType::exp2:      return "__nv_exp2";
-        case IntrinsicBasicMathFunctionType::exp10:     return "__nv_exp10";
-        case IntrinsicBasicMathFunctionType::log:       return "__nv_log";
-        case IntrinsicBasicMathFunctionType::log2:      return "__nv_log2";
-        case IntrinsicBasicMathFunctionType::log10:     return "__nv_log10";
-        case IntrinsicBasicMathFunctionType::pow:       return "__nv_pow";
-        case IntrinsicBasicMathFunctionType::sqrt:      return "__nv_sqrt";
-        case IntrinsicBasicMathFunctionType::rsqrt:     return "__nv_rsqrt";
-        case IntrinsicBasicMathFunctionType::sin:       return "__nv_sin";
-        case IntrinsicBasicMathFunctionType::cos:       return "__nv_cos";
-        case IntrinsicBasicMathFunctionType::tan:       return "__nv_tan";
-        case IntrinsicBasicMathFunctionType::asin:      return "__nv_asin";
-        case IntrinsicBasicMathFunctionType::acos:      return "__nv_acos";
-        case IntrinsicBasicMathFunctionType::atan:      return "__nv_atan";
-        case IntrinsicBasicMathFunctionType::atan2:     return "__nv_atan2";
-        case IntrinsicBasicMathFunctionType::ceil:      return "__nv_ceil";
-        case IntrinsicBasicMathFunctionType::floor:     return "__nv_floor";
-        case IntrinsicBasicMathFunctionType::round:     return "__nv_round";
-        case IntrinsicBasicMathFunctionType::trunc:     return "__nv_trunc";
-        case IntrinsicBasicMathFunctionType::isfinite:  return "__nv_isfinited";
-        case IntrinsicBasicMathFunctionType::isinf:     return "__nv_isinfd";
-        case IntrinsicBasicMathFunctionType::isnan:     return "__nv_isnand";
-        case IntrinsicBasicMathFunctionType::min:       return "__nv_fmin";
-        case IntrinsicBasicMathFunctionType::max:       return "__nv_fmax";
-        }
-    }
-    else if(type == S32)
-    {
-        if(func == IntrinsicBasicMathFunctionType::min)
-            return "__nv_min";
-        if(func == IntrinsicBasicMathFunctionType::max)
-            return "__nv_max";
-    }
-    else
-    {
-        CUJ_INTERNAL_ASSERT(type == S64);
-        if(func == IntrinsicBasicMathFunctionType::min)
-            return "__nv_llmin";
-        if(func == IntrinsicBasicMathFunctionType::max)
-            return "__nv_llmax";
-    }
-
-    throw CUJException("libdevice: unknown function");
 }
 
 CUJ_NAMESPACE_END(cuj::gen::libdev)
