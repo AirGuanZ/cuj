@@ -70,6 +70,7 @@ U ref<Arithmetic<T>>::as() const
 template<typename T> requires std::is_arithmetic_v<T>
 Arithmetic<T> ref<Arithmetic<T>>::operator-() const
 {
+    static_assert(!std::is_same_v<T, bool>);
     auto type_ctx = FunctionContext::get_func_context()->get_type_context();
     auto type = type_ctx->get_type<Arithmetic<T>>();
     core::Unary unary = {
@@ -83,6 +84,7 @@ Arithmetic<T> ref<Arithmetic<T>>::operator-() const
 template<typename T> requires std::is_arithmetic_v<T>
 Arithmetic<T> ref<Arithmetic<T>>::operator+(const Arithmetic<T> &rhs) const
 {
+    static_assert(!std::is_same_v<T, bool>);
     auto type_ctx = FunctionContext::get_func_context()->get_type_context();
     auto type = type_ctx->get_type<Arithmetic<T>>();
     core::Binary binary = {
@@ -98,6 +100,7 @@ Arithmetic<T> ref<Arithmetic<T>>::operator+(const Arithmetic<T> &rhs) const
 template<typename T> requires std::is_arithmetic_v<T>
 Arithmetic<T> ref<Arithmetic<T>>::operator-(const Arithmetic<T> &rhs) const
 {
+    static_assert(!std::is_same_v<T, bool>);
     auto type_ctx = FunctionContext::get_func_context()->get_type_context();
     auto type = type_ctx->get_type<Arithmetic<T>>();
     core::Binary binary = {
@@ -113,6 +116,7 @@ Arithmetic<T> ref<Arithmetic<T>>::operator-(const Arithmetic<T> &rhs) const
 template<typename T> requires std::is_arithmetic_v<T>
 Arithmetic<T> ref<Arithmetic<T>>::operator*(const Arithmetic<T> &rhs) const
 {
+    static_assert(!std::is_same_v<T, bool>);
     auto type_ctx = FunctionContext::get_func_context()->get_type_context();
     auto type = type_ctx->get_type<Arithmetic<T>>();
     core::Binary binary = {
@@ -128,6 +132,7 @@ Arithmetic<T> ref<Arithmetic<T>>::operator*(const Arithmetic<T> &rhs) const
 template<typename T> requires std::is_arithmetic_v<T>
 Arithmetic<T> ref<Arithmetic<T>>::operator/(const Arithmetic<T> &rhs) const
 {
+    static_assert(!std::is_same_v<T, bool>);
     auto type_ctx = FunctionContext::get_func_context()->get_type_context();
     auto type = type_ctx->get_type<Arithmetic<T>>();
     core::Binary binary = {
@@ -143,6 +148,7 @@ Arithmetic<T> ref<Arithmetic<T>>::operator/(const Arithmetic<T> &rhs) const
 template<typename T> requires std::is_arithmetic_v<T>
 Arithmetic<T> ref<Arithmetic<T>>::operator%(const Arithmetic<T> &rhs) const
 {
+    static_assert(!std::is_same_v<T, bool>);
     static_assert(std::is_integral_v<T>);
     auto type_ctx = FunctionContext::get_func_context()->get_type_context();
     auto type = type_ctx->get_type<Arithmetic<T>>();
@@ -312,6 +318,18 @@ Arithmetic<T> ref<Arithmetic<T>>::operator^(const Arithmetic<T> &rhs) const
         .rhs      = newRC<core::Expr>(rhs._load()),
         .lhs_type = type,
         .rhs_type = type
+    });
+}
+
+template<typename T> requires std::is_arithmetic_v<T>
+Arithmetic<T> ref<Arithmetic<T>>::operator~() const
+{
+    auto type = FunctionContext::get_func_context()
+        ->get_type_context()->get_type<Arithmetic<T>>();
+    return Arithmetic<T>::_from_expr(core::Unary{
+        .op       = core::Unary::Op::BitwiseNot,
+        .val      = newRC<core::Expr>(_load()),
+        .val_type = type
     });
 }
 

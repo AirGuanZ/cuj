@@ -9,11 +9,10 @@ int main()
     int n = 0;
     std::cout << "enter n: ";
     std::cin >> n;
-    std::cout << std::endl;
 
     ScopedModule mod;
 
-    auto pow_n = function("pow_n", [n](i32 x) mutable
+    Function pow_n = [n](i32 x) mutable
     {
         i64 result = 1;
         i64 base = i64(x);
@@ -25,14 +24,16 @@ int main()
             n >>= 1;
         }
         return result;
-    });
+    };
 
     MCJIT mcjit;
     mcjit.generate(mod);
 
-    std::cout << mcjit.get_llvm_string() << std::endl;
+    std::cout << "============================= llvm ir =============================" << std::endl;
+    std::cout << mcjit.get_llvm_string();
+    std::cout << "===================================================================" << std::endl;
 
-    auto pow_n_func = mcjit.get_function<int64_t(int32_t)>("pow_n");
+    auto pow_n_func = mcjit.get_function(pow_n);
     for(int i = 1; i < 10; ++i)
     {
         std::cout << "pow(" << i << ", "

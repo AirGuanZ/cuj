@@ -84,7 +84,7 @@ void Function<Ret(Args ...)>::initialize()
             arg_type = type_ctx->get_type<Arg>();
         context_->add_argument(arg_type, is_cuj_ref_v<Arg>);
     };
-    ((add_arg.template operator() < Args > ()), ...);
+    ((add_arg.template operator()<Args>()), ...);
 }
 
 template<typename Ret, typename...Args>

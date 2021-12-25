@@ -64,6 +64,8 @@ public:
     Arithmetic operator|(const Arithmetic &rhs) const;
     Arithmetic operator^(const Arithmetic &rhs) const;
 
+    Arithmetic operator~() const;
+
     Pointer<Arithmetic> address() const;
 
     static Arithmetic _from_expr(core::Expr expr);

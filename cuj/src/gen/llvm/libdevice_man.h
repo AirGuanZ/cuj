@@ -1,7 +1,5 @@
 #pragma once
 
-#if CUJ_ENABLE_CUDA
-
 #include <cuj/gen/llvm.h>
 
 #ifdef _MSC_VER
@@ -26,5 +24,3 @@ std::unique_ptr<llvm::Module> new_libdevice10_module(llvm::LLVMContext *context)
 const char *get_libdevice_function_name(core::Intrinsic);
 
 CUJ_NAMESPACE_END(cuj::gen::libdev)
-
-#endif // #if CUJ_ENABLE_CUDA

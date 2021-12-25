@@ -124,13 +124,13 @@ namespace
 #define ADD_GLOBAL_FUNC(NAME, FUNC) \
         ee.addGlobalMapping(#NAME, reinterpret_cast<uint64_t>(FUNC))
 
-        auto *f32_exp10    = +[](float x)            { return std::pow(x, 10); };
+        auto *f32_exp10    = +[](float x)            { return std::pow(10.0f, x); };
         auto *f32_rsqrt    = +[](float x)            { return 1 / std::sqrt(x); };
         auto *f32_isfinite = +[](float x) -> int32_t { return std::isfinite(x); };
         auto *f32_isinf    = +[](float x) -> int32_t { return std::isinf(x); };
         auto *f32_isnan    = +[](float x) -> int32_t { return std::isnan(x); };
         
-        auto *f64_exp10    = +[](double x)            { return std::pow(x, 10); };
+        auto *f64_exp10    = +[](double x)            { return std::pow(10.0, x); };
         auto *f64_rsqrt    = +[](double x)            { return 1 / std::sqrt(x); };
         auto *f64_isfinite = +[](double x) -> int32_t { return std::isfinite(x); };
         auto *f64_isinf    = +[](double x) -> int32_t { return std::isinf(x); };
@@ -152,15 +152,15 @@ namespace
         using DD  = double(*)(double);
         using DDD = double(*)(double, double);
 
-        ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_mod,      DDD(&::fmod));
-        ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_rem,      DDD(&::remainder));
+        ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_mod,      static_cast<DDD>(&::fmod));
+        ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_rem,      static_cast<DDD>(&::remainder));
         ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_exp10,    f64_exp10);
         ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_rsqrt,    f64_rsqrt);
-        ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_tan,      DD(&::tan));
-        ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_asin,     DD(&::asin));
-        ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_acos,     DD(&::acosf));
-        ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_atan,     DD(&::atanf));
-        ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_atan2,    DDD(&::atan2));
+        ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_tan,      static_cast<DD>(&::tan));
+        ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_asin,     static_cast<DD>(&::asin));
+        ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_acos,     static_cast<DD>(&::acos));
+        ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_atan,     static_cast<DD>(&::atan));
+        ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_atan2,    static_cast<DDD>(&::atan2));
         ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_isfinite, f64_isfinite);
         ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_isinf,    f64_isinf);
         ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_isnan,    f64_isnan);

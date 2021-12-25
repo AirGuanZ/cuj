@@ -1,5 +1,3 @@
-#if CUJ_ENABLE_CUDA
-
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4141)
@@ -112,5 +110,3 @@ const char *get_libdevice_function_name(core::Intrinsic intrinsic)
 }
 
 CUJ_NAMESPACE_END(cuj::gen::libdev)
-
-#endif // #if CUJ_ENABLE_CUDA

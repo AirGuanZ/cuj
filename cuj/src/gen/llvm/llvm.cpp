@@ -244,6 +244,12 @@ llvm::Type *LLVMIRGenerator::build_llvm_type(const core::Type *type)
     },
         [&](const core::Pointer &t) -> llvm::Type *
     {
+        if(auto pt = t.pointed->as_if<core::Builtin>();
+           pt && *pt == core::Builtin::Void)
+        {
+            return llvm::PointerType::get(
+                llvm::Type::getInt8Ty(*llvm_->context), 0);
+        }
         auto pointed = build_llvm_type(t.pointed);
         return llvm::PointerType::get(pointed, 0);
     });
@@ -616,6 +622,21 @@ llvm::Value *LLVMIRGenerator::generate(const core::ArithmeticCast &expr)
     if(src_builtin_type == dst_builtin_type)
         return src_val;
     auto dst_type = get_llvm_type(expr.dst_type);
+
+    if(src_builtin_type == core::Builtin::Bool)
+    {
+        if(is_dst_int)
+        {
+            return llvm_->ir_builder->CreateSelect(
+                src_val,
+                llvm::ConstantInt::get(dst_type, 1, false),
+                llvm::ConstantInt::get(dst_type, 0, false));
+        }
+        return llvm_->ir_builder->CreateSelect(
+            src_val,
+            llvm::ConstantFP::get(dst_type, 1),
+            llvm::ConstantFP::get(dst_type, 0));
+    }
 
     if(is_src_int && is_dst_int)
     {

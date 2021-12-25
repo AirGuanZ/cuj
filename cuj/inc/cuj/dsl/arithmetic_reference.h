@@ -51,6 +51,8 @@ public:
     Arithmetic<T> operator|(const Arithmetic<T> &rhs) const;
     Arithmetic<T> operator^(const Arithmetic<T> &rhs) const;
 
+    Arithmetic<T> operator~() const;
+
     Pointer<Arithmetic<T>> address() const;
     
     core::Load _load() const;

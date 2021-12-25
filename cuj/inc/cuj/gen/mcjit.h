@@ -24,7 +24,16 @@ public:
     const std::string &get_llvm_string() const;
 
     template<typename T>
+        requires std::is_function_v<T>
     T *get_function(const std::string &symbol_name) const;
+
+    template<typename T, typename Ret, typename...Args>
+        requires std::is_function_v<T>
+    T *get_function(const dsl::Function<Ret(Args...)> &func) const;
+
+    template<typename Ret, typename...Args>
+        requires !std::is_function_v<Ret>
+    auto get_function(const dsl::Function<Ret(Args...)> &func) const;
 
 private:
 
@@ -36,10 +45,6 @@ private:
     MCJITData *llvm_data_ = nullptr;
 };
 
-template<typename T>
-T *MCJIT::get_function(const std::string &symbol_name) const
-{
-    return reinterpret_cast<T *>(get_function_impl(symbol_name));
-}
-
 CUJ_NAMESPACE_END(cuj::gen)
+
+#include <cuj/gen/impl/mcjit.inl>

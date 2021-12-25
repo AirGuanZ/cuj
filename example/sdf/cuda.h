@@ -1,7 +1,5 @@
 #pragma once
 
-#if CUJ_ENABLE_CUDA
-
 #include <string>
 
 #include <cuj.h>
@@ -83,5 +81,3 @@ void CUDAModule::take_kernel_arg_ptrs(
     *arg_ptrs = &arg0;
     this->take_kernel_arg_ptrs(arg_ptrs + 1, arg1, args...);
 }
-
-#endif // #if CUJ_ENABLE_CUDA
