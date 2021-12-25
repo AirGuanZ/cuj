@@ -100,7 +100,7 @@ const char *get_libdevice_function_name(core::Intrinsic intrinsic)
     case f64_floor:    return "__nv_floor";
     case f64_trunc:    return "__nv_trunc";
     case f64_round:    return "__nv_round";
-    case f64_isfinite: return "__nv_finited";
+    case f64_isfinite: return "__nv_isfinited";
     case f64_isinf:    return "__nv_isinfd";
     case f64_isnan:    return "__nv_isnand";
     case f64_min:      return "__nv_fmin";
