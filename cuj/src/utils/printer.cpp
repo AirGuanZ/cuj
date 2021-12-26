@@ -221,6 +221,32 @@ void Printer::print(TextBuilder &b, const core::Continue &stat)
     b.appendl("continue");
 }
 
+void Printer::print(TextBuilder &b, const core::Switch &stat)
+{
+    b.append("switch(");
+    print(b, stat.value);
+    b.appendl(")");
+    b.appendl("{");
+    b.with_indent([&]
+    {
+        for(auto &branch : stat.branches)
+        {
+            b.append("case ");
+            print(b, branch.cond);
+            b.appendl(":");
+            print(b, *branch.body);
+            if(branch.fallthrough)
+                b.appendl("fallthrough");
+        }
+        if(stat.default_body)
+        {
+            b.appendl("default:");
+            print(b, *stat.default_body);
+        }
+    });
+    b.appendl("}");
+}
+
 void Printer::print(TextBuilder &b, const core::CallFuncStat &call)
 {
     print(b, call.call_expr);

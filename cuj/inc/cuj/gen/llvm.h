@@ -88,6 +88,8 @@ private:
 
     void generate(const core::Continue &continue_s);
 
+    void generate(const core::Switch &switch_s);
+
     void generate(const core::CallFuncStat &call);
 
     llvm::Value *generate(const core::Expr &expr);

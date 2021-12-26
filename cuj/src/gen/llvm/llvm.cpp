@@ -566,6 +566,76 @@ void LLVMIRGenerator::generate(const core::Continue &continue_s)
     llvm_->ir_builder->SetInsertPoint(after_continue);
 }
 
+void LLVMIRGenerator::generate(const core::Switch &switch_s)
+{
+    auto end_block = llvm::BasicBlock::Create(*llvm_->context, "exit_switch");
+
+    auto default_body_block = end_block;
+    if(switch_s.default_body)
+    {
+        default_body_block =
+            llvm::BasicBlock::Create(*llvm_->context, "default");
+    }
+
+    std::vector<llvm::BasicBlock *> case_body_blocks;
+    case_body_blocks.reserve(switch_s.branches.size());
+    for(auto &_ : switch_s.branches)
+    {
+        case_body_blocks.push_back(
+            llvm::BasicBlock::Create(*llvm_->context, "case"));
+    }
+
+    auto function = llvm_->current_function;
+    for(auto c : case_body_blocks)
+        function->getBasicBlockList().push_back(c);
+    function->getBasicBlockList().push_back(default_body_block);
+    if(end_block != default_body_block)
+        function->getBasicBlockList().push_back(end_block);
+
+    auto value = generate(switch_s.value);
+    if(!value->getType()->isIntegerTy())
+        throw CujException("switch statement requires an integer value");
+
+    auto inst = llvm_->ir_builder->CreateSwitch(value, default_body_block);
+    size_t case_index = 0;
+    for(auto &b : switch_s.branches)
+    {
+        auto body_block = case_body_blocks[case_index++];
+        auto cond = b.cond.value.match(
+            [&]<typename T>(T v)
+        {
+            if(!std::is_integral_v<T>)
+                throw CujException("switch statement requires an integer cond");
+            auto val = llvm_helper::llvm_constant_num(*llvm_->context, v);
+            auto cval = llvm::dyn_cast<llvm::ConstantInt>(val);
+            assert(cval);
+            return cval;
+        });
+
+        assert(cond->getType() == value->getType());
+        inst->addCase(cond, body_block);
+
+        llvm_->ir_builder->SetInsertPoint(body_block);
+        generate(*b.body);
+
+        llvm::BasicBlock *case_end = end_block;
+        if(b.fallthrough)
+        {
+            case_end = case_index < case_body_blocks.size() ?
+                case_body_blocks[case_index] : default_body_block;
+        }
+        llvm_->ir_builder->CreateBr(case_end);
+    }
+
+    if(default_body_block != end_block)
+    {
+        llvm_->ir_builder->SetInsertPoint(default_body_block);
+        generate(*switch_s.default_body);
+        llvm_->ir_builder->CreateBr(end_block);
+    }
+    llvm_->ir_builder->SetInsertPoint(end_block);
+}
+
 void LLVMIRGenerator::generate(const core::CallFuncStat &call)
 {
     generate(call.call_expr);

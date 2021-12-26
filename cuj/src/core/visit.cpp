@@ -61,6 +61,19 @@ void Visitor::visit(const Continue &continue_s)
         on_continue(continue_s);
 }
 
+void Visitor::visit(const Switch &switch_s)
+{
+    if(on_switch)
+        on_switch(switch_s);
+    for(auto &b : switch_s.branches)
+    {
+        visit(b.cond);
+        visit(*b.body);
+    }
+    if(switch_s.default_body)
+        visit(*switch_s.default_body);
+}
+
 void Visitor::visit(const CallFuncStat &call)
 {
     if(on_call_func_stat)

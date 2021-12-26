@@ -68,6 +68,8 @@ private:
 
     void print(TextBuilder &b, const core::Continue &stat);
 
+    void print(TextBuilder &b, const core::Switch &stat);
+
     void print(TextBuilder &b, const core::CallFuncStat &call);
 
     // expression

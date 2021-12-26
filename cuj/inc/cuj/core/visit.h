@@ -18,6 +18,7 @@ public:
     void visit(const Loop         &loop);
     void visit(const Break        &break_s);
     void visit(const Continue     &continue_s);
+    void visit(const Switch       &switch_s);
     void visit(const CallFuncStat &call);
 
     void visit(const Expr                        &expr);
@@ -46,6 +47,7 @@ public:
     std::function<void(const Loop &)>         on_loop;
     std::function<void(const Break &)>        on_break;
     std::function<void(const Continue &)>     on_continue;
+    std::function<void(const Switch &)>       on_switch;
     std::function<void(const CallFuncStat &)> on_call_func_stat;
     
     std::function<void(const Expr                        &)> on_expr;

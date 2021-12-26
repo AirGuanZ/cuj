@@ -11,6 +11,7 @@ struct If;
 struct Loop;
 struct Break;
 struct Continue;
+struct Switch;
 struct CallFuncStat;
 
 using Stat = Variant<
@@ -21,6 +22,7 @@ using Stat = Variant<
     Loop,
     Break,
     Continue,
+    Switch,
     CallFuncStat>;
 
 struct Store
@@ -60,6 +62,20 @@ struct Break
 struct Continue
 {
     
+};
+
+struct Switch
+{
+    struct Branch
+    {
+        Immediate cond;
+        RC<Block> body;
+        bool      fallthrough = false;
+    };
+
+    Expr                value;
+    std::vector<Branch> branches;
+    RC<Block>           default_body;
 };
 
 struct CallFuncStat

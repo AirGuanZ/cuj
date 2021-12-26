@@ -8,7 +8,7 @@
 
 #include <cuj.h>
 
-#include "cuda.h"
+#include "../../test/test/cuda/cuda.h"
 #include "vec.h"
 
 constexpr float EPS = 1e-4f;
