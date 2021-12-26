@@ -102,6 +102,9 @@ void Function<Ret(Args...)>::define_impl(F &&body_func)
             decltype(std::function{ std::forward<F>(body_func) })> ||
         std::is_same_v<
             std::function<add_reference_t<Ret>(Args...)>,
+            decltype(std::function{ std::forward<F>(body_func) })> ||
+        std::is_same_v<
+            std::function<Variable<Ret>(Args...)>,
             decltype(std::function{ std::forward<F>(body_func) })>);
 
     constexpr bool is_F_ret_void = std::is_same_v<
@@ -138,7 +141,8 @@ void Function<Ret(Args...)>::define_impl(F &&body_func)
     }
     else
     {
-        auto ret = std::apply(std::forward<F>(body_func), args);
+        auto ret_tmp = std::apply(std::forward<F>(body_func), args);
+        remove_var_wrapper_t<decltype(ret_tmp)> ret = ret_tmp;
         static_assert(
             std::is_same_v<decltype(ret), Ret> ||
             std::is_same_v<decltype(ret), add_reference_t<Ret>>);

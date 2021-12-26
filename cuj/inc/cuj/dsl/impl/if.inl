@@ -14,7 +14,8 @@ inline IfBuilder::~IfBuilder()
     core::If ret, *last_stat = &ret;
     for(size_t i = 0; i < then_units_.size(); ++i)
     {
-        last_stat->cond = then_units_[i].cond;
+        last_stat->calc_cond = then_units_[i].cond_calc;
+        last_stat->cond      = then_units_[i].cond;
         last_stat->then_body = then_units_[i].body;
         if(i < then_units_.size() - 1)
         {
@@ -34,7 +35,16 @@ IfBuilder &IfBuilder::operator*(F &&cond_func)
 {
     assert(then_units_.empty() || then_units_.back().body);
     assert(!else_body_);
-    then_units_.push_back({ std::forward<F>(cond_func)()._load(), {} });
+    auto func = FunctionContext::get_func_context();
+    auto cond_calc = newRC<core::Block>();
+    Arithmetic<bool> cond;
+    {
+        func->push_block(cond_calc);
+        CUJ_SCOPE_EXIT{ func->pop_block(); };
+        cond = cond_func();
+    }
+    then_units_.push_back(ThenUnit{
+        std::move(cond_calc), cond._load(), {} });
     return *this;
 }
 

@@ -183,6 +183,7 @@ void Printer::print(TextBuilder &b, const core::Return &ret)
 
 void Printer::print(TextBuilder &b, const core::If &stat)
 {
+    print(b, *stat.calc_cond);
     b.append("if(");
     print(b, stat.cond);
     b.append(")");

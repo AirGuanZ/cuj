@@ -17,7 +17,9 @@ void LoopBuilder::operator+(F &&body_func)
         CUJ_SCOPE_EXIT{ func->pop_block(); };
         std::forward<F>(body_func)();
     }
-    func->append_statement(std::move(*block));
+    func->append_statement(newRC<core::Stat>(core::Loop{
+        .body = std::move(block)
+    }));
 }
 
 template<typename F>
@@ -44,15 +46,15 @@ void WhileBuilder::operator+(F &&body_func)
         std::forward<F>(body_func)();
     }
     std::vector body_stats = {
-        newRC<core::Stat>(std::move(*cond_block_)),
         newRC<core::Stat>(core::If{
-            .cond = std::move(cond_),
+            .calc_cond = std::move(cond_block_),
+            .cond      = std::move(cond_),
             .then_body = newRC<core::Stat>(std::move(*body)),
             .else_body = newRC<core::Stat>(core::Break{})
         })
     };
     func->append_statement(core::Loop{
-        .body = newRC<core::Stat>(core::Block{
+        .body = newRC<core::Block>(core::Block{
             .stats = std::move(body_stats)
         })
     });

@@ -44,14 +44,15 @@ struct Return
 
 struct If
 {
-    Expr     cond;
-    RC<Stat> then_body;
-    RC<Stat> else_body;
+    RC<Block> calc_cond;
+    Expr      cond;
+    RC<Stat>  then_body;
+    RC<Stat>  else_body;
 };
 
 struct Loop
 {
-    RC<Stat> body;
+    RC<Block> body;
 };
 
 struct Break

@@ -7,6 +7,7 @@
 
 #include <cuj/core/func.h>
 #include <cuj/dsl/type_context.h>
+#include <cuj/dsl/variable.h>
 #include <cuj/utils/uncopyable.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
@@ -48,7 +49,9 @@ namespace function_detail
     struct AutoFunctionTrait<std::function<Ret(Args...)>>
     {
         using R = std::conditional_t<
-            std::is_same_v<Ret, void>, CujVoid, remove_reference_t<Ret>>;
+            std::is_same_v<Ret, void>,
+            CujVoid,
+            remove_var_wrapper_t<remove_reference_t<Ret>>>;
         using FRaw = R(Args...);
         using F = Function<R(Args...)>;
     };
@@ -216,7 +219,8 @@ auto declare(std::string name = {})
 {
     using Func = typename function_detail::AutoFunctionTrait<F>::F;
     Func ret;
-    ret.set_name(std::move(name));
+    if(!name.empty())
+        ret.set_name(std::move(name));
     return ret;
 }
 

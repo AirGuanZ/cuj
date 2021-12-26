@@ -9,8 +9,9 @@ class IfBuilder : public Uncopyable
 {
     struct ThenUnit
     {
-        core::Expr     cond;
-        RC<core::Stat> body;
+        RC<core::Block> cond_calc;
+        core::Expr      cond;
+        RC<core::Stat>  body;
     };
 
     std::vector<ThenUnit> then_units_;

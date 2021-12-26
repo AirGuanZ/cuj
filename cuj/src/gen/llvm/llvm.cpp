@@ -494,7 +494,6 @@ void LLVMIRGenerator::generate(const core::Return &ret)
 
 void LLVMIRGenerator::generate(const core::If &if_s)
 {
-    auto cond = generate(if_s.cond);
     auto then_block = llvm::BasicBlock::Create(*llvm_->context, "then");
     auto exit_block = llvm::BasicBlock::Create(*llvm_->context, "exit_if");
 
@@ -502,6 +501,8 @@ void LLVMIRGenerator::generate(const core::If &if_s)
     if(if_s.else_body)
         else_block = llvm::BasicBlock::Create(*llvm_->context, "else");
 
+    generate(*if_s.calc_cond);
+    auto cond = generate(if_s.cond);
     llvm_->ir_builder->CreateCondBr(
         cond, then_block, else_block ? else_block : exit_block);
 

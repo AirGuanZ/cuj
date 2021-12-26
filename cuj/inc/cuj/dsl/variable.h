@@ -9,6 +9,26 @@ CUJ_NAMESPACE_BEGIN(cuj::dsl)
 template<typename T>
 class Variable;
 
+namespace var_detail
+{
+
+    template<typename T>
+    struct RemoveVarWrapper
+    {
+        using Type = T;
+    };
+
+    template<typename T>
+    struct RemoveVarWrapper<Variable<T>>
+    {
+        using Type = T;
+    };
+
+} // namespace var_detail
+
+template<typename T>
+using remove_var_wrapper_t = typename var_detail::RemoveVarWrapper<T>::Type;
+
 template<typename T>
 class Variable<Arithmetic<T>> : public Arithmetic<T>
 {
