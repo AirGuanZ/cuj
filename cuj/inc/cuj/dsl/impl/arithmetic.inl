@@ -2,7 +2,6 @@
 
 #include <cuj/dsl/arithmetic.h>
 #include <cuj/dsl/function.h>
-#include <cuj/dsl/if.h>
 #include <cuj/dsl/pointer.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::dsl)

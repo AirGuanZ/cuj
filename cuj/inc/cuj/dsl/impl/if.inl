@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 #include <cuj/core/stat.h>
 #include <cuj/dsl/function.h>
 #include <cuj/dsl/if.h>

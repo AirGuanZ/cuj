@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 
 namespace mcjit_detail

@@ -32,6 +32,20 @@ void with_mcjit(F &&f, Action &&action)
         std::forward<Action>(action)(c_func);
 }
 
+template<typename Ret, typename F, typename Action>
+    requires dsl::is_cuj_var_v<Ret> || dsl::is_cuj_ref_v<Ret>
+void with_mcjit(F &&f, Action &&action)
+{
+    ScopedModule mod;
+    auto func = function<Ret>(std::forward<F>(f));
+    MCJIT mcjit;
+    mcjit.generate(mod);
+    auto c_func = mcjit.get_function(func);
+    REQUIRE(c_func);
+    if(c_func)
+        std::forward<Action>(action)(c_func);
+}
+
 template<typename F, typename...Args>
 void mcjit_require(F &&f, Args...args)
 {
@@ -95,7 +109,6 @@ void cuda_require(F &&f, Args...args)
     PTXGenerator ptx_gen;
     ptx_gen.generate(mod);
     const auto &ptx = ptx_gen.get_ptx();
-    INFO(ptx);
 
     CUdevice cuda_device;
     CUcontext cuda_context;

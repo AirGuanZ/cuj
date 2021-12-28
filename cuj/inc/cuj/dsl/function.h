@@ -1,8 +1,6 @@
 #pragma once
 
-#include <cassert>
 #include <functional>
-#include <map>
 #include <stack>
 
 #include <cuj/core/func.h>

@@ -7,7 +7,7 @@
 CUJ_NAMESPACE_BEGIN(cuj::dsl)
 
 template<typename T>
-class Variable;
+class var;
 
 namespace var_detail
 {
@@ -19,7 +19,7 @@ namespace var_detail
     };
 
     template<typename T>
-    struct RemoveVarWrapper<Variable<T>>
+    struct RemoveVarWrapper<var<T>>
     {
         using Type = T;
     };
@@ -30,78 +30,76 @@ template<typename T>
 using remove_var_wrapper_t = typename var_detail::RemoveVarWrapper<T>::Type;
 
 template<typename T>
-class Variable<Arithmetic<T>> : public Arithmetic<T>
+class var<Arithmetic<T>> : public Arithmetic<T>
 {
 public:
 
     using Arithmetic<T>::Arithmetic;
 
-    Variable(Arithmetic<T> other) : Arithmetic<T>(std::move(other)) { }
+    var(Arithmetic<T> other) : Arithmetic<T>(std::move(other)) { }
 };
 
 template<typename T>
-class Variable<Pointer<T>> : public Pointer<T>
+class var<Pointer<T>> : public Pointer<T>
 {
 public:
 
     using Pointer<T>::Pointer;
 
-    Variable(Pointer<T> other) : Pointer<T>(std::move(other)) { }
+    var(Pointer<T> other) : Pointer<T>(std::move(other)) { }
 };
 
 template<typename T, size_t N>
-class Variable<Array<T, N>> : public Array<T, N>
+class var<Array<T, N>> : public Array<T, N>
 {
 public:
 
     using Array<T, N>::Array;
 
-    Variable(Array<T, N> other) : Array<T, N>(std::move(other)) { }
+    var(Array<T, N> other) : Array<T, N>(std::move(other)) { }
 };
 
 template<typename T> requires is_cuj_class_v<T>
-class Variable<T> : public T
+class var<T> : public T
 {
 public:
 
     using T::T;
 
-    Variable(T other) : T(std::move(other)) { }
+    var(T other) : T(std::move(other)) { }
 };
 
 template<typename T> requires std::is_arithmetic_v<T>
-Variable(T)->Variable<Arithmetic<T>>;
+var(T)->var<Arithmetic<T>>;
 
 template<typename T> requires std::is_same_v<T, std::nullptr_t>
-Variable(T)->Variable<Pointer<CujVoid>>;
+var(T)->var<Pointer<CujVoid>>;
 
 template<typename T>
-Variable(Arithmetic<T>)->Variable<Arithmetic<T>>;
+var(Arithmetic<T>)->var<Arithmetic<T>>;
 
 template<typename T>
-Variable(Pointer<T>)->Variable<Pointer<T>>;
+var(Pointer<T>)->var<Pointer<T>>;
 
 template<typename T, size_t N>
-Variable(Array<T, N>)->Variable<Array<T, N>>;
+var(Array<T, N>)->var<Array<T, N>>;
 
 template<typename T> requires is_cuj_class_v<T>
-Variable(T)->Variable<T>;
+var(T)->var<T>;
 
 template<typename T> requires is_cuj_class_v<T>
-Variable(Variable<T>)->Variable<T>;
+var(var<T>)->var<T>;
 
 template<typename T>
-Variable(ref<Arithmetic<T>>)->Variable<Arithmetic<T>>;
+var(ref<Arithmetic<T>>)->var<Arithmetic<T>>;
 
 template<typename T>
-Variable(ref<Pointer<T>>)->Variable<Pointer<T>>;
+var(ref<Pointer<T>>)->var<Pointer<T>>;
 
 template<typename T, size_t N>
-Variable(ref<Array<T, N>>)->Variable<Array<T, N>>;
+var(ref<Array<T, N>>)->var<Array<T, N>>;
 
 template<typename T> requires is_cuj_class_v<T>
-Variable(ref<T>)->Variable<T>;
-
-using var = Variable;
+var(ref<T>)->var<T>;
 
 CUJ_NAMESPACE_END(cuj::dsl)

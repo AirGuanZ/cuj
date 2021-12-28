@@ -27,6 +27,8 @@ public:
     ref &operator=(const ref &other);
 
     ref &operator=(const Array<T, N> &other);
+
+    constexpr size_t size() const { return N; }
     
     template<typename U> requires std::is_integral_v<U>
     add_reference_t<T> operator[](const Arithmetic<U> &idx) const;

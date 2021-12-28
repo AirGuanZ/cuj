@@ -1,6 +1,5 @@
 #pragma once
 
-#include <map>
 #include <typeindex>
 
 #include <cuj/core/type.h>

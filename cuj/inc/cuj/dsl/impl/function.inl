@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 #include <functional>
 
 #include <cuj/dsl/function.h>
@@ -104,7 +106,7 @@ void Function<Ret(Args...)>::define_impl(F &&body_func)
             std::function<add_reference_t<Ret>(Args...)>,
             decltype(std::function{ std::forward<F>(body_func) })> ||
         std::is_same_v<
-            std::function<Variable<Ret>(Args...)>,
+            std::function<var<Ret>(Args...)>,
             decltype(std::function{ std::forward<F>(body_func) })>);
 
     constexpr bool is_F_ret_void = std::is_same_v<

@@ -1,7 +1,12 @@
 #pragma once
 
-#include <cuj/dsl/module.h>
 #include <cuj/gen/option.h>
+
+CUJ_NAMESPACE_BEGIN(cuj::dsl)
+
+class Module;
+
+CUJ_NAMESPACE_END(cuj::dsl)
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 

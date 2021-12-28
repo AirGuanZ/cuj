@@ -99,7 +99,7 @@ Arithmetic<bool> operator>(T lhs, const Arithmetic<T> &rhs);
 template<typename T> requires std::is_arithmetic_v<T>
 Arithmetic<bool> operator>=(T lhs, const Arithmetic<T> &rhs);
 
-inline Arithmetic<bool> operator!(const Arithmetic<bool> &rhs);
+inline Arithmetic<bool> operator!(const Arithmetic<bool> &val);
 
 template<typename T> requires std::is_integral_v<T>
 Arithmetic<T> operator<<(T lhs, const Arithmetic<T> &rhs);

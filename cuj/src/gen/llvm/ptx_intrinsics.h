@@ -3,7 +3,6 @@
 #include <llvm/IR/IRBuilder.h>
 
 #include <cuj/core/expr.h>
-#include <cuj/gen/llvm.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 

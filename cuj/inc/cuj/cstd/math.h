@@ -64,11 +64,13 @@ f32 max(f32 a, f32 b);
 f64 min(f64 a, f64 b);
 f64 max(f64 a, f64 b);
 
-template<typename T>
-dsl::Arithmetic<T> select(
-    boolean cond, const dsl::Arithmetic<T> &a, const dsl::Arithmetic<T> &b)
+template<typename T> requires dsl::is_cuj_var_v<T>
+T select(
+    const boolean &cond,
+    const T       &a,
+    const T       &b)
 {
-    dsl::Arithmetic<T> ret;
+    T ret;
     $if(cond)
     {
         ret = a;
@@ -78,6 +80,44 @@ dsl::Arithmetic<T> select(
         ret = b;
     };
     return ret;
+}
+
+template<typename T>
+T select(
+    const boolean          &cond,
+    const dsl::var<T> &a,
+    const dsl::var<T> &b)
+{
+    T ret;
+    $if(cond)
+    {
+        ret = a;
+    }
+    $else
+    {
+        ret = b;
+    };
+    return ret;
+}
+
+template<typename T>
+ref<T> select(
+    const boolean &cond,
+    const ref<T>  &a,
+    const ref<T>  &b)
+{
+    var pa = a.address();
+    var pb = b.address();
+    ptr<T> pr;
+    $if(cond)
+    {
+        pr = pa;
+    }
+    $else
+    {
+        pr = pb;
+    };
+    return *pr;
 }
 
 CUJ_NAMESPACE_END(cuj::cstd)

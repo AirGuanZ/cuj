@@ -11,7 +11,7 @@ template<typename T>
 class ref;
 
 template<typename T>
-class Variable;
+class var;
 
 template<typename T>
 ref(Arithmetic<T>)->ref<Arithmetic<T>>;
@@ -23,7 +23,7 @@ template<typename T, size_t N>
 ref(Array<T, N>)->ref<Array<T, N>>;
 
 template<typename T> requires is_cuj_class_v<T>
-ref(Variable<T>)->ref<T>;
+ref(var<T>)->ref<T>;
 
 template<typename T> requires is_cuj_class_v<T>
 ref(T)->ref<T>;
