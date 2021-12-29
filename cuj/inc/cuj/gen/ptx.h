@@ -1,9 +1,7 @@
 #pragma once
 
-#if CUJ_ENABLE_CUDA
-
 #include <cuj/gen/option.h>
-#include <cuj/ir/prog.h>
+#include <cuj/dsl/module.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 
@@ -11,15 +9,19 @@ class PTXGenerator
 {
 public:
 
-    void generate(const ir::Program &prog, const Options &opts);
+    void set_options(const Options &opts);
 
-    const std::string &get_result() const;
+    void generate(const dsl::Module &mod);
+
+    const std::string &get_llvm_ir() const;
+
+    const std::string &get_ptx() const;
 
 private:
-    
-    std::string result_;
+
+    Options     opts_;
+    std::string llvm_ir_;
+    std::string ptx_;
 };
 
 CUJ_NAMESPACE_END(cuj::gen)
-
-#endif // #if CUJ_ENABLE_CUDA

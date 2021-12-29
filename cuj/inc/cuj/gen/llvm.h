@@ -1,7 +1,6 @@
 #pragma once
 
-#include <cuj/ir/prog.h>
-#include <cuj/util/uncopyable.h>
+#include <cuj/dsl/module.h>
 
 namespace llvm
 {
@@ -14,7 +13,7 @@ namespace llvm
     class Type;
     class Value;
 
-} // namespace llvm
+}
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 
@@ -24,13 +23,11 @@ public:
 
     enum class Target
     {
-        Host,
-#if CUJ_ENABLE_CUDA
-        PTX,
-#endif
+        Native,
+        PTX
     };
 
-    struct Data;
+    struct LLVMData;
 
     ~LLVMIRGenerator();
 
@@ -38,131 +35,107 @@ public:
 
     void use_fast_math();
 
+    void use_approx_math_func();
+
     void disable_basic_optimizations();
 
-    void generate(const ir::Program &prog, llvm::DataLayout *dl = nullptr);
+    void set_data_layout(llvm::DataLayout *data_layout);
 
-    llvm::Module *get_module() const;
+    void generate(const dsl::Module &mod);
+
+    llvm::Module *get_llvm_module() const;
 
     std::pair<Box<llvm::LLVMContext>, Box<llvm::Module>> get_data_ownership();
 
-    std::string get_string() const;
+    std::string get_llvm_string() const;
 
 private:
 
-    llvm::Type *find_llvm_type(const ir::Type *type);
-    
-    llvm::Type *create_llvm_type_record(      ir::BuiltinType  type);
-    llvm::Type *create_llvm_type_record(const ir::ArrayType   &type);
-    llvm::Type *create_llvm_type_record(const ir::PointerType &type);
-    llvm::Type *create_llvm_type_record(const ir::StructType  &type);
+    std::map<std::type_index, const core::Type *>
+        build_type_to_index(const core::Prog &prog);
 
-    void construct_struct_type_body(const ir::Type *type);
+    llvm::Type *build_llvm_type(const core::Type *type);
 
-    void generate_func_decl(const ir::Function &func);
+    void build_llvm_struct_body(const core::Type *type);
 
-    void generate_func_decl(const ir::ImportedHostFunction &func);
+    llvm::Type *get_llvm_type(const core::Type *type) const;
 
-    llvm::Function *generate_func(const ir::Function &func);
+    llvm::FunctionType *get_function_type(const core::Func &func);
 
-    llvm::Function *generate_func(const ir::ImportedHostFunction &func);
+    void declare_function(const core::Func *func);
 
-    llvm::FunctionType *generate_func_type(const ir::Function &func);
+    void define_function(const core::Func *func);
 
-    llvm::FunctionType *generate_func_type(
-        const ir::ImportedHostFunction &func, bool consider_context);
+    void clear_temp_function_data();
 
-    void mark_func_type(const ir::Function &func, llvm::Function *llvm_func);
+    void generate_local_allocs(const core::Func *func);
 
-    void generate_func_allocs(const ir::Function &func);
+    void generate_default_ret(const core::Func *func);
 
-    void copy_func_args(const ir::Function &func);
+    void generate(const core::Stat &stat);
 
-    void generate(const ir::Statement &s);
+    void generate(const core::Store &store);
 
-    void generate(const ir::Store &store);
+    void generate(const core::Block &block);
 
-    void generate(const ir::Assign &assign);
+    void generate(const core::Return &ret);
 
-    void generate(const ir::Break &);
+    void generate(const core::If &if_s);
 
-    void generate(const ir::Continue &);
+    void generate(const core::Loop &loop);
 
-    void generate(const ir::Block &block);
+    void generate(const core::Break &break_s);
 
-    void generate(const ir::If &if_s);
+    void generate(const core::Continue &continue_s);
 
-    void generate(const ir::While &while_s);
+    void generate(const core::Switch &switch_s);
 
-    void generate(const ir::Switch &switch_s);
+    void generate(const core::CallFuncStat &call);
 
-    void generate(const ir::Return &return_s);
+    llvm::Value *generate(const core::Expr &expr);
 
-    void generate(const ir::ReturnClass &return_class);
+    llvm::Value *generate(const core::FuncArgAddr &expr);
 
-    void generate(const ir::ReturnArray &return_array);
+    llvm::Value *generate(const core::LocalAllocAddr &expr);
 
-    void generate(const ir::Call &call);
+    llvm::Value *generate(const core::Load &expr);
 
-    void generate(const ir::IntrinsicCall &call);
+    llvm::Value *generate(const core::Immediate &expr);
 
-    llvm::Value *get_value(const ir::Value &v);
+    llvm::Value *generate(const core::NullPtr &expr);
 
-    llvm::Value *get_value(const ir::BasicValue &v);
+    llvm::Value *generate(const core::ArithmeticCast &expr);
 
-    llvm::Value *get_value(const ir::BinaryOp &v);
+    llvm::Value *generate(const core::PointerOffset &expr);
 
-    llvm::Value *get_value(const ir::UnaryOp &v);
+    llvm::Value *generate(const core::ClassPointerToMemberPointer &expr);
 
-    llvm::Value *get_value(const ir::LoadOp &v);
+    llvm::Value *generate(const core::DerefClassPointer &expr);
 
-    llvm::Value *get_value(const ir::CallOp &v);
+    llvm::Value *generate(const core::DerefArrayPointer &expr);
 
-    llvm::Value *get_value(const ir::CastBuiltinOp &v);
+    llvm::Value *generate(const core::SaveClassIntoLocalAlloc &expr);
 
-    llvm::Value *get_value(const ir::CastPointerOp &v);
+    llvm::Value *generate(const core::SaveArrayIntoLocalAlloc &expr);
 
-    llvm::Value *get_value(const ir::ArrayElemAddrOp &v);
+    llvm::Value *generate(const core::ArrayAddrToFirstElemAddr &expr);
 
-    llvm::Value *get_value(const ir::IntrinsicOp &v);
+    llvm::Value *generate(const core::Binary &expr);
 
-    llvm::Value *get_value(const ir::MemberPtrOp &v);
+    llvm::Value *generate(const core::Unary &expr);
 
-    llvm::Value *get_value(const ir::PointerOffsetOp &v);
+    llvm::Value *generate(const core::CallFunc &expr);
 
-    llvm::Value *get_value(const ir::EmptyPointerOp &v);
+    llvm::Value *process_intrinsic_call(
+        const core::CallFunc &call, const std::vector<llvm::Value *> &args);
 
-    llvm::Value *get_value(const ir::PointerToUIntOp &v);
+    Target            target_              = Target::Native;
+    bool              fast_math_           = false;
+    bool              approx_math_func_    = false;
+    bool              basic_optimizations_ = true;
+    llvm::DataLayout *data_layout_         = nullptr;
 
-    llvm::Value *get_value(const ir::UintToPointerOp &v);
-
-    llvm::Value *get_value(const ir::PointerDiffOp &v);
-
-    llvm::Value *get_value(const ir::BasicTempValue &v);
-
-    llvm::Value *get_value(const ir::BasicImmediateValue &v);
-
-    llvm::Value *get_value(const ir::AllocAddress &v);
-
-    llvm::Value *get_value(const ir::ConstData &v);
-
-    llvm::Value *convert_to_bool(llvm::Value *from, ir::BuiltinType from_type);
-
-    llvm::Value *convert_from_bool(llvm::Value *from, ir::BuiltinType to_type);
-
-    llvm::Value *convert_arithmetic(
-        llvm::Value *from, ir::BuiltinType from_type, ir::BuiltinType to_type);
-
-    ir::BuiltinType get_arithmetic_type(const ir::BasicValue &v);
-
-    llvm::Value *i1_to_bool(llvm::Value *val);
-
-    bool fast_math_           = false;
-    bool basic_optimizations_ = true;
-    Target target_            = Target::Host;
-    llvm::DataLayout *dl_     = nullptr;
-    
-    Data *data_ = nullptr;
+    LLVMData *llvm_ = nullptr;
 };
 
 CUJ_NAMESPACE_END(cuj::gen)

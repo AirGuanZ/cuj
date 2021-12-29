@@ -1,5 +1,3 @@
-#if CUJ_ENABLE_CUDA
-
 #include <cstring>
 
 #include <cuj/common.h>
@@ -22,5 +20,3 @@ std::string get_libdevice_str()
 }
 
 CUJ_NAMESPACE_END(cuj::gen::libdev)
-
-#endif // #if CUJ_ENABLE_CUDA
