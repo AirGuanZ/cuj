@@ -12,6 +12,7 @@
 #include <cuj/dsl/pointer.h>
 #include <cuj/dsl/pointer_reference.h>
 #include <cuj/dsl/reference.h>
+#include <cuj/dsl/return.h>
 #include <cuj/dsl/switch.h>
 #include <cuj/dsl/type_context.h>
 #include <cuj/dsl/variable.h>
@@ -27,6 +28,7 @@
 #include <cuj/dsl/impl/loop.inl>
 #include <cuj/dsl/impl/pointer.inl>
 #include <cuj/dsl/impl/pointer_reference.inl>
+#include <cuj/dsl/impl/return.inl>
 #include <cuj/dsl/impl/switch.inl>
 #include <cuj/dsl/impl/type_context.inl>
 

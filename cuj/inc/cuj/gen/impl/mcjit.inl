@@ -25,12 +25,12 @@ namespace mcjit_detail
             else
                 return false;
         }
-        else if constexpr(dsl::is_cuj_arithmetic_v<Arg>)
-            return std::is_same_v<dsl::cxx<CArg>, Arg>;
-        else if constexpr(std::is_same_v<Arg, dsl::CujVoid> ||
+        else if constexpr(std::is_same_v<Arg, dsl::CujVoid>)
+            return false;
+        else if constexpr(dsl::is_cuj_arithmetic_v<Arg> ||
                           dsl::is_cuj_class_v<Arg> ||
                           dsl::is_cuj_array_v<Arg>)
-            return false;
+            return std::is_same_v<dsl::cxx<CArg>, Arg>;
         else
         {
             static_assert(dsl::is_cuj_pointer_v<Arg>);
@@ -95,13 +95,13 @@ namespace mcjit_detail
     template<typename T, size_t N>
     struct ArgToCArg<dsl::Array<T, N>>
     {
-        using Type = void;
+        using Type = dsl::cuj_to_cxx_t<dsl::Array<T, N>>;
     };
 
     template<typename T> requires dsl::is_cuj_class_v<T>
     struct ArgToCArg<T>
     {
-        using Type = void;
+        using Type = dsl::cuj_to_cxx_t<T>;
     };
 
     template<typename T>

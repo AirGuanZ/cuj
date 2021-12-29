@@ -128,6 +128,7 @@ namespace class_detail
     };                                                                          \
     struct CujBase##PROXY                                                       \
     {                                                                           \
+        using CXXClass = CLASS;                                                 \
         using CujBase = CujBase##PROXY;                                         \
         using Reflection = CujReflection##PROXY;                                \
         struct CujClassTag { };                                                 \

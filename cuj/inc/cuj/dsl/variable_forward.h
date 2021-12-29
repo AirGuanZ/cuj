@@ -142,7 +142,7 @@ using remove_reference_t = typename RemoveReference<T>::Type;
 // c++ to cuj
 
 template<typename T>
-struct CXXToCuj;
+struct CXXToCuj { using Type = void; };
 
 template<typename T> requires std::is_arithmetic_v<T>
 struct CXXToCuj<T> { using Type = Arithmetic<T>; };
@@ -159,6 +159,24 @@ struct CXXToCuj<T[N]> { using Type = Array<typename CXXToCuj<T>::Type, N>; };
 template<typename T>
 struct CXXClassToCujClass;
 
+template<typename T>
+struct CujToCXX { using Type = void; };
+
+template<typename T>
+struct CujToCXX<Arithmetic<T>> { using Type = T; };
+
+template<>
+struct CujToCXX<CujVoid> { using Type = void; };
+
+template<typename T>
+struct CujToCXX<Pointer<T>> { using Type = typename CujToCXX<T>::Type *; };
+
+template<typename T, size_t N>
+struct CujToCXX<Array<T, N>> { using Type = typename CujToCXX<T>::Type[N]; };
+
+template<typename T>
+struct CujClassToCXXClass;
+
 namespace detail
 {
 
@@ -168,7 +186,7 @@ namespace detail
     auto cxx_class_to_cuj_class_aux()
     {
         using LocalRegisteredType = std::remove_pointer_t<
-            decltype(_cxx_class_to_cuj_class(std::declval<CXXClass*>()))>;
+            decltype(_cxx_class_to_cuj_class(std::declval<CXXClass *>()))>;
 
         if constexpr(!std::is_same_v<LocalRegisteredType, void>)
         {
@@ -192,8 +210,14 @@ namespace detail
 template<typename T> requires std::is_class_v<T>
 struct CXXToCuj<T> { using Type = detail::cxx_class_to_cuj_class_t<T>; };
 
+template<typename T> requires is_cuj_class_v<T>
+struct CujToCXX<T> { using Type = typename T::CXXClass; };
+
 template<typename T>
 using cxx_to_cuj_t = typename CXXToCuj<T>::Type;
+
+template<typename T>
+using cuj_to_cxx_t = typename CujToCXX<T>::Type;
 
 template<typename T>
 using cxx_to_cuj_ref_t = add_reference_t<cxx_to_cuj_t<T>>;

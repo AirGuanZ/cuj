@@ -107,6 +107,8 @@ public:
 
     void set_return(const core::Type *type, bool is_reference);
 
+    const core::Func::Argument &get_return() const;
+
     void append_statement(RC<core::Stat> stat);
 
     void append_statement(core::Stat stat);

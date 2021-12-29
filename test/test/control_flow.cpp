@@ -37,13 +37,12 @@ TEST_CASE("control flow")
             i32 ret;
             $if(i <= 1)
             {
-                ret = i;
+                $return(i);
             }
             $else
             {
-                ret = fib(i - 1) + fib(i - 2);
+                $return(ret = fib(i - 1) + fib(i - 2));
             };
-            return ret;
         });
 
         MCJIT mcjit;

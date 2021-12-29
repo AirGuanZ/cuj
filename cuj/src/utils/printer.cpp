@@ -176,9 +176,17 @@ void Printer::print(TextBuilder &b, const core::Block &block)
 
 void Printer::print(TextBuilder &b, const core::Return &ret)
 {
-    b.append("return ");
-    print(b, ret.val);
-    b.new_line();
+    if(auto builtin = ret.return_type->as_if<core::Builtin>();
+       builtin && *builtin == core::Builtin::Void)
+    {
+        b.appendl("return");
+    }
+    else
+    {
+        b.append("return ");
+        print(b, ret.val);
+        b.new_line();
+    }
 }
 
 void Printer::print(TextBuilder &b, const core::If &stat)

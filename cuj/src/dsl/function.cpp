@@ -86,6 +86,11 @@ void FunctionContext::set_return(const core::Type *type, bool is_reference)
     func_->return_type = { type, is_reference };
 }
 
+const core::Func::Argument &FunctionContext::get_return() const
+{
+    return func_->return_type;
+}
+
 void FunctionContext::append_statement(core::Stat stat)
 {
     append_statement(newRC<core::Stat>(std::move(stat)));
