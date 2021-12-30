@@ -1,150 +1,249 @@
-#include <test/test.h>
+#include "test.h"
 
 TEST_CASE("operator")
 {
-    SECTION("mod")
+    SECTION("+")
     {
-        ScopedContext ctx;
-
-        auto test = to_callable<bool>([]
-        {
-            boolean ret = true;
-
-            ret = ret && (i32(7) % i32(5) == i32(2));
-            ret = ret && (i32(-7) % i32(5) == i32(-2));
-            ret = ret && (i32(7) % i32(-5) == i32(2));
-            ret = ret && (i32(-7) % i32(-5) == i32(-2));
-
-            $return(ret);
-        });
-
-        auto jit = ctx.gen_native_jit();
-        auto test_func = jit.get_function(test);
-
-        REQUIRE(test_func);
-        if(test_func)
-            REQUIRE(test_func() == true);
+        mcjit_require([](i32 a, i32 b) { return a + b; }, 1, 2, 3);
+        mcjit_require([](f32 a, f32 b) { return a + b; }, 1.0f, 2.0f, 3.0f);
+        mcjit_require([](f32 a) { return a + 2.0f; }, 2.0f, 4.0f);
+        mcjit_require([](f32 a) { return 2.0f + a; }, 2.0f, 4.0f);
+        mcjit_require([](f32 a) { ref b = a; return b + 2.0f; }, 2.0f, 4.0f);
+        mcjit_require([](f32 a) { ref b = a; return 2.0f + b; }, 2.0f, 4.0f);
     }
 
-    SECTION("bitwise")
+    SECTION("-")
     {
-        ScopedContext ctx;
+        mcjit_require([](i32 a, i32 b) { return a - b; }, 1, 2, -1);
+        mcjit_require([](f32 a, f32 b) { return a - b; }, 1.0f, 2.0f, -1.0f);
+        mcjit_require([](f32 a) { return a - 2.0f; }, 2.0f, 0.0f);
+        mcjit_require([](f32 a) { return 2.0f - a; }, 2.0f, 0.0f);
+        mcjit_require([](f32 a) { ref b = a; return b - 2.0f; }, 2.0f, 0.0f);
+        mcjit_require([](f32 a) { ref b = a; return 2.0f - b; }, 2.0f, 0.0f);
+    }
 
-        auto band = to_callable<i32>(
+    SECTION("*")
+    {
+        mcjit_require([](i32 a, i32 b) { return a * b; }, 2, 3, 6);
+        mcjit_require([](f32 a, f32 b) { return a * b; }, 2.0f, 3.0f, 6.0f);
+        mcjit_require([](f32 a) { return a * 2.0f; }, 2.0f, 4.0f);
+        mcjit_require([](f32 a) { return 2.0f * a; }, 2.0f, 4.0f);
+        mcjit_require([](f32 a) { ref b = a; return b * 2.0f; }, 2.0f, 4.0f);
+        mcjit_require([](f32 a) { ref b = a; return 2.0f * b; }, 2.0f, 4.0f);
+    }
+
+    SECTION("/")
+    {
+        mcjit_require([](i32 a, i32 b) { return a / b; }, 7, 3, 2);
+        mcjit_require([](f32 a, f32 b) { return a / b; }, 2.0f, 3.0f, 2.0f / 3.0f);
+        mcjit_require([](f32 a) { return a / 2.0f; }, 2.0f, 1.0f);
+        mcjit_require([](f32 a) { return 2.0f / a; }, 2.0f, 1.0f);
+        mcjit_require([](f32 a) { ref b = a; return b / 2.0f; }, 2.0f, 1.0f);
+        mcjit_require([](f32 a) { ref b = a; return 2.0f / b; }, 2.0f, 1.0f);
+    }
+
+    SECTION("%")
+    {
+        with_mcjit(
             [](i32 a, i32 b)
         {
-            $return(a & b);
+            return a % b;
+        },
+            [](auto f)
+        {
+            REQUIRE(f(1, 2) == 1);
+            REQUIRE(f(5, 3) == 2);
+            REQUIRE(f(0, 3) == 0);
+            REQUIRE(f(-5, 4) == -1);
         });
 
-        auto bor = to_callable<i32>(
+        with_mcjit(
+            [](u32 a, u32 b)
+        {
+            return a % b;
+        },
+            [](auto f)
+        {
+            REQUIRE(f(1, 2) == 1);
+            REQUIRE(f(5, 3) == 2);
+            REQUIRE(f(0, 3) == 0);
+        });
+    }
+
+    SECTION("==")
+    {
+        with_mcjit(
             [](i32 a, i32 b)
         {
-            $return(a | b);
+            return i32(a == b);
+        },
+            [](auto f)
+        {
+            REQUIRE(f(1, 2) == 0);
+            REQUIRE(f(-5, -5) == 1);
         });
+    }
 
-        auto bxor = to_callable<i32>(
+    SECTION("!=")
+    {
+        with_mcjit(
             [](i32 a, i32 b)
         {
-            $return(a ^ b);
-        });
-
-        auto bnot = to_callable<i32>(
-            [](i32 a)
+            return i32(a != b);
+        },
+            [](auto f)
         {
-            $return(~a);
+            REQUIRE(f(1, 2) == 1);
+            REQUIRE(f(-5, -5) == 0);
         });
-
-        auto jit = ctx.gen_native_jit();
-
-        auto bitand_func = jit.get_function(band);
-        auto bitor_func = jit.get_function(bor);
-        auto bitxor_func = jit.get_function(bxor);
-        auto bitnot_func = jit.get_function(bnot);
-        
-        REQUIRE(bitand_func);
-        if(bitand_func)
-            REQUIRE(bitand_func(34785, 45891) == (34785 & 45891));
-        
-        REQUIRE(bitor_func);
-        if(bitor_func)
-            REQUIRE(bitor_func(34785, 45891) == (34785 | 45891));
-        
-        REQUIRE(bitxor_func);
-        if(bitxor_func)
-            REQUIRE(bitxor_func(34785, 45891) == (34785 ^ 45891));
-
-        REQUIRE(bitnot_func);
-        if(bitnot_func)
-            REQUIRE(bitnot_func(32753) == ~32753);
     }
 
-    SECTION("const_data")
+    SECTION(">")
     {
-        ScopedContext ctx;
-
-        auto test = to_callable<bool>([]
+        with_mcjit(
+            [](i32 a, i32 b)
         {
-            const int data[] = { 1, 2, 3, 4, 5 };
-            auto ptr = const_data<int>(data);
-
-            $return(ptr[0] == 1 && ptr[1] == 2 && data[3] != 3 && data[4] == 5);
+            return i32(a > b);
+        },
+            [](auto f)
+        {
+            REQUIRE(f(1, 2) == 0);
+            REQUIRE(f(-5, -5) == 0);
+            REQUIRE(f(2, -7) == 1);
         });
-
-        auto jit = ctx.gen_native_jit();
-        auto test_func = jit.get_function(test);
-
-        REQUIRE(test_func);
-        if(test_func)
-            REQUIRE(test_func() == true);
     }
 
-    SECTION("shift")
+    SECTION(">=")
     {
-        ScopedContext ctx;
-
-        auto lsh = to_callable<u32>(
-            [](u32 a, i32 b)
+        with_mcjit(
+            [](i32 a, i32 b)
         {
-            $return(a << b);
-        });
-
-        auto rsh = to_callable<u32>(
-            [](u64 a, u32 b)
+            return i32(a >= b);
+        },
+            [](auto f)
         {
-            $return(a >> b);
+            REQUIRE(f(1, 2) == 0);
+            REQUIRE(f(-5, -5) == 1);
+            REQUIRE(f(2, -7) == 1);
         });
-
-        auto jit = ctx.gen_native_jit();
-        auto lsh_func = jit.get_function(lsh);
-        auto rsh_func = jit.get_function(rsh);
-
-        REQUIRE(lsh_func);
-        if(lsh_func)
-            REQUIRE(lsh_func(327u, 4) == 327u << 4);
-
-        REQUIRE(rsh_func);
-        if(rsh_func)
-            REQUIRE(rsh_func(32765u, 5) == 32765u >> 5);
     }
 
-    SECTION("select")
+    SECTION("<")
     {
-        ScopedContext ctx;
-
-        auto test = to_callable<float>(
-            [](boolean cond, f32 a, f32 b)
+        with_mcjit(
+            [](i32 a, i32 b)
         {
-            $return(select(cond, a, b));
+            return i32(a < b);
+        },
+            [](auto f)
+        {
+            REQUIRE(f(1, 2) == 1);
+            REQUIRE(f(-5, -5) == 0);
+            REQUIRE(f(2, -7) == 0);
         });
+    }
 
-        auto jit = ctx.gen_native_jit();
-        auto test_func = jit.get_function(test);
-
-        REQUIRE(test_func);
-        if(test_func)
+    SECTION("<=")
+    {
+        with_mcjit(
+            [](i32 a, i32 b)
         {
-            REQUIRE(test_func(true, 0, 1) == 0);
-            REQUIRE(test_func(false, 0, 1) == 1);
-        }
+            return i32(a <= b);
+        },
+            [](auto f)
+        {
+            REQUIRE(f(1, 2) == 1);
+            REQUIRE(f(-5, -5) == 1);
+            REQUIRE(f(2, -7) == 0);
+        });
+    }
+
+    SECTION("<<")
+    {
+        with_mcjit(
+            [](i32 a, i32 b)
+        {
+            return a << b;
+        },
+            [](auto f)
+        {
+            REQUIRE(f(2, 3) == 2 << 3);
+            REQUIRE(f(13579, 12) == 13579 << 12);
+        });
+    }
+
+    SECTION(">>")
+    {
+        with_mcjit(
+            [](u32 a, u32 b)
+        {
+            return a >> b;
+        },
+            [](auto f)
+        {
+            REQUIRE(f(2u, 3u) == 2u >> 3u);
+            REQUIRE(f(135797895u, 7u) == 135797895u >> 7u);
+        });
+    }
+
+    SECTION("&")
+    {
+        with_mcjit(
+            [](i32 a, i32 b)
+        {
+            return a & b;
+        },
+            [](auto f)
+        {
+            REQUIRE(f(0b1011011, 0b1011010) == (0b1011011 & 0b1011010));
+            REQUIRE(f(123456, 234567) == (123456 & 234567));
+        });
+    }
+
+    SECTION("|")
+    {
+        with_mcjit(
+            [](i32 a, i32 b)
+        {
+            return a | b;
+        },
+            [](auto f)
+        {
+            REQUIRE(f(0b1011011, 0b1011010) == (0b1011011 | 0b1011010));
+            REQUIRE(f(123456, 234567) == (123456 | 234567));
+        });
+    }
+
+    SECTION("^")
+    {
+        with_mcjit(
+            [](i32 a, i32 b)
+        {
+            return a ^ b;
+        },
+            [](auto f)
+        {
+            REQUIRE(f(0b1011011, 0b1011010) == (0b1011011 ^ 0b1011010));
+            REQUIRE(f(123456, 234567) == (123456 ^ 234567));
+        });
+    }
+
+    SECTION("-")
+    {
+        mcjit_require([](i32 x) { return -x; }, 1, -1);
+        mcjit_require([](i32 x) { return -x; }, 0, 0);
+        mcjit_require([](f32 x) { return -x; }, -5.0f, 5.0f);
+    }
+
+    SECTION("~")
+    {
+        mcjit_require([](i32 x) { return ~x; }, 0b1011011, ~0b1011011);
+        mcjit_require([](u32 x) { return ~x; }, 234567u, ~234567u);
+    }
+
+    SECTION("!")
+    {
+        mcjit_require([](i32 x) { return i32(!(x != 0)); }, 1, 0);
+        mcjit_require([](i32 x) { return i32(!(x != 0)); }, 0, 1);
     }
 }

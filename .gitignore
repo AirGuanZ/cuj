@@ -1,4 +1,2 @@
-﻿build/
-build_debug/
-build_release/
-README-cn.md
+build-debug
+build-release

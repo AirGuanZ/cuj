@@ -1,5 +1,3 @@
-#if CUJ_ENABLE_CUDA
-
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4141)
@@ -22,10 +20,6 @@
 #include <llvm/Transforms/IPO/PassManagerBuilder.h>
 #include <llvm/Transforms/IPO.h>
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
 #include <cuj/gen/llvm.h>
 #include <cuj/gen/ptx.h>
 
@@ -42,18 +36,22 @@ namespace
     };
 
     IntermediateModule construct_intermediate_module(
-        const ir::Program &prog, const Options opts)
+        const dsl::Module &mod, const Options opts)
     {
-        LLVMInitializeNVPTXTargetInfo();
-        LLVMInitializeNVPTXTarget();
-        LLVMInitializeNVPTXTargetMC();
-        LLVMInitializeNVPTXAsmPrinter();
+        static std::once_flag init_nvptx_target_flag;
+        std::call_once(init_nvptx_target_flag, [] 
+        {
+            LLVMInitializeNVPTXTargetInfo();
+            LLVMInitializeNVPTXTarget();
+            LLVMInitializeNVPTXTargetMC();
+            LLVMInitializeNVPTXAsmPrinter();
+        });
 
         std::string err;
         const char *target_triple = "nvptx64-nvidia-cuda";
         auto target = llvm::TargetRegistry::lookupTarget(target_triple, err);
         if(!target)
-            throw CUJException(err);
+            throw CujException(err);
 
         llvm::TargetOptions options;
         if(opts.fast_math)
@@ -71,38 +69,37 @@ namespace
             options.NoNaNsFPMath = 0;
         }
 
-        llvm::Optional<llvm::Reloc::Model> reloc_model = {};
-        if(opts.relocatable_code)
-            reloc_model = llvm::Reloc::PIC_;
-
         auto machine = target->createTargetMachine(
-            target_triple, "sm_60", "+ptx63", options, reloc_model,
+            target_triple, "sm_60", "+ptx63", options, llvm::Reloc::PIC_,
             llvm::CodeModel::Small, llvm::CodeGenOpt::Aggressive);
         auto data_layout = machine->createDataLayout();
 
         LLVMIRGenerator ir_gen;
         if(opts.fast_math)
             ir_gen.use_fast_math();
+        if(opts.approx_math_func)
+            ir_gen.use_approx_math_func();
         ir_gen.disable_basic_optimizations();
         ir_gen.set_target(LLVMIRGenerator::Target::PTX);
-        ir_gen.generate(prog, &data_layout);
+        ir_gen.set_data_layout(&data_layout);
+        ir_gen.generate(mod);
 
-        auto llvm_module = ir_gen.get_module();
+        auto llvm_module = ir_gen.get_llvm_module();
         llvm_module->setTargetTriple(target_triple);
         llvm_module->setDataLayout(data_layout);
 
         llvm::PassManagerBuilder pass_mgr_builder;
-        switch(opts.optimize_level)
+        switch(opts.opt_level)
         {
-        case OptimizeLevel::O0: pass_mgr_builder.OptLevel = 0; break;
-        case OptimizeLevel::O1: pass_mgr_builder.OptLevel = 1; break;
-        case OptimizeLevel::O2: pass_mgr_builder.OptLevel = 2; break;
-        case OptimizeLevel::O3: pass_mgr_builder.OptLevel = 3; break;
+        case OptimizationLevel::O0: pass_mgr_builder.OptLevel = 0; break;
+        case OptimizationLevel::O1: pass_mgr_builder.OptLevel = 1; break;
+        case OptimizationLevel::O2: pass_mgr_builder.OptLevel = 2; break;
+        case OptimizationLevel::O3: pass_mgr_builder.OptLevel = 3; break;
         }
         pass_mgr_builder.Inliner = llvm::createFunctionInliningPass(
             pass_mgr_builder.OptLevel, 0, false);
-        pass_mgr_builder.SLPVectorize   = opts.auto_vectorization;
-        pass_mgr_builder.LoopVectorize  = opts.auto_vectorization;
+        pass_mgr_builder.SLPVectorize   = true;
+        pass_mgr_builder.LoopVectorize  = false;
         pass_mgr_builder.MergeFunctions = true;
 
         machine->adjustPassManager(pass_mgr_builder);
@@ -136,28 +133,45 @@ namespace
 
 } // namespace anonymouos
 
-void PTXGenerator::generate(const ir::Program &prog, const Options &opts)
+void PTXGenerator::set_options(const Options &opts)
 {
-    auto im = construct_intermediate_module(prog, opts);
+    opts_ = opts;
+}
+
+void PTXGenerator::generate(const dsl::Module &mod)
+{
+    auto im = construct_intermediate_module(mod, opts_);
+
+    llvm_ir_ = {};
+    llvm::raw_string_ostream ir_stream(llvm_ir_);
+    ir_stream << *im.llvm_module;
+    ir_stream.flush();
 
     llvm::legacy::PassManager passes;
     llvm::SmallString<8> output_buf;
     llvm::raw_svector_ostream output_stream(output_buf);
     if(im.machine->addPassesToEmitFile(
         passes, output_stream, nullptr, llvm::CGFT_AssemblyFile))
-        throw CUJException("ptx file emission is not supported");
+        throw CujException("ptx emission is not supported");
 
     passes.run(*im.llvm_module);
 
-    result_.resize(output_buf.size());
-    std::memcpy(result_.data(), output_buf.data(), output_buf.size());
+    ptx_.resize(output_buf.size());
+    std::memcpy(ptx_.data(), output_buf.data(), output_buf.size());
 }
 
-const std::string &PTXGenerator::get_result() const
+const std::string &PTXGenerator::get_llvm_ir() const
 {
-    return result_;
+    return llvm_ir_;
+}
+
+const std::string &PTXGenerator::get_ptx() const
+{
+    return ptx_;
 }
 
 CUJ_NAMESPACE_END(cuj::gen)
 
-#endif // #if CUJ_ENABLE_CUDA
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
