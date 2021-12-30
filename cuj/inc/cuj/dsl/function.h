@@ -161,7 +161,7 @@ public:
 
     Function();
 
-    template<typename F> requires !function_detail::is_function_v<F>
+    template<typename F> requires (!function_detail::is_function_v<F>)
     Function(F &&body_func);
 
     void set_name(std::string name);
@@ -176,13 +176,13 @@ public:
     RC<const FunctionContext> _get_context() const;
 };
 
-template<typename F> requires !function_detail::is_function_v<F>
+template<typename F> requires (!function_detail::is_function_v<F>)
 Function(F)->Function<
     typename function_detail::AutoFunctionTrait<std::remove_reference_t<F>>::FRaw>;
 
 // create regular function
 
-template<typename F> requires !(is_cuj_ref_v<F> || is_cuj_var_v<F>)
+template<typename F> requires (!(is_cuj_ref_v<F> || is_cuj_var_v<F>))
 auto function(F &&body_func)
 {
     using Func = typename function_detail::AutoFunctionTrait<F>::F;

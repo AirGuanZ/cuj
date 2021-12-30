@@ -206,7 +206,7 @@ Function<Ret(Args...)>::Function()
 }
 
 template<typename Ret, typename...Args>
-template<typename F> requires !function_detail::is_function_v<F>
+template<typename F> requires (!function_detail::is_function_v<F>)
 Function<Ret(Args...)>::Function(F &&body_func)
 {
     initialize();

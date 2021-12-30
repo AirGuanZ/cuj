@@ -38,7 +38,7 @@ num<T>::num(const num &other)
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-template<typename U> requires !std::is_same_v<T, U>
+template<typename U> requires (!std::is_same_v<T, U>)
 num<T>::num(const num<U> &other)
     : num()
 {
@@ -46,7 +46,7 @@ num<T>::num(const num<U> &other)
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-template<typename U> requires !std::is_same_v<T, U>
+template<typename U> requires (!std::is_same_v<T, U>)
 num<T>::num(const ref<num<U>> &other)
     : num()
 {
@@ -531,7 +531,7 @@ inline num<bool> operator!(const num<bool> &val)
     });
 }
 
-template<typename T> requires std::is_integral_v<T> && !std::is_signed_v<T>
+template<typename T> requires std::is_integral_v<T> && (!std::is_signed_v<T>)
 num<T> operator>>(T lhs, const num<T> &rhs)
 {
     return num(lhs) >> rhs;

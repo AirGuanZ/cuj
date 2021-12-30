@@ -18,10 +18,10 @@ public:
 
     num(T immediate_value);
 
-    template<typename U> requires !std::is_same_v<T, U>
+    template<typename U> requires (!std::is_same_v<T, U>)
     explicit num(const num<U> &other);
     
-    template<typename U> requires !std::is_same_v<T, U>
+    template<typename U> requires (!std::is_same_v<T, U>)
     explicit num(const ref<num<U>> &other);
 
     num(const num &other);
@@ -103,7 +103,7 @@ inline num<bool> operator!(const num<bool> &val);
 
 template<typename T> requires std::is_integral_v<T>
 num<T> operator<<(T lhs, const num<T> &rhs);
-template<typename T> requires std::is_integral_v<T> && !std::is_signed_v<T>
+template<typename T> requires std::is_integral_v<T> && (!std::is_signed_v<T>)
 num<T> operator>>(T lhs, const num<T> &rhs);
 
 template<typename T> requires std::is_integral_v<T>

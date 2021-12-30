@@ -88,7 +88,7 @@ inline num<bool> operator!(const ref<num<bool>> &val);
 
 template<typename T> requires std::is_integral_v<T>
 num<T> operator<<(T lhs, const ref<num<T>> &rhs);
-template<typename T> requires std::is_integral_v<T> && !std::is_signed_v<T>
+template<typename T> requires std::is_integral_v<T> && (!std::is_signed_v<T>)
 num<T> operator>>(T lhs, const ref<num<T>> &rhs);
 
 template<typename T> requires std::is_integral_v<T>

@@ -16,7 +16,7 @@ namespace class_detail
 template<typename T> requires is_cuj_class_v<T>
 class ref<T> : public T
 {
-    using T::CujClassTag;
+    using typename T::CujClassTag;
 
     explicit ref(const ptr<T> &addr)
         : T(class_detail::ClassInternalConstructorTag{}, addr)
