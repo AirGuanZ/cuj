@@ -48,7 +48,7 @@ TEST_CASE("mcjit")
     CHECK_C_FUNC_TYPE_DEFAULT(void(int32_t, int32_t),       [](i32, i32)      {});
     CHECK_C_FUNC_TYPE_DEFAULT(int32_t * (int32_t, int32_t), [](i32 a, i32)    { return a.address(); });
     CHECK_C_FUNC_TYPE_DEFAULT(int32_t(int32_t, int32_t),    [](i32 a, i32)    { ref b = a; return b; });
-    CHECK_C_FUNC_TYPE_DEFAULT(void *(),                     []                { ptr ret = nullptr; return ret; });
+    CHECK_C_FUNC_TYPE_DEFAULT(void *(),                     []                { ptr<cxx<void>> ret = nullptr; return ret; });
     CHECK_C_FUNC_TYPE_DEFAULT(A *(A *),                     [](ref<cxx<A>> a) { return a.address(); });
     CHECK_C_FUNC_TYPE_DEFAULT(A *(B *),                     [](ref<cxx<B>> b) { return b.arr[0].address(); });
     CHECK_C_FUNC_TYPE_DEFAULT(B *(B *),                     [](ptr<cxx<B>> b) { return b->ptr; });

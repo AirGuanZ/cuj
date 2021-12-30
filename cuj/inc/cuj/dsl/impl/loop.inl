@@ -23,7 +23,7 @@ void LoopBuilder::operator+(F &&body_func)
 }
 
 template<typename F>
-    requires !std::is_same_v<WhileBuilder, std::remove_cvref_t<F>>
+    requires (!std::is_same_v<WhileBuilder, std::remove_cvref_t<F>>)
 WhileBuilder::WhileBuilder(F &&cond_func)
 {
     auto func = FunctionContext::get_func_context();

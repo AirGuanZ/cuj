@@ -18,10 +18,10 @@ public:
 
     Arithmetic(T immediate_value);
 
-    template<typename U> requires !std::is_same_v<T, U>
+    template<typename U> requires (!std::is_same_v<T, U>)
     explicit Arithmetic(const Arithmetic<U> &other);
     
-    template<typename U> requires !std::is_same_v<T, U>
+    template<typename U> requires (!std::is_same_v<T, U>)
     explicit Arithmetic(const ref<Arithmetic<U>> &other);
 
     Arithmetic(const Arithmetic &other);
@@ -103,7 +103,7 @@ inline Arithmetic<bool> operator!(const Arithmetic<bool> &val);
 
 template<typename T> requires std::is_integral_v<T>
 Arithmetic<T> operator<<(T lhs, const Arithmetic<T> &rhs);
-template<typename T> requires std::is_integral_v<T> && !std::is_signed_v<T>
+template<typename T> requires std::is_integral_v<T> && (!std::is_signed_v<T>)
 Arithmetic<T> operator>>(T lhs, const Arithmetic<T> &rhs);
 
 template<typename T> requires std::is_integral_v<T>
