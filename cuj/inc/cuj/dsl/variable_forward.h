@@ -9,13 +9,13 @@ struct CujVoid { };
 // arithmetic
 
 template<typename T> requires std::is_arithmetic_v<T>
-class Arithmetic;
+class num;
 
 template<typename T>
 struct IsCujArithmetic : std::false_type { };
 
 template<typename T>
-struct IsCujArithmetic<Arithmetic<T>> : std::true_type { };
+struct IsCujArithmetic<num<T>> : std::true_type { };
 
 template<typename T>
 constexpr bool is_cuj_arithmetic_v = IsCujArithmetic<T>::value;
@@ -23,13 +23,13 @@ constexpr bool is_cuj_arithmetic_v = IsCujArithmetic<T>::value;
 // pointer
 
 template<typename T>
-class Pointer;
+class ptr;
 
 template<typename T>
 struct IsCujPointer : std::false_type { };
 
 template<typename T>
-struct IsCujPointer<Pointer<T>> : std::true_type { };
+struct IsCujPointer<ptr<T>> : std::true_type { };
 
 template<typename T>
 constexpr bool is_cuj_pointer_v = IsCujPointer<T>::value;
@@ -37,13 +37,13 @@ constexpr bool is_cuj_pointer_v = IsCujPointer<T>::value;
 // array
 
 template<typename T, size_t N>
-class Array;
+class arr;
 
 template<typename T>
 struct IsCujArray : std::false_type { };
 
 template<typename T, size_t N>
-struct IsCujArray<Array<T, N>> : std::true_type { };
+struct IsCujArray<arr<T, N>> : std::true_type { };
 
 template<typename T>
 constexpr bool is_cuj_array_v = IsCujArray<T>::value;
@@ -85,7 +85,7 @@ template<typename T>
 struct IsCujArithmeticReference : std::false_type { };
 
 template<typename T>
-struct IsCujArithmeticReference<ref<Arithmetic<T>>> : std::true_type { };
+struct IsCujArithmeticReference<ref<num<T>>> : std::true_type { };
 
 template<typename T>
 constexpr bool is_cuj_arithmetic_reference_v = IsCujArithmeticReference<T>::value;
@@ -94,7 +94,7 @@ template<typename T>
 struct IsCujPointerReference : std::false_type { };
 
 template<typename T>
-struct IsCujPointerReference<ref<Pointer<T>>> : std::true_type { };
+struct IsCujPointerReference<ref<ptr<T>>> : std::true_type { };
 
 template<typename T>
 constexpr bool is_cuj_pointer_reference_v = IsCujPointerReference<T>::value;
@@ -103,7 +103,7 @@ template<typename T>
 struct IsCujArrayReference : std::false_type { };
 
 template<typename T, size_t N>
-struct IsCujArrayReference<ref<Array<T, N>>> : std::true_type { };
+struct IsCujArrayReference<ref<arr<T, N>>> : std::true_type { };
 
 template<typename T>
 constexpr bool is_cuj_array_reference_v = IsCujArrayReference<T>::value;
@@ -145,16 +145,16 @@ template<typename T>
 struct CXXToCuj { using Type = void; };
 
 template<typename T> requires std::is_arithmetic_v<T>
-struct CXXToCuj<T> { using Type = Arithmetic<T>; };
+struct CXXToCuj<T> { using Type = num<T>; };
 
 template<>
 struct CXXToCuj<void> { using Type = CujVoid; };
 
 template<typename T>
-struct CXXToCuj<T *> { using Type = Pointer<typename CXXToCuj<T>::Type>; };
+struct CXXToCuj<T *> { using Type = ptr<typename CXXToCuj<T>::Type>; };
 
 template<typename T, size_t N>
-struct CXXToCuj<T[N]> { using Type = Array<typename CXXToCuj<T>::Type, N>; };
+struct CXXToCuj<T[N]> { using Type = arr<typename CXXToCuj<T>::Type, N>; };
 
 template<typename T>
 struct CXXClassToCujClass;
@@ -163,16 +163,16 @@ template<typename T>
 struct CujToCXX { using Type = void; };
 
 template<typename T>
-struct CujToCXX<Arithmetic<T>> { using Type = T; };
+struct CujToCXX<num<T>> { using Type = T; };
 
 template<>
 struct CujToCXX<CujVoid> { using Type = void; };
 
 template<typename T>
-struct CujToCXX<Pointer<T>> { using Type = typename CujToCXX<T>::Type *; };
+struct CujToCXX<ptr<T>> { using Type = typename CujToCXX<T>::Type *; };
 
 template<typename T, size_t N>
-struct CujToCXX<Array<T, N>> { using Type = typename CujToCXX<T>::Type[N]; };
+struct CujToCXX<arr<T, N>> { using Type = typename CujToCXX<T>::Type[N]; };
 
 template<typename T>
 struct CujClassToCXXClass;
@@ -221,15 +221,6 @@ using cuj_to_cxx_t = typename CujToCXX<T>::Type;
 
 template<typename T>
 using cxx_to_cuj_ref_t = add_reference_t<cxx_to_cuj_t<T>>;
-
-template<typename T>
-using ptr = Pointer<T>;
-
-template<typename T>
-using num = Arithmetic<T>;
-
-template<typename T, size_t N>
-using arr = Array<T, N>;
 
 template<typename T>
 using cxx = cxx_to_cuj_t<T>;

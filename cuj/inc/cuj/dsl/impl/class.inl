@@ -9,14 +9,14 @@ namespace class_detail
 {
 
     template<typename C, typename M>
-    Pointer<M> class_pointer_to_member_ptr(
-        const Pointer<C> &class_ptr, size_t member_index)
+    ptr<M> class_pointer_to_member_ptr(
+        const ptr<C> &class_ptr, size_t member_index)
     {
         auto func_ctx = FunctionContext::get_func_context();
         auto type_ctx = func_ctx->get_type_context();
         
-        auto class_ptr_type = type_ctx->get_type<Pointer<C>>();
-        auto member_ptr_type = type_ctx->get_type<Pointer<M>>();
+        auto class_ptr_type = type_ctx->get_type<ptr<C>>();
+        auto member_ptr_type = type_ctx->get_type<ptr<M>>();
         
         core::ClassPointerToMemberPointer class_to_member = {
             .class_ptr_type  = class_ptr_type,
@@ -24,11 +24,11 @@ namespace class_detail
             .class_ptr       = newRC<core::Expr>(class_ptr._load()),
             .member_index    = member_index
         };
-        return Pointer<M>::_from_expr(std::move(class_to_member));
+        return ptr<M>::_from_expr(std::move(class_to_member));
     }
 
     template<typename C>
-    Pointer<C> alloc_local_var()
+    ptr<C> alloc_local_var()
     {
         auto func_ctx = FunctionContext::get_func_context();
         auto type_ctx = func_ctx->get_type_context();
@@ -37,7 +37,7 @@ namespace class_detail
             .alloc_type  = type,
             .alloc_index = func_ctx->alloc_local_var(type)
         };
-        return Pointer<C>::_from_expr(std::move(addr));
+        return ptr<C>::_from_expr(std::move(addr));
     }
 
 } // namespace class_detail

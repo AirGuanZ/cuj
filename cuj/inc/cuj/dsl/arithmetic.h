@@ -6,7 +6,7 @@
 CUJ_NAMESPACE_BEGIN(cuj::dsl)
 
 template<typename T> requires std::is_arithmetic_v<T>
-class Arithmetic
+class num
 {
     size_t alloc_index_;
 
@@ -14,61 +14,61 @@ public:
 
     using RawType = T;
 
-    Arithmetic();
+    num();
 
-    Arithmetic(T immediate_value);
+    num(T immediate_value);
 
     template<typename U> requires !std::is_same_v<T, U>
-    explicit Arithmetic(const Arithmetic<U> &other);
+    explicit num(const num<U> &other);
     
     template<typename U> requires !std::is_same_v<T, U>
-    explicit Arithmetic(const ref<Arithmetic<U>> &other);
+    explicit num(const ref<num<U>> &other);
 
-    Arithmetic(const Arithmetic &other);
+    num(const num &other);
 
-    Arithmetic(const ref<Arithmetic<T>> &ref);
+    num(const ref<num<T>> &ref);
 
-    Arithmetic(Arithmetic &&other) noexcept;
+    num(num &&other) noexcept;
 
-    Arithmetic &operator=(const Arithmetic &other);
+    num &operator=(const num &other);
 
     template<typename U> requires is_cuj_arithmetic_v<U>
     U as() const;
 
-    Arithmetic operator-() const;
+    num operator-() const;
 
-    Arithmetic operator+(const Arithmetic &rhs) const;
-    Arithmetic operator-(const Arithmetic &rhs) const;
-    Arithmetic operator*(const Arithmetic &rhs) const;
-    Arithmetic operator/(const Arithmetic &rhs) const;
-    Arithmetic operator%(const Arithmetic &rhs) const;
+    num operator+(const num &rhs) const;
+    num operator-(const num &rhs) const;
+    num operator*(const num &rhs) const;
+    num operator/(const num &rhs) const;
+    num operator%(const num &rhs) const;
 
-    Arithmetic<bool> operator==(const Arithmetic &rhs) const;
-    Arithmetic<bool> operator!=(const Arithmetic &rhs) const;
-    Arithmetic<bool> operator< (const Arithmetic &rhs) const;
-    Arithmetic<bool> operator<=(const Arithmetic &rhs) const;
-    Arithmetic<bool> operator> (const Arithmetic &rhs) const;
-    Arithmetic<bool> operator>=(const Arithmetic &rhs) const;
+    num<bool> operator==(const num &rhs) const;
+    num<bool> operator!=(const num &rhs) const;
+    num<bool> operator< (const num &rhs) const;
+    num<bool> operator<=(const num &rhs) const;
+    num<bool> operator> (const num &rhs) const;
+    num<bool> operator>=(const num &rhs) const;
 
-    Arithmetic<bool> operator==(T rhs) const;
-    Arithmetic<bool> operator!=(T rhs) const;
-    Arithmetic<bool> operator< (T rhs) const;
-    Arithmetic<bool> operator<=(T rhs) const;
-    Arithmetic<bool> operator> (T rhs) const;
-    Arithmetic<bool> operator>=(T rhs) const;
+    num<bool> operator==(T rhs) const;
+    num<bool> operator!=(T rhs) const;
+    num<bool> operator< (T rhs) const;
+    num<bool> operator<=(T rhs) const;
+    num<bool> operator> (T rhs) const;
+    num<bool> operator>=(T rhs) const;
 
-    Arithmetic operator>>(const Arithmetic &rhs) const;
-    Arithmetic operator<<(const Arithmetic &rhs) const;
+    num operator>>(const num &rhs) const;
+    num operator<<(const num &rhs) const;
 
-    Arithmetic operator&(const Arithmetic &rhs) const;
-    Arithmetic operator|(const Arithmetic &rhs) const;
-    Arithmetic operator^(const Arithmetic &rhs) const;
+    num operator&(const num &rhs) const;
+    num operator|(const num &rhs) const;
+    num operator^(const num &rhs) const;
 
-    Arithmetic operator~() const;
+    num operator~() const;
 
-    Pointer<Arithmetic> address() const;
+    ptr<num> address() const;
 
-    static Arithmetic _from_expr(core::Expr expr);
+    static num _from_expr(core::Expr expr);
 
     core::Load _load() const;
 
@@ -76,41 +76,41 @@ public:
 };
 
 template<typename T>
-Arithmetic<T> operator+(T lhs, const Arithmetic<T> &rhs);
+num<T> operator+(T lhs, const num<T> &rhs);
 template<typename T>
-Arithmetic<T> operator-(T lhs, const Arithmetic<T> &rhs);
+num<T> operator-(T lhs, const num<T> &rhs);
 template<typename T>
-Arithmetic<T> operator*(T lhs, const Arithmetic<T> &rhs);
+num<T> operator*(T lhs, const num<T> &rhs);
 template<typename T>
-Arithmetic<T> operator/(T lhs, const Arithmetic<T> &rhs);
+num<T> operator/(T lhs, const num<T> &rhs);
 template<typename T>
-Arithmetic<T> operator%(T lhs, const Arithmetic<T> &rhs);
+num<T> operator%(T lhs, const num<T> &rhs);
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> operator==(T lhs, const Arithmetic<T> &rhs);
+num<bool> operator==(T lhs, const num<T> &rhs);
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> operator!=(T lhs, const Arithmetic<T> &rhs);
+num<bool> operator!=(T lhs, const num<T> &rhs);
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> operator<(T lhs, const Arithmetic<T> &rhs);
+num<bool> operator<(T lhs, const num<T> &rhs);
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> operator<=(T lhs, const Arithmetic<T> &rhs);
+num<bool> operator<=(T lhs, const num<T> &rhs);
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> operator>(T lhs, const Arithmetic<T> &rhs);
+num<bool> operator>(T lhs, const num<T> &rhs);
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> operator>=(T lhs, const Arithmetic<T> &rhs);
+num<bool> operator>=(T lhs, const num<T> &rhs);
 
-inline Arithmetic<bool> operator!(const Arithmetic<bool> &val);
+inline num<bool> operator!(const num<bool> &val);
 
 template<typename T> requires std::is_integral_v<T>
-Arithmetic<T> operator<<(T lhs, const Arithmetic<T> &rhs);
+num<T> operator<<(T lhs, const num<T> &rhs);
 template<typename T> requires std::is_integral_v<T> && !std::is_signed_v<T>
-Arithmetic<T> operator>>(T lhs, const Arithmetic<T> &rhs);
+num<T> operator>>(T lhs, const num<T> &rhs);
 
 template<typename T> requires std::is_integral_v<T>
-Arithmetic<T> operator&(T lhs, const Arithmetic<T> &rhs);
+num<T> operator&(T lhs, const num<T> &rhs);
 template<typename T> requires std::is_integral_v<T>
-Arithmetic<T> operator|(T lhs, const Arithmetic<T> &rhs);
+num<T> operator|(T lhs, const num<T> &rhs);
 template<typename T> requires std::is_integral_v<T>
-Arithmetic<T> operator^(T lhs, const Arithmetic<T> &rhs);
+num<T> operator^(T lhs, const num<T> &rhs);
 
 CUJ_NAMESPACE_END(cuj::dsl)

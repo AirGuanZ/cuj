@@ -31,7 +31,7 @@ inline void SwitchBuilder::set_current_switch_builder(SwitchBuilder *builder)
 }
 
 template<typename T> requires std::is_integral_v<T>
-SwitchBuilder::SwitchBuilder(const Arithmetic<T> &value)
+SwitchBuilder::SwitchBuilder(const num<T> &value)
 {
     val_type_ = core::arithmetic_to_builtin_v<T>;
     switch_s_.value = value._load();

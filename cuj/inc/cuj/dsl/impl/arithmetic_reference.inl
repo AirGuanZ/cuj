@@ -8,26 +8,26 @@
 CUJ_NAMESPACE_BEGIN(cuj::dsl)
 
 template<typename T> requires std::is_arithmetic_v<T>
-ref<Arithmetic<T>>::ref(const Arithmetic<T> &var)
+ref<num<T>>::ref(const num<T> &var)
 {
     addr_ = var.address();
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-ref<Arithmetic<T>>::ref(const ref &ref)
+ref<num<T>>::ref(const ref &ref)
 {
     addr_ = ref.address();
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-ref<Arithmetic<T>>::ref(ref &&other) noexcept
+ref<num<T>>::ref(ref &&other) noexcept
     : addr_(std::move(other.addr_))
 {
     
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-ref<Arithmetic<T>> &ref<Arithmetic<T>>::operator=(
+ref<num<T>> &ref<num<T>>::operator=(
     const ref &other)
 {
     core::Store store = {
@@ -40,8 +40,8 @@ ref<Arithmetic<T>> &ref<Arithmetic<T>>::operator=(
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-ref<Arithmetic<T>> &ref<Arithmetic<T>>::operator=(
-    const Arithmetic<T> &other)
+ref<num<T>> &ref<num<T>>::operator=(
+    const num<T> &other)
 {
     core::Store store = {
         .dst_addr = addr_._load(),
@@ -54,10 +54,10 @@ ref<Arithmetic<T>> &ref<Arithmetic<T>>::operator=(
 
 template<typename T> requires std::is_arithmetic_v<T>
 template<typename U> requires is_cuj_arithmetic_v<U>
-U ref<Arithmetic<T>>::as() const
+U ref<num<T>>::as() const
 {
     auto type_ctx = FunctionContext::get_func_context()->get_type_context();
-    auto src_type = type_ctx->get_type<Arithmetic<T>>();
+    auto src_type = type_ctx->get_type<num<T>>();
     auto dst_type = type_ctx->get_type<U>();
     core::ArithmeticCast cast = {
         .dst_type = dst_type ,
@@ -68,25 +68,25 @@ U ref<Arithmetic<T>>::as() const
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<T> ref<Arithmetic<T>>::operator-() const
+num<T> ref<num<T>>::operator-() const
 {
     static_assert(!std::is_same_v<T, bool>);
     auto type_ctx = FunctionContext::get_func_context()->get_type_context();
-    auto type = type_ctx->get_type<Arithmetic<T>>();
+    auto type = type_ctx->get_type<num<T>>();
     core::Unary unary = {
         .op       = core::Unary::Op::Neg,
         .val      = newRC<core::Expr>(_load()),
         .val_type = type
     };
-    return Arithmetic<T>::_from_expr(unary);
+    return num<T>::_from_expr(unary);
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<T> ref<Arithmetic<T>>::operator+(const Arithmetic<T> &rhs) const
+num<T> ref<num<T>>::operator+(const num<T> &rhs) const
 {
     static_assert(!std::is_same_v<T, bool>);
     auto type_ctx = FunctionContext::get_func_context()->get_type_context();
-    auto type = type_ctx->get_type<Arithmetic<T>>();
+    auto type = type_ctx->get_type<num<T>>();
     core::Binary binary = {
         .op       = core::Binary::Op::Add,
         .lhs      = newRC<core::Expr>(_load()),
@@ -94,15 +94,15 @@ Arithmetic<T> ref<Arithmetic<T>>::operator+(const Arithmetic<T> &rhs) const
         .lhs_type = type,
         .rhs_type = type
     };
-    return Arithmetic<T>::_from_expr(binary);
+    return num<T>::_from_expr(binary);
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<T> ref<Arithmetic<T>>::operator-(const Arithmetic<T> &rhs) const
+num<T> ref<num<T>>::operator-(const num<T> &rhs) const
 {
     static_assert(!std::is_same_v<T, bool>);
     auto type_ctx = FunctionContext::get_func_context()->get_type_context();
-    auto type = type_ctx->get_type<Arithmetic<T>>();
+    auto type = type_ctx->get_type<num<T>>();
     core::Binary binary = {
         .op       = core::Binary::Op::Sub,
         .lhs      = newRC<core::Expr>(_load()),
@@ -110,15 +110,15 @@ Arithmetic<T> ref<Arithmetic<T>>::operator-(const Arithmetic<T> &rhs) const
         .lhs_type = type,
         .rhs_type = type
     };
-    return Arithmetic<T>::_from_expr(binary);
+    return num<T>::_from_expr(binary);
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<T> ref<Arithmetic<T>>::operator*(const Arithmetic<T> &rhs) const
+num<T> ref<num<T>>::operator*(const num<T> &rhs) const
 {
     static_assert(!std::is_same_v<T, bool>);
     auto type_ctx = FunctionContext::get_func_context()->get_type_context();
-    auto type = type_ctx->get_type<Arithmetic<T>>();
+    auto type = type_ctx->get_type<num<T>>();
     core::Binary binary = {
         .op       = core::Binary::Op::Mul,
         .lhs      = newRC<core::Expr>(_load()),
@@ -126,15 +126,15 @@ Arithmetic<T> ref<Arithmetic<T>>::operator*(const Arithmetic<T> &rhs) const
         .lhs_type = type,
         .rhs_type = type
     };
-    return Arithmetic<T>::_from_expr(binary);
+    return num<T>::_from_expr(binary);
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<T> ref<Arithmetic<T>>::operator/(const Arithmetic<T> &rhs) const
+num<T> ref<num<T>>::operator/(const num<T> &rhs) const
 {
     static_assert(!std::is_same_v<T, bool>);
     auto type_ctx = FunctionContext::get_func_context()->get_type_context();
-    auto type = type_ctx->get_type<Arithmetic<T>>();
+    auto type = type_ctx->get_type<num<T>>();
     core::Binary binary = {
         .op       = core::Binary::Op::Div,
         .lhs      = newRC<core::Expr>(_load()),
@@ -142,16 +142,16 @@ Arithmetic<T> ref<Arithmetic<T>>::operator/(const Arithmetic<T> &rhs) const
         .lhs_type = type,
         .rhs_type = type
     };
-    return Arithmetic<T>::_from_expr(binary);
+    return num<T>::_from_expr(binary);
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<T> ref<Arithmetic<T>>::operator%(const Arithmetic<T> &rhs) const
+num<T> ref<num<T>>::operator%(const num<T> &rhs) const
 {
     static_assert(!std::is_same_v<T, bool>);
     static_assert(std::is_integral_v<T>);
     auto type_ctx = FunctionContext::get_func_context()->get_type_context();
-    auto type = type_ctx->get_type<Arithmetic<T>>();
+    auto type = type_ctx->get_type<num<T>>();
     core::Binary binary = {
         .op       = core::Binary::Op::Mod,
         .lhs      = newRC<core::Expr>(_load()),
@@ -159,15 +159,15 @@ Arithmetic<T> ref<Arithmetic<T>>::operator%(const Arithmetic<T> &rhs) const
         .lhs_type = type,
         .rhs_type = type
     };
-    return Arithmetic<T>::_from_expr(binary);
+    return num<T>::_from_expr(binary);
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> ref<Arithmetic<T>>::operator==(const Arithmetic<T> &rhs) const
+num<bool> ref<num<T>>::operator==(const num<T> &rhs) const
 {
     auto type = FunctionContext::get_func_context()
-        ->get_type_context()->get_type<Arithmetic<T>>();
-    return Arithmetic<bool>::_from_expr(core::Binary{
+        ->get_type_context()->get_type<num<T>>();
+    return num<bool>::_from_expr(core::Binary{
         .op       = core::Binary::Op::Equal,
         .lhs      = newRC<core::Expr>(_load()),
         .rhs      = newRC<core::Expr>(rhs._load()),
@@ -177,11 +177,11 @@ Arithmetic<bool> ref<Arithmetic<T>>::operator==(const Arithmetic<T> &rhs) const
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> ref<Arithmetic<T>>::operator!=(const Arithmetic<T> &rhs) const
+num<bool> ref<num<T>>::operator!=(const num<T> &rhs) const
 {
     auto type = FunctionContext::get_func_context()
-        ->get_type_context()->get_type<Arithmetic<T>>();
-    return Arithmetic<bool>::_from_expr(core::Binary{
+        ->get_type_context()->get_type<num<T>>();
+    return num<bool>::_from_expr(core::Binary{
         .op       = core::Binary::Op::NotEqual,
         .lhs      = newRC<core::Expr>(_load()),
         .rhs      = newRC<core::Expr>(rhs._load()),
@@ -191,11 +191,11 @@ Arithmetic<bool> ref<Arithmetic<T>>::operator!=(const Arithmetic<T> &rhs) const
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> ref<Arithmetic<T>>::operator<(const Arithmetic<T> &rhs) const
+num<bool> ref<num<T>>::operator<(const num<T> &rhs) const
 {
     auto type = FunctionContext::get_func_context()
-        ->get_type_context()->get_type<Arithmetic<T>>();
-    return Arithmetic<bool>::_from_expr(core::Binary{
+        ->get_type_context()->get_type<num<T>>();
+    return num<bool>::_from_expr(core::Binary{
         .op       = core::Binary::Op::Less,
         .lhs      = newRC<core::Expr>(_load()),
         .rhs      = newRC<core::Expr>(rhs._load()),
@@ -205,11 +205,11 @@ Arithmetic<bool> ref<Arithmetic<T>>::operator<(const Arithmetic<T> &rhs) const
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> ref<Arithmetic<T>>::operator<=(const Arithmetic<T> &rhs) const
+num<bool> ref<num<T>>::operator<=(const num<T> &rhs) const
 {
     auto type = FunctionContext::get_func_context()
-        ->get_type_context()->get_type<Arithmetic<T>>();
-    return Arithmetic<bool>::_from_expr(core::Binary{
+        ->get_type_context()->get_type<num<T>>();
+    return num<bool>::_from_expr(core::Binary{
         .op       = core::Binary::Op::LessEqual,
         .lhs      = newRC<core::Expr>(_load()),
         .rhs      = newRC<core::Expr>(rhs._load()),
@@ -219,11 +219,11 @@ Arithmetic<bool> ref<Arithmetic<T>>::operator<=(const Arithmetic<T> &rhs) const
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> ref<Arithmetic<T>>::operator>(const Arithmetic<T> &rhs) const
+num<bool> ref<num<T>>::operator>(const num<T> &rhs) const
 {
     auto type = FunctionContext::get_func_context()
-        ->get_type_context()->get_type<Arithmetic<T>>();
-    return Arithmetic<bool>::_from_expr(core::Binary{
+        ->get_type_context()->get_type<num<T>>();
+    return num<bool>::_from_expr(core::Binary{
         .op       = core::Binary::Op::Greater,
         .lhs      = newRC<core::Expr>(_load()),
         .rhs      = newRC<core::Expr>(rhs._load()),
@@ -233,11 +233,11 @@ Arithmetic<bool> ref<Arithmetic<T>>::operator>(const Arithmetic<T> &rhs) const
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> ref<Arithmetic<T>>::operator>=(const Arithmetic<T> &rhs) const
+num<bool> ref<num<T>>::operator>=(const num<T> &rhs) const
 {
     auto type = FunctionContext::get_func_context()
-        ->get_type_context()->get_type<Arithmetic<T>>();
-    return Arithmetic<bool>::_from_expr(core::Binary{
+        ->get_type_context()->get_type<num<T>>();
+    return num<bool>::_from_expr(core::Binary{
         .op       = core::Binary::Op::GreaterEqual,
         .lhs      = newRC<core::Expr>(_load()),
         .rhs      = newRC<core::Expr>(rhs._load()),
@@ -247,12 +247,12 @@ Arithmetic<bool> ref<Arithmetic<T>>::operator>=(const Arithmetic<T> &rhs) const
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<T> ref<Arithmetic<T>>::operator>>(const Arithmetic<T> &rhs) const
+num<T> ref<num<T>>::operator>>(const num<T> &rhs) const
 {
     static_assert(std::is_integral_v<T> && !std::is_signed_v<T>);
     auto type = FunctionContext::get_func_context()
-        ->get_type_context()->get_type<Arithmetic<T>>();
-    return Arithmetic<T>::_from_expr(core::Binary{
+        ->get_type_context()->get_type<num<T>>();
+    return num<T>::_from_expr(core::Binary{
         .op       = core::Binary::Op::RightShift,
         .lhs      = newRC<core::Expr>(this->_load()),
         .rhs      = newRC<core::Expr>(rhs._load()),
@@ -262,12 +262,12 @@ Arithmetic<T> ref<Arithmetic<T>>::operator>>(const Arithmetic<T> &rhs) const
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<T> ref<Arithmetic<T>>::operator<<(const Arithmetic<T> &rhs) const
+num<T> ref<num<T>>::operator<<(const num<T> &rhs) const
 {
     static_assert(std::is_integral_v<T>);
     auto type = FunctionContext::get_func_context()
-        ->get_type_context()->get_type<Arithmetic<T>>();
-    return Arithmetic<T>::_from_expr(core::Binary{
+        ->get_type_context()->get_type<num<T>>();
+    return num<T>::_from_expr(core::Binary{
         .op       = core::Binary::Op::LeftShift,
         .lhs      = newRC<core::Expr>(this->_load()),
         .rhs      = newRC<core::Expr>(rhs._load()),
@@ -277,12 +277,12 @@ Arithmetic<T> ref<Arithmetic<T>>::operator<<(const Arithmetic<T> &rhs) const
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<T> ref<Arithmetic<T>>::operator&(const Arithmetic<T> &rhs) const
+num<T> ref<num<T>>::operator&(const num<T> &rhs) const
 {
     static_assert(std::is_integral_v<T>);
     auto type = FunctionContext::get_func_context()
-        ->get_type_context()->get_type<Arithmetic<T>>();
-    return Arithmetic<T>::_from_expr(core::Binary{
+        ->get_type_context()->get_type<num<T>>();
+    return num<T>::_from_expr(core::Binary{
         .op       = core::Binary::Op::BitwiseAnd,
         .lhs      = newRC<core::Expr>(this->_load()),
         .rhs      = newRC<core::Expr>(rhs._load()),
@@ -292,12 +292,12 @@ Arithmetic<T> ref<Arithmetic<T>>::operator&(const Arithmetic<T> &rhs) const
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<T> ref<Arithmetic<T>>::operator|(const Arithmetic<T> &rhs) const
+num<T> ref<num<T>>::operator|(const num<T> &rhs) const
 {
     static_assert(std::is_integral_v<T>);
     auto type = FunctionContext::get_func_context()
-        ->get_type_context()->get_type<Arithmetic<T>>();
-    return Arithmetic<T>::_from_expr(core::Binary{
+        ->get_type_context()->get_type<num<T>>();
+    return num<T>::_from_expr(core::Binary{
         .op       = core::Binary::Op::BitwiseOr,
         .lhs      = newRC<core::Expr>(this->_load()),
         .rhs      = newRC<core::Expr>(rhs._load()),
@@ -307,12 +307,12 @@ Arithmetic<T> ref<Arithmetic<T>>::operator|(const Arithmetic<T> &rhs) const
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<T> ref<Arithmetic<T>>::operator^(const Arithmetic<T> &rhs) const
+num<T> ref<num<T>>::operator^(const num<T> &rhs) const
 {
     static_assert(std::is_integral_v<T>);
     auto type = FunctionContext::get_func_context()
-        ->get_type_context()->get_type<Arithmetic<T>>();
-    return Arithmetic<T>::_from_expr(core::Binary{
+        ->get_type_context()->get_type<num<T>>();
+    return num<T>::_from_expr(core::Binary{
         .op       = core::Binary::Op::BitwiseXOr,
         .lhs      = newRC<core::Expr>(this->_load()),
         .rhs      = newRC<core::Expr>(rhs._load()),
@@ -322,11 +322,11 @@ Arithmetic<T> ref<Arithmetic<T>>::operator^(const Arithmetic<T> &rhs) const
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<T> ref<Arithmetic<T>>::operator~() const
+num<T> ref<num<T>>::operator~() const
 {
     auto type = FunctionContext::get_func_context()
-        ->get_type_context()->get_type<Arithmetic<T>>();
-    return Arithmetic<T>::_from_expr(core::Unary{
+        ->get_type_context()->get_type<num<T>>();
+    return num<T>::_from_expr(core::Unary{
         .op       = core::Unary::Op::BitwiseNot,
         .val      = newRC<core::Expr>(_load()),
         .val_type = type
@@ -334,18 +334,18 @@ Arithmetic<T> ref<Arithmetic<T>>::operator~() const
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Pointer<Arithmetic<T>> ref<Arithmetic<T>>::address() const
+ptr<num<T>> ref<num<T>>::address() const
 {
-    Pointer<Arithmetic<T>> ret;
+    ptr<num<T>> ret;
     ret = addr_;
     return ret;
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-core::Load ref<Arithmetic<T>>::_load() const
+core::Load ref<num<T>>::_load() const
 {
     auto type = FunctionContext::get_func_context()->get_type_context()
-        ->get_type<Arithmetic<T>>();
+        ->get_type<num<T>>();
     return core::Load{
         .val_type = type,
         .src_addr = newRC<core::Expr>(addr_._load())
@@ -353,7 +353,7 @@ core::Load ref<Arithmetic<T>>::_load() const
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-ref<Arithmetic<T>> ref<Arithmetic<T>>::_from_ptr(const Pointer<Arithmetic<T>> &ptr)
+ref<num<T>> ref<num<T>>::_from_ptr(const ptr<num<T>> &ptr)
 {
     ref ret;
     ret.addr_ = ptr;
@@ -361,76 +361,76 @@ ref<Arithmetic<T>> ref<Arithmetic<T>>::_from_ptr(const Pointer<Arithmetic<T>> &p
 }
 
 template<typename T>
-Arithmetic<T> operator+(T lhs, const ref<Arithmetic<T>> &rhs)
+num<T> operator+(T lhs, const ref<num<T>> &rhs)
 {
-    return Arithmetic(lhs) + rhs;
+    return num(lhs) + rhs;
 }
 
 template<typename T>
-Arithmetic<T> operator-(T lhs, const ref<Arithmetic<T>> &rhs)
+num<T> operator-(T lhs, const ref<num<T>> &rhs)
 {
-    return Arithmetic(lhs) - rhs;
+    return num(lhs) - rhs;
 }
 
 template<typename T>
-Arithmetic<T> operator*(T lhs, const ref<Arithmetic<T>> &rhs)
+num<T> operator*(T lhs, const ref<num<T>> &rhs)
 {
-    return Arithmetic(lhs) * rhs;
+    return num(lhs) * rhs;
 }
 
 template<typename T>
-Arithmetic<T> operator/(T lhs, const ref<Arithmetic<T>> &rhs)
+num<T> operator/(T lhs, const ref<num<T>> &rhs)
 {
-    return Arithmetic(lhs) / rhs;
+    return num(lhs) / rhs;
 }
 
 template<typename T>
-Arithmetic<T> operator%(T lhs, const ref<Arithmetic<T>> &rhs)
+num<T> operator%(T lhs, const ref<num<T>> &rhs)
 {
-    return Arithmetic(lhs) % rhs;
+    return num(lhs) % rhs;
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> operator==(T lhs, const ref<Arithmetic<T>> &rhs)
+num<bool> operator==(T lhs, const ref<num<T>> &rhs)
 {
-    return Arithmetic(lhs) == rhs;
+    return num(lhs) == rhs;
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> operator!=(T lhs, const ref<Arithmetic<T>> &rhs)
+num<bool> operator!=(T lhs, const ref<num<T>> &rhs)
 {
-    return Arithmetic(lhs) != rhs;
+    return num(lhs) != rhs;
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> operator<(T lhs, const ref<Arithmetic<T>> &rhs)
+num<bool> operator<(T lhs, const ref<num<T>> &rhs)
 {
-    return Arithmetic(lhs) < rhs;
+    return num(lhs) < rhs;
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> operator<=(T lhs, const ref<Arithmetic<T>> &rhs)
+num<bool> operator<=(T lhs, const ref<num<T>> &rhs)
 {
-    return Arithmetic(lhs) <= rhs;
+    return num(lhs) <= rhs;
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> operator>(T lhs, const ref<Arithmetic<T>> &rhs)
+num<bool> operator>(T lhs, const ref<num<T>> &rhs)
 {
-    return Arithmetic(lhs) > rhs;
+    return num(lhs) > rhs;
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-Arithmetic<bool> operator>=(T lhs, const ref<Arithmetic<T>> &rhs)
+num<bool> operator>=(T lhs, const ref<num<T>> &rhs)
 {
-    return Arithmetic(lhs) >= rhs;
+    return num(lhs) >= rhs;
 }
 
-inline Arithmetic<bool> operator!(const ref<Arithmetic<bool>> &val)
+inline num<bool> operator!(const ref<num<bool>> &val)
 {
     auto type = FunctionContext::get_func_context()
-        ->get_type_context()->get_type<Arithmetic<bool>>();
-    return Arithmetic<bool>::_from_expr(core::Unary{
+        ->get_type_context()->get_type<num<bool>>();
+    return num<bool>::_from_expr(core::Unary{
         .op       = core::Unary::Op::Not,
         .val      = newRC<core::Expr>(val._load()),
         .val_type = type
@@ -438,33 +438,33 @@ inline Arithmetic<bool> operator!(const ref<Arithmetic<bool>> &val)
 }
 
 template<typename T> requires std::is_integral_v<T> && !std::is_signed_v<T>
-Arithmetic<T> operator>>(T lhs, const ref<Arithmetic<T>> &rhs)
+num<T> operator>>(T lhs, const ref<num<T>> &rhs)
 {
-    return Arithmetic(lhs) >> rhs;
+    return num(lhs) >> rhs;
 }
 
 template<typename T> requires std::is_integral_v<T>
-Arithmetic<T> operator<<(T lhs, const ref<Arithmetic<T>> &rhs)
+num<T> operator<<(T lhs, const ref<num<T>> &rhs)
 {
-    return Arithmetic(lhs) << rhs;
+    return num(lhs) << rhs;
 }
 
 template<typename T> requires std::is_integral_v<T>
-Arithmetic<T> operator&(T lhs, const ref<Arithmetic<T>> &rhs)
+num<T> operator&(T lhs, const ref<num<T>> &rhs)
 {
-    return Arithmetic(lhs) & rhs;
+    return num(lhs) & rhs;
 }
 
 template<typename T> requires std::is_integral_v<T>
-Arithmetic<T> operator|(T lhs, const ref<Arithmetic<T>> &rhs)
+num<T> operator|(T lhs, const ref<num<T>> &rhs)
 {
-    return Arithmetic(lhs) | rhs;
+    return num(lhs) | rhs;
 }
 
 template<typename T> requires std::is_integral_v<T>
-Arithmetic<T> operator^(T lhs, const ref<Arithmetic<T>> &rhs)
+num<T> operator^(T lhs, const ref<num<T>> &rhs)
 {
-    return Arithmetic(lhs) ^ rhs;
+    return num(lhs) ^ rhs;
 }
 
 CUJ_NAMESPACE_END(cuj::dsl)

@@ -108,6 +108,6 @@ inline Vec3f cross(const Vec3f &a, const Vec3f &b)
 
 inline Vec3f normalize(const Vec3f &v)
 {
-    var inv_len = 1.0f / length(v);
+    var inv_len = cstd::rsqrt(length_square(v));
     return make_vec3f(inv_len * v.x, inv_len * v.y, inv_len * v.z);
 }

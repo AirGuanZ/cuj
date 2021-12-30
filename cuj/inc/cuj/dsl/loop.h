@@ -36,7 +36,7 @@ void _add_continue_statement();
 #define CUJ_LOOP ::cuj::dsl::LoopBuilder{}+[&]()->void
 #define CUJ_WHILE(COND)                                                         \
     ::cuj::dsl::WhileBuilder(                                                   \
-        [&]()->::cuj::dsl::Arithmetic<bool>{return(COND);})+[&]()->void
+        [&]()->::cuj::dsl::num<bool>{return(COND);})+[&]()->void
 
 #define $loop CUJ_LOOP
 #define $while CUJ_WHILE

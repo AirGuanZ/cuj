@@ -27,7 +27,7 @@ namespace function_detail
     template<typename T> requires is_cuj_ref_v<T>
     struct ArgToVar<T>
     {
-        using Type = Pointer<remove_reference_t<T>>;
+        using Type = ptr<remove_reference_t<T>>;
     };
 
     template<typename T>
@@ -123,15 +123,15 @@ void Function<Ret(Args...)>::define_impl(F &&body_func)
 
     auto type_ctx = func_ctx.get_type_context();
 
-    std::tuple<Pointer<arg_to_var_t<Args>>...> arg_pointers;
+    std::tuple<ptr<arg_to_var_t<Args>>...> arg_pointers;
     foreach_type_indexed<Args...>([&]<typename Arg, int Idx>
     {
         using Var = arg_to_var_t<Arg>;
         core::FuncArgAddr addr = {
-            .addr_type = type_ctx->get_type<Pointer<Var>>(),
+            .addr_type = type_ctx->get_type<ptr<Var>>(),
             .arg_index = Idx
         };
-        std::get<Idx>(arg_pointers) = Pointer<Var>::_from_expr(addr);
+        std::get<Idx>(arg_pointers) = ptr<Var>::_from_expr(addr);
     });
 
     std::tuple<Args...> args = deref_arg_pointers<std::tuple<Args...>>(
@@ -160,7 +160,7 @@ void Function<Ret(Args...)>::define_impl(F &&body_func)
         else if constexpr(is_cuj_class_v<Ret>)
         {
             auto class_type = type_ctx->get_type<Ret>();
-            auto class_ptr_type = type_ctx->get_type<Pointer<Ret>>();
+            auto class_ptr_type = type_ctx->get_type<ptr<Ret>>();
             core::Return ret_stat = {
                 .return_type = class_type,
                 .val         = core::DerefClassPointer{
@@ -173,7 +173,7 @@ void Function<Ret(Args...)>::define_impl(F &&body_func)
         else if constexpr(is_cuj_array_v<Ret>)
         {
             auto arr_type = type_ctx->get_type<Ret>();
-            auto arr_ptr_type = type_ctx->get_type<Pointer<Ret>>();
+            auto arr_ptr_type = type_ctx->get_type<ptr<Ret>>();
             core::Return ret_stat = {
                 .return_type = arr_type,
                 .val         = core::DerefArrayPointer{
@@ -264,7 +264,7 @@ Ret Function<Ret(Args...)>::operator()(Args...args)
         else if constexpr(is_cuj_class_v<Arg>)
         {
             core::DerefClassPointer deref_class = {
-                .class_ptr_type = type_ctx->get_type<Pointer<Arg>>(),
+                .class_ptr_type = type_ctx->get_type<ptr<Arg>>(),
                 .class_ptr      = newRC<core::Expr>(arg.address()._load())
             };
             call.args.push_back(newRC<core::Expr>(std::move(deref_class)));
@@ -272,7 +272,7 @@ Ret Function<Ret(Args...)>::operator()(Args...args)
         else if constexpr(is_cuj_array_v<Arg>)
         {
             core::DerefArrayPointer deref_array = {
-                .array_ptr_type = type_ctx->get_type<Pointer<Arg>>(),
+                .array_ptr_type = type_ctx->get_type<ptr<Arg>>(),
                 .array_ptr      = newRC<core::Expr>(arg.address()._load())
             };
             call.args.push_back(newRC<core::Expr>(std::move(deref_array)));
@@ -292,24 +292,24 @@ Ret Function<Ret(Args...)>::operator()(Args...args)
     }
     else if constexpr(is_cuj_ref_v<Ret>)
     {
-        auto ptr = Pointer<remove_reference_t<Ret>>::_from_expr(std::move(call));
+        auto ptr = ptr<remove_reference_t<Ret>>::_from_expr(std::move(call));
         return Ret::_from_ptr(ptr);
     }
     else if constexpr(is_cuj_class_v<Ret>)
     {
         core::SaveClassIntoLocalAlloc alloc = {
-            .class_ptr_type = type_ctx->get_type<Pointer<Ret>>(),
+            .class_ptr_type = type_ctx->get_type<ptr<Ret>>(),
             .class_val      = std::move(call)
         };
-        return *Pointer<Ret>::from_expr(std::move(alloc));
+        return *ptr<Ret>::from_expr(std::move(alloc));
     }
     else if constexpr(is_cuj_array_v<Ret>)
     {
         core::SaveArrayIntoLocalAlloc alloc = {
-            .array_ptr_type = type_ctx->get_type<Pointer<Ret>>(),
+            .array_ptr_type = type_ctx->get_type<ptr<Ret>>(),
             .array_val      = std::move(call)
         };
-        return *Pointer<Ret>::from_expr(std::move(alloc));
+        return *ptr<Ret>::from_expr(std::move(alloc));
     }
     else
     {

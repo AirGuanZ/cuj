@@ -81,21 +81,21 @@ namespace mcjit_detail
     struct ArgToCArg { };
 
     template<typename T>
-    struct ArgToCArg<dsl::Arithmetic<T>>
+    struct ArgToCArg<dsl::num<T>>
     {
         using Type = T;
     };
 
     template<typename T>
-    struct ArgToCArg<dsl::Pointer<T>>
+    struct ArgToCArg<dsl::ptr<T>>
     {
         using Type = std::add_pointer_t<typename ArgToCArg<T>::Type>;
     };
 
     template<typename T, size_t N>
-    struct ArgToCArg<dsl::Array<T, N>>
+    struct ArgToCArg<dsl::arr<T, N>>
     {
-        using Type = dsl::cuj_to_cxx_t<dsl::Array<T, N>>;
+        using Type = dsl::cuj_to_cxx_t<dsl::arr<T, N>>;
     };
 
     template<typename T> requires dsl::is_cuj_class_v<T>

@@ -39,7 +39,7 @@ IfBuilder &IfBuilder::operator*(F &&cond_func)
     assert(!else_body_);
     auto func = FunctionContext::get_func_context();
     auto cond_calc = newRC<core::Block>();
-    Arithmetic<bool> cond;
+    num<bool> cond;
     {
         func->push_block(cond_calc);
         CUJ_SCOPE_EXIT{ func->pop_block(); };

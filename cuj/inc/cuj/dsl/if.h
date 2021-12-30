@@ -33,9 +33,9 @@ public:
 
 #define CUJ_IF(COND)                                                            \
     ::cuj::dsl::IfBuilder()                                                     \
-    *[&]()->::cuj::dsl::Arithmetic<bool>{return (COND);}/[&]()->void
+    *[&]()->::cuj::dsl::num<bool>{return (COND);}/[&]()->void
 #define CUJ_ELIF(COND)                                                          \
-    *[&]()->::cuj::dsl::Arithmetic<bool>{return (COND);}/[&]()->void
+    *[&]()->::cuj::dsl::num<bool>{return (COND);}/[&]()->void
 #define CUJ_ELSE -[&]()->void
 
 #define $if   CUJ_IF

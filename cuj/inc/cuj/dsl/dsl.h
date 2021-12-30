@@ -34,21 +34,21 @@
 
 CUJ_NAMESPACE_BEGIN(cuj)
 
-using i8  = dsl::Arithmetic<int8_t>;
-using i16 = dsl::Arithmetic<int16_t>;
-using i32 = dsl::Arithmetic<int32_t>;
-using i64 = dsl::Arithmetic<int64_t>;
+using i8  = dsl::num<int8_t>;
+using i16 = dsl::num<int16_t>;
+using i32 = dsl::num<int32_t>;
+using i64 = dsl::num<int64_t>;
 
-using u8  = dsl::Arithmetic<uint8_t>;
-using u16 = dsl::Arithmetic<uint16_t>;
-using u32 = dsl::Arithmetic<uint32_t>;
-using u64 = dsl::Arithmetic<uint64_t>;
+using u8  = dsl::num<uint8_t>;
+using u16 = dsl::num<uint16_t>;
+using u32 = dsl::num<uint32_t>;
+using u64 = dsl::num<uint64_t>;
 
-using f32 = dsl::Arithmetic<float>;
-using f64 = dsl::Arithmetic<double>;
+using f32 = dsl::num<float>;
+using f64 = dsl::num<double>;
 
-using boolean = dsl::Arithmetic<bool>;
-using char_t = dsl::Arithmetic<char>;
+using boolean = dsl::num<bool>;
+using char_t = dsl::num<char>;
 
 using dsl::Function;
 using dsl::Module;

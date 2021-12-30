@@ -31,7 +31,7 @@ void _add_return_statement(const T &val)
             if(!type_ctx->get_type<RT>() != func_ret_type.type)
                 throw CujException("return type doesn't match");
 
-            using PRT = Pointer<RT>;
+            using PRT = ptr<RT>;
             func->append_statement(core::Return{
                 .return_type = type_ctx->get_type<PRT>(),
                 .val         = val.address()._load()
@@ -47,7 +47,7 @@ void _add_return_statement(const T &val)
         if constexpr(is_cuj_class_v<RT>)
         {
             auto class_type = type_ctx->get_type<RT>();
-            auto class_ptr_type = type_ctx->get_type<Pointer<RT>>();
+            auto class_ptr_type = type_ctx->get_type<ptr<RT>>();
             core::Return ret_stat = {
                 .return_type = class_type,
                 .val         = core::DerefClassPointer{
@@ -60,7 +60,7 @@ void _add_return_statement(const T &val)
         else if constexpr(is_cuj_array_v<RT>)
         {
             auto arr_type = type_ctx->get_type<RT>();
-            auto arr_ptr_type = type_ctx->get_type<Pointer<RT>>();
+            auto arr_ptr_type = type_ctx->get_type<ptr<RT>>();
             core::Return ret_stat = {
                 .return_type = arr_type,
                 .val         = core::DerefArrayPointer{

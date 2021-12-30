@@ -18,7 +18,7 @@ public:
     static void set_current_switch_builder(SwitchBuilder *builder);
 
     template<typename T> requires std::is_integral_v<T>
-    explicit SwitchBuilder(const Arithmetic<T> &value);
+    explicit SwitchBuilder(const num<T> &value);
 
     template<typename F>
     void operator*(F &&stat_func);

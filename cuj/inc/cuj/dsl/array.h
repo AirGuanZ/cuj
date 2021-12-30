@@ -6,7 +6,7 @@
 CUJ_NAMESPACE_BEGIN(cuj::dsl)
 
 template<typename T, size_t N>
-class Array
+class arr
 {
     size_t alloc_index_;
 
@@ -18,25 +18,25 @@ public:
 
     static constexpr size_t ElementCount = N;
 
-    Array();
+    arr();
 
-    Array(const ref<Array<T, N>> &ref);
+    arr(const ref<arr<T, N>> &ref);
 
-    Array(const Array &other);
+    arr(const arr &other);
 
-    Array(Array &&other) noexcept;
+    arr(arr &&other) noexcept;
 
-    Array &operator=(const Array &other);
+    arr &operator=(const arr &other);
 
     constexpr size_t size() const { return N; }
 
     template<typename U> requires std::is_integral_v<U>
-    add_reference_t<T> operator[](const Arithmetic<U> &idx) const;
+    add_reference_t<T> operator[](const num<U> &idx) const;
 
     template<typename U> requires std::is_integral_v<U>
     add_reference_t<T> operator[](U idx) const;
 
-    Pointer<Array> address() const;
+    ptr<arr> address() const;
 
     core::ArrayAddrToFirstElemAddr _first_elem_addr() const;
 };

@@ -8,14 +8,14 @@
 CUJ_NAMESPACE_BEGIN(cuj::dsl)
 
 template<typename T>
-const core::Type *Pointer<T>::type()
+const core::Type *ptr<T>::type()
 {
     return FunctionContext::get_func_context()
-        ->get_type_context()->get_type<Pointer>();
+        ->get_type_context()->get_type<ptr>();
 }
 
 template<typename T>
-Pointer<T>::Pointer()
+ptr<T>::ptr()
 {
     static_assert(is_cuj_var_v<T> || std::is_same_v<T, CujVoid>);
     auto func_ctx = FunctionContext::get_func_context();
@@ -23,41 +23,40 @@ Pointer<T>::Pointer()
 }
 
 template<typename T>
-Pointer<T>::Pointer(std::nullptr_t)
-    : Pointer()
+ptr<T>::ptr(std::nullptr_t)
+    : ptr()
 {
     core::Store store = {
         .dst_addr = _addr(),
         .val      = core::NullPtr{ type() }
     };
-
     auto func_ctx = FunctionContext::get_func_context();
     func_ctx->append_statement(std::move(store));
 }
 
 template<typename T>
-Pointer<T>::Pointer(const ref<Pointer<T>> &ref)
-    : Pointer()
+ptr<T>::ptr(const ref<ptr<T>> &ref)
+    : ptr()
 {
-    *this = Pointer::_from_expr(ref._load());
+    *this = ptr::_from_expr(ref._load());
 }
 
 template<typename T>
-Pointer<T>::Pointer(const Pointer &other)
-    : Pointer()
+ptr<T>::ptr(const ptr &other)
+    : ptr()
 {
     *this = other;
 }
 
 template<typename T>
-Pointer<T>::Pointer(Pointer &&other) noexcept
+ptr<T>::ptr(ptr &&other) noexcept
     : alloc_index_(other.alloc_index_)
 {
     static_assert(is_cuj_var_v<T> || std::is_same_v<T, CujVoid>);
 }
 
 template<typename T>
-Pointer<T> &Pointer<T>::operator=(const Pointer &other)
+ptr<T> &ptr<T>::operator=(const ptr &other)
 {
     if(other.alloc_index_ == alloc_index_)
         return *this;
@@ -72,7 +71,7 @@ Pointer<T> &Pointer<T>::operator=(const Pointer &other)
 
 template<typename T>
 template<typename U> requires std::is_integral_v<U>
-Pointer<T> Pointer<T>::operator+(const Arithmetic<U> &rhs) const
+ptr<T> ptr<T>::operator+(const num<U> &rhs) const
 {
     static_assert(!std::is_same_v<T, CujVoid>);
 
@@ -81,7 +80,7 @@ Pointer<T> Pointer<T>::operator+(const Arithmetic<U> &rhs) const
 
     core::PointerOffset ptr_offset = {
         .ptr_type    = type(),
-        .offset_type = type_ctx->get_type<Arithmetic<U>>(),
+        .offset_type = type_ctx->get_type<num<U>>(),
         .ptr_val     = newRC<core::Expr>(_load()),
         .offset_val  = newRC<core::Expr>(rhs._load()),
         .negative    = false
@@ -92,7 +91,7 @@ Pointer<T> Pointer<T>::operator+(const Arithmetic<U> &rhs) const
 
 template<typename T>
 template<typename U> requires std::is_integral_v<U>
-Pointer<T> Pointer<T>::operator-(const Arithmetic<U> &rhs) const
+ptr<T> ptr<T>::operator-(const num<U> &rhs) const
 {
     static_assert(!std::is_same_v<T, CujVoid>);
 
@@ -101,7 +100,7 @@ Pointer<T> Pointer<T>::operator-(const Arithmetic<U> &rhs) const
 
     core::PointerOffset ptr_offset = {
         .ptr_type    = type(),
-        .offset_type = type_ctx->get_type<Arithmetic<U>>(),
+        .offset_type = type_ctx->get_type<num<U>>(),
         .ptr_val     = newRC<core::Expr>(_load()),
         .offset_val  = newRC<core::Expr>(rhs._load()),
         .negative    = true
@@ -112,35 +111,35 @@ Pointer<T> Pointer<T>::operator-(const Arithmetic<U> &rhs) const
 
 template<typename T>
 template<typename U> requires std::is_integral_v<U>
-add_reference_t<T> Pointer<T>::operator[](const Arithmetic<U> &rhs) const
+add_reference_t<T> ptr<T>::operator[](const num<U> &rhs) const
 {
     return *(*this + rhs);
 }
 
 template<typename T>
 template<typename U> requires std::is_integral_v<U>
-Pointer<T> Pointer<T>::operator+(U rhs) const
+ptr<T> ptr<T>::operator+(U rhs) const
 {
-    return *this + Arithmetic(rhs);
+    return *this + num(rhs);
 }
 
 template<typename T>
 template<typename U> requires std::is_integral_v<U>
-Pointer<T> Pointer<T>::operator-(U rhs) const
+ptr<T> ptr<T>::operator-(U rhs) const
 {
-    return *this - Arithmetic(rhs);
+    return *this - num(rhs);
 }
 
 template<typename T>
 template<typename U> requires std::is_integral_v<U>
-add_reference_t<T> Pointer<T>::operator[](U rhs) const
+add_reference_t<T> ptr<T>::operator[](U rhs) const
 {
     return *(*this + rhs);
 }
 
 template<typename T>
 template<typename U> requires std::is_integral_v<U>
-Pointer<T> Pointer<T>::operator+(const ref<Arithmetic<U>> &rhs) const
+ptr<T> ptr<T>::operator+(const ref<num<U>> &rhs) const
 {
     static_assert(!std::is_same_v<T, CujVoid>);
 
@@ -149,7 +148,7 @@ Pointer<T> Pointer<T>::operator+(const ref<Arithmetic<U>> &rhs) const
 
     core::PointerOffset ptr_offset = {
         .ptr_type    = type(),
-        .offset_type = type_ctx->get_type<Arithmetic<U>>(),
+        .offset_type = type_ctx->get_type<num<U>>(),
         .ptr_val     = newRC<core::Expr>(_load()),
         .offset_val  = newRC<core::Expr>(rhs._load()),
         .negative    = false
@@ -160,7 +159,7 @@ Pointer<T> Pointer<T>::operator+(const ref<Arithmetic<U>> &rhs) const
 
 template<typename T>
 template<typename U> requires std::is_integral_v<U>
-Pointer<T> Pointer<T>::operator-(const ref<Arithmetic<U>> &rhs) const
+ptr<T> ptr<T>::operator-(const ref<num<U>> &rhs) const
 {
     static_assert(!std::is_same_v<T, CujVoid>);
 
@@ -169,7 +168,7 @@ Pointer<T> Pointer<T>::operator-(const ref<Arithmetic<U>> &rhs) const
 
     core::PointerOffset ptr_offset = {
         .ptr_type    = type(),
-        .offset_type = type_ctx->get_type<Arithmetic<U>>(),
+        .offset_type = type_ctx->get_type<num<U>>(),
         .ptr_val     = newRC<core::Expr>(_load()),
         .offset_val  = newRC<core::Expr>(rhs._load()),
         .negative    = true
@@ -180,33 +179,33 @@ Pointer<T> Pointer<T>::operator-(const ref<Arithmetic<U>> &rhs) const
 
 template<typename T>
 template<typename U> requires std::is_integral_v<U>
-add_reference_t<T> Pointer<T>::operator[](const ref<Arithmetic<U>> &rhs) const
+add_reference_t<T> ptr<T>::operator[](const ref<num<U>> &rhs) const
 {
     return *(*this + rhs);
 }
 
 template<typename U, typename T> requires std::is_integral_v<U>
-Pointer<T> operator+(const Arithmetic<U> &lhs, const Pointer<T> &rhs)
+ptr<T> operator+(const num<U> &lhs, const ptr<T> &rhs)
 {
     return rhs + lhs;
 }
 
 template<typename U, typename T> requires std::is_integral_v<U>
-Pointer<T> operator+(U lhs, const Pointer<T> &rhs)
+ptr<T> operator+(U lhs, const ptr<T> &rhs)
 {
     return rhs + lhs;
 }
 
 template<typename U, typename T> requires std::is_integral_v<U>
-Pointer<T> operator+(const ref<Arithmetic<U>> &lhs, const Pointer<T> &rhs)
+ptr<T> operator+(const ref<num<U>> &lhs, const ptr<T> &rhs)
 {
     return rhs + lhs;
 }
 
 template<typename T>
-Pointer<Pointer<T>> Pointer<T>::address() const
+ptr<ptr<T>> ptr<T>::address() const
 {
-    Pointer<Pointer> ret;
+    ptr<ptr> ret;
     core::Store store = {
         .dst_addr = ret._addr(),
         .val      = _addr()
@@ -217,20 +216,20 @@ Pointer<Pointer<T>> Pointer<T>::address() const
 }
 
 template<typename T>
-add_reference_t<T> Pointer<T>::deref() const
+add_reference_t<T> ptr<T>::deref() const
 {
     static_assert(!std::is_same_v<T, CujVoid>);
     return add_reference_t<T>::_from_ptr(*this);
 }
 
 template<typename T>
-add_reference_t<T> Pointer<T>::operator*() const
+add_reference_t<T> ptr<T>::operator*() const
 {
     return deref();
 }
 
 template<typename T>
-add_reference_t<T> *Pointer<T>::operator->() const
+add_reference_t<T> *ptr<T>::operator->() const
 {
     auto temp_var_ctx = PointerTempVarContext::get_context();
     auto ret = newRC<add_reference_t<T>>(this->deref());
@@ -239,9 +238,9 @@ add_reference_t<T> *Pointer<T>::operator->() const
 }
 
 template<typename T>
-Pointer<T> Pointer<T>::_from_expr(core::Expr expr)
+ptr<T> ptr<T>::_from_expr(core::Expr expr)
 {
-    Pointer ret;
+    ptr ret;
     core::Store store = {
         .dst_addr = ret._addr(),
         .val      = expr
@@ -252,7 +251,7 @@ Pointer<T> Pointer<T>::_from_expr(core::Expr expr)
 }
 
 template<typename T>
-core::LocalAllocAddr Pointer<T>::_addr() const
+core::LocalAllocAddr ptr<T>::_addr() const
 {
     return core::LocalAllocAddr{
         .alloc_type  = type(),
@@ -261,7 +260,7 @@ core::LocalAllocAddr Pointer<T>::_addr() const
 }
 
 template<typename T>
-core::Load Pointer<T>::_load() const
+core::Load ptr<T>::_load() const
 {
     return core::Load{
         .val_type = type(),

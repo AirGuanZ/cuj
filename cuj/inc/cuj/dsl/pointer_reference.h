@@ -6,9 +6,9 @@
 CUJ_NAMESPACE_BEGIN(cuj::dsl)
 
 template<typename T>
-class ref<Pointer<T>>
+class ref<ptr<T>>
 {
-    Pointer<Pointer<T>> addr_;
+    ptr<ptr<T>> addr_;
 
     ref() = default;
 
@@ -16,7 +16,7 @@ public:
 
     using PointedType = T;
 
-    ref(const Pointer<T> &ptr);
+    ref(const ptr<T> &ptr);
 
     ref(const ref &ref);
 
@@ -24,36 +24,36 @@ public:
 
     ref &operator=(const ref &other);
 
-    ref &operator=(const Pointer<T> &other);
+    ref &operator=(const ptr<T> &other);
 
     template<typename U> requires std::is_integral_v<U>
-    Pointer<T> operator+(const Arithmetic<U> &rhs) const;
+    ptr<T> operator+(const num<U> &rhs) const;
 
     template<typename U> requires std::is_integral_v<U>
-    Pointer<T> operator-(const Arithmetic<U> &rhs) const;
+    ptr<T> operator-(const num<U> &rhs) const;
 
     template<typename U> requires std::is_integral_v<U>
-    add_reference_t<T> operator[](const Arithmetic<U> &rhs) const;
+    add_reference_t<T> operator[](const num<U> &rhs) const;
 
     template<typename U> requires std::is_integral_v<U>
-    Pointer<T> operator+(U rhs) const;
+    ptr<T> operator+(U rhs) const;
 
     template<typename U> requires std::is_integral_v<U>
-    Pointer<T> operator-(U rhs) const;
+    ptr<T> operator-(U rhs) const;
 
     template<typename U> requires std::is_integral_v<U>
     add_reference_t<T> operator[](U rhs) const;
     
     template<typename U> requires std::is_integral_v<U>
-    Pointer<T> operator+(const ref<Arithmetic<U>> &rhs) const;
+    ptr<T> operator+(const ref<num<U>> &rhs) const;
 
     template<typename U> requires std::is_integral_v<U>
-    Pointer<T> operator-(const ref<Arithmetic<U>> &rhs) const;
+    ptr<T> operator-(const ref<num<U>> &rhs) const;
 
     template<typename U> requires std::is_integral_v<U>
-    add_reference_t<T> operator[](const ref<Arithmetic<U>> &rhs) const;
+    add_reference_t<T> operator[](const ref<num<U>> &rhs) const;
 
-    Pointer<Pointer<T>> address() const;
+    ptr<ptr<T>> address() const;
 
     add_reference_t<T> deref() const;
 
@@ -63,13 +63,13 @@ public:
 
     core::Load _load() const;
 
-    static ref _from_ptr(const Pointer<Pointer<T>> &ptr);
+    static ref _from_ptr(const ptr<ptr<T>> &ptr);
 };
 
 template<typename U, typename T> requires std::is_integral_v<U>
-Pointer<T> operator+(const Arithmetic<U> &lhs, const ref<Pointer<T>> &rhs);
+ptr<T> operator+(const num<U> &lhs, const ref<ptr<T>> &rhs);
 
 template<typename U, typename T> requires std::is_integral_v<U>
-Pointer<T> operator+(const ref<Arithmetic<U>> &lhs, const ref<Pointer<T>> &rhs);
+ptr<T> operator+(const ref<num<U>> &lhs, const ref<ptr<T>> &rhs);
 
 CUJ_NAMESPACE_END(cuj::dsl)

@@ -18,7 +18,7 @@ class ref<T> : public T
 {
     using T::CujClassTag;
 
-    explicit ref(const Pointer<T> &addr)
+    explicit ref(const ptr<T> &addr)
         : T(class_detail::ClassInternalConstructorTag{}, addr)
     {
         static_assert(is_cuj_class_v<T>);
@@ -38,7 +38,7 @@ public:
         
     }
 
-    static ref _from_ptr(const Pointer<T> &ptr)
+    static ref _from_ptr(const ptr<T> &ptr)
     {
         static_assert(is_cuj_class_v<T>);
         return ref(ptr);
@@ -67,11 +67,11 @@ namespace class_detail
     using pointer_to_reference_t = add_reference_t<pointer_to_variable_t<T>>;
 
     template<typename C, typename M>
-    Pointer<M> class_pointer_to_member_ptr(
-        const Pointer<C> &class_ptr, size_t member_index);
+    ptr<M> class_pointer_to_member_ptr(
+        const ptr<C> &class_ptr, size_t member_index);
 
     template<typename C>
-    Pointer<C> alloc_local_var();
+    ptr<C> alloc_local_var();
 
 #define CUJ_MAKE_REFLECTION_MEMBER_INFO(INDEX, CLASS, MEMBER)                   \
     template<>                                                                  \
@@ -137,7 +137,7 @@ namespace class_detail
             ::cuj::dsl::class_detail::alloc_local_var<PROXY>()) { }             \
         CujBase##PROXY(                                                         \
             ::cuj::dsl::class_detail::ClassInternalConstructorTag,              \
-            const ::cuj::dsl::Pointer<PROXY> &ptr)                              \
+            const ::cuj::dsl::ptr<PROXY> &ptr)                                  \
                 : cuj_class_object_address_(ptr) { }                            \
         CujBase##PROXY(const CujBase##PROXY &other)                             \
             : CujBase##PROXY()                                                  \
@@ -157,7 +157,7 @@ namespace class_detail
         {                                                                       \
             ::cuj::dsl::class_detail::foreach_member<PROXY>(f);                 \
         }                                                                       \
-        ::cuj::dsl::Pointer<PROXY> cuj_class_object_address_;                   \
+        ::cuj::dsl::ptr<PROXY> cuj_class_object_address_;                       \
         CUJ_MACRO_FOREACH_INDEXED_2(                                            \
             CUJ_MAKE_PROXY_BASE_MEMBER, CLASS, __VA_ARGS__)                     \
     };                                                                          \
