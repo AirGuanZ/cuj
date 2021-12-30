@@ -38,7 +38,7 @@ Arithmetic<T>::Arithmetic(const Arithmetic &other)
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-template<typename U> requires !std::is_same_v<T, U>
+template<typename U> requires (!std::is_same_v<T, U>)
 Arithmetic<T>::Arithmetic(const Arithmetic<U> &other)
     : Arithmetic()
 {
@@ -46,7 +46,7 @@ Arithmetic<T>::Arithmetic(const Arithmetic<U> &other)
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-template<typename U> requires !std::is_same_v<T, U>
+template<typename U> requires (!std::is_same_v<T, U>)
 Arithmetic<T>::Arithmetic(const ref<Arithmetic<U>> &other)
     : Arithmetic()
 {
@@ -531,7 +531,7 @@ inline Arithmetic<bool> operator!(const Arithmetic<bool> &val)
     });
 }
 
-template<typename T> requires std::is_integral_v<T> && !std::is_signed_v<T>
+template<typename T> requires std::is_integral_v<T> && (!std::is_signed_v<T>)
 Arithmetic<T> operator>>(T lhs, const Arithmetic<T> &rhs)
 {
     return Arithmetic(lhs) >> rhs;

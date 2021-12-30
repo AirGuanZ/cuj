@@ -37,7 +37,7 @@ public:
     T *get_function(const dsl::Function<Ret(Args...)> &func) const;
 
     template<typename Ret, typename...Args>
-        requires !std::is_function_v<Ret>
+        requires (!std::is_function_v<Ret>)
     auto get_function(const dsl::Function<Ret(Args...)> &func) const;
 
 private:

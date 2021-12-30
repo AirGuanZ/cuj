@@ -336,17 +336,10 @@ void run()
     constexpr int BLOCK_COUNT_X = (WIDTH  + BLOCK_SIZE_X - 1) / BLOCK_SIZE_X;
     constexpr int BLOCK_COUNT_Y = (HEIGHT + BLOCK_SIZE_Y - 1) / BLOCK_SIZE_Y;
 
+    std::cout << "start rendering" << std::endl;
+    const auto start_time = std::chrono::steady_clock::now();
 
-    cuda_module.launch(
-        "render",
-        { BLOCK_COUNT_X, BLOCK_COUNT_Y, 1 },
-        { BLOCK_SIZE_X, BLOCK_SIZE_Y, 1 },
-        device_color_buffer, device_rng_buffer, 0);
-    cudaDeviceSynchronize();
-
-        std::cout << "start rendering" << std::endl;
-        const auto start_time = std::chrono::steady_clock::now();
-    for(int i = 0; i < 4096; ++i)
+    for(int i = 0; i < 400; ++i)
     {
         cuda_module.launch(
             "render",

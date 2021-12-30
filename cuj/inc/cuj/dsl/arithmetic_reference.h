@@ -88,7 +88,7 @@ inline Arithmetic<bool> operator!(const ref<Arithmetic<bool>> &val);
 
 template<typename T> requires std::is_integral_v<T>
 Arithmetic<T> operator<<(T lhs, const ref<Arithmetic<T>> &rhs);
-template<typename T> requires std::is_integral_v<T> && !std::is_signed_v<T>
+template<typename T> requires std::is_integral_v<T> && (!std::is_signed_v<T>)
 Arithmetic<T> operator>>(T lhs, const ref<Arithmetic<T>> &rhs);
 
 template<typename T> requires std::is_integral_v<T>
