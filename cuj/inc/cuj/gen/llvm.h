@@ -76,6 +76,8 @@ private:
 
     void generate(const core::Store &store);
 
+    void generate(const core::Copy &copy);
+
     void generate(const core::Block &block);
 
     void generate(const core::Return &ret);

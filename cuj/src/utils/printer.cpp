@@ -163,6 +163,15 @@ void Printer::print(TextBuilder &b, const core::Store &s)
     b.new_line();
 }
 
+void Printer::print(TextBuilder &b, const core::Copy &copy)
+{
+    b.append("copy from (");
+    print(b, copy.src_addr);
+    b.append(") to (");
+    print(b, copy.dst_addr);
+    b.append(")");
+}
+
 void Printer::print(TextBuilder &b, const core::Block &block)
 {
     b.appendl("{");

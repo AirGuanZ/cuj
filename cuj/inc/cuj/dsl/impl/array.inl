@@ -25,8 +25,33 @@ template<typename T, size_t N>
 arr<T, N>::arr(const ref<arr<T, N>> &ref)
     : arr()
 {
-    for(size_t i = 0; i < N; ++i)
-        this->operator[](i) = ref[i];
+    if constexpr(is_trivially_copyable_v<T>)
+    {
+        FunctionContext::get_func_context()->append_statement(
+            core::Copy
+        {
+            .dst_addr = address()._load(),
+            .src_addr = ref.address()._load()
+        });
+    }
+    else if constexpr(N > std::numeric_limits<uint32_t>::max())
+    {
+        num<uint64_t> i = 0;
+        $while(i < N)
+        {
+            this->operator[](i) = ref[i];
+            i = i + 1;
+        };
+    }
+    else
+    {
+        num i = 0;
+        $while(i < static_cast<uint32_t>(N))
+        {
+            this->operator[](i) = ref[i];
+            i = i + 1;
+        };
+    }
 }
 
 template<typename T, size_t N>
@@ -46,8 +71,33 @@ arr<T, N>::arr(arr &&other) noexcept
 template<typename T, size_t N>
 arr<T, N> &arr<T, N>::operator=(const arr &other)
 {
-    for(size_t i = 0; i < N; ++i)
-        this->operator[](i) = other[i];
+    if constexpr(is_trivially_copyable_v<T>)
+    {
+        FunctionContext::get_func_context()->append_statement(
+            core::Copy
+            {
+                .dst_addr = address()._load(),
+                .src_addr = other.address()._load()
+            });
+    }
+    else if constexpr(N > std::numeric_limits<uint32_t>::max())
+    {
+        num<uint64_t> i = 0;
+        $while(i < N)
+        {
+            this->operator[](i) = other[i];
+            i = i + 1;
+        };
+    }
+    else
+    {
+        num i = 0;
+        $while(i < static_cast<uint32_t>(N))
+        {
+            this->operator[](i) = other[i];
+            i = i + 1;
+        };
+    }
     return *this;
 }
 

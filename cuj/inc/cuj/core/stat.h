@@ -5,6 +5,7 @@
 CUJ_NAMESPACE_BEGIN(cuj::core)
 
 struct Store;
+struct Copy;
 struct Block;
 struct Return;
 struct If;
@@ -16,6 +17,7 @@ struct CallFuncStat;
 
 using Stat = Variant<
     Store,
+    Copy,
     Block,
     Return,
     If,
@@ -29,6 +31,12 @@ struct Store
 {
     Expr dst_addr;
     Expr val;
+};
+
+struct Copy
+{
+    Expr dst_addr;
+    Expr src_addr;
 };
 
 struct Block

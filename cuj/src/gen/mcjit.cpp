@@ -106,6 +106,7 @@ namespace
             llvm_ir_gen.use_fast_math();
         if(opts.approx_math_func)
             llvm_ir_gen.use_approx_math_func();
+        llvm_ir_gen.set_data_layout(&data_layout);
         llvm_ir_gen.generate(mod);
 
         do_llvm_optimize(llvm_ir_gen.get_llvm_module(), target_machine, opts);

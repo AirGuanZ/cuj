@@ -470,6 +470,26 @@ void LLVMIRGenerator::generate(const core::Store &store)
     llvm_->ir_builder->CreateStore(val, dst_addr);
 }
 
+void LLVMIRGenerator::generate(const core::Copy &copy)
+{
+    if(data_layout_)
+    {
+        auto src_addr = generate(copy.src_addr);
+        auto dst_addr = generate(copy.dst_addr);
+        const auto size = data_layout_->getTypeStoreSize(llvm::dyn_cast<
+            llvm::PointerType>(src_addr->getType())->getElementType());
+        llvm_->ir_builder->CreateMemCpy(
+            dst_addr, {}, src_addr, {}, size.getFixedSize());
+    }
+    else
+    {
+        auto src_addr = generate(copy.src_addr);
+        auto dst_addr = generate(copy.dst_addr);
+        auto src_val = llvm_->ir_builder->CreateLoad(src_addr);
+        llvm_->ir_builder->CreateStore(src_val, dst_addr);
+    }
+}
+
 void LLVMIRGenerator::generate(const core::Block &block)
 {
     for(auto &s : block.stats)

@@ -17,6 +17,14 @@ void Visitor::visit(const Store &store)
     visit(store.val);
 }
 
+void Visitor::visit(const Copy &copy)
+{
+    if(on_copy)
+        on_copy(copy);
+    visit(copy.dst_addr);
+    visit(copy.src_addr);
+}
+
 void Visitor::visit(const Block &block)
 {
     if(on_block)

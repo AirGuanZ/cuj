@@ -125,6 +125,28 @@ constexpr bool is_cuj_ref_v =
     is_cuj_array_reference_v<T>      ||
     is_cuj_class_reference_v<T>;
 
+// trivial
+
+template<typename T>
+struct IsTriviallyCopyable : std::false_type { };
+
+template<typename T>
+struct IsTriviallyCopyable<num<T>> : std::true_type { };
+
+template<typename T>
+struct IsTriviallyCopyable<ptr<T>> : std::true_type { };
+
+template<typename T, size_t N>
+struct IsTriviallyCopyable<arr<T, N>> : IsTriviallyCopyable<T> { };
+
+template<typename T>
+    requires is_cuj_class_v<T> &&
+             requires { typename T::TriviallyCopyableTag; }
+struct IsTriviallyCopyable<T> : std::true_type { };
+
+template<typename T>
+constexpr bool is_trivially_copyable_v = IsTriviallyCopyable<T>::value;
+
 // conv
 
 template<typename T>

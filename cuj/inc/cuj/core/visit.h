@@ -12,6 +12,7 @@ public:
 
     void visit(const Stat         &stat);
     void visit(const Store        &store);
+    void visit(const Copy         &copy);
     void visit(const Block        &block);
     void visit(const Return       &ret);
     void visit(const If           &if_s);
@@ -41,6 +42,7 @@ public:
 
     std::function<void(const Stat &)>         on_stat;
     std::function<void(const Store &)>        on_store;
+    std::function<void(const Copy &)>         on_copy;
     std::function<void(const Block &)>        on_block;
     std::function<void(const Return &)>       on_return;
     std::function<void(const If &)>           on_if;

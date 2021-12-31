@@ -109,6 +109,21 @@ namespace class_detail
     CUJ_PROXY_CLASS_EX(PROXY, CLASS, __VA_ARGS__)                               \
     { CUJ_BASE_CONSTRUCTORS }
 
+    template<typename Reflection, int...Is>
+    constexpr bool are_all_members_trivially_copyable(
+        std::integer_sequence<int, Is...>)
+    {
+        return ((is_trivially_copyable_v<
+            typename Reflection::template MemberInfo<Is>::Variable>) && ...);
+    }
+
+    template<typename Reflection>
+    constexpr bool are_all_members_trivially_copyable()
+    {
+        return are_all_members_trivially_copyable<Reflection>(
+            std::make_integer_sequence<int, Reflection::MemberCount>());
+    }
+
 #define CUJ_PROXY_CLASS_EX(PROXY, CLASS, ...)                                   \
     struct PROXY;                                                               \
     inline PROXY *_cxx_class_to_cuj_class(const CLASS *) { return nullptr; }    \
@@ -142,11 +157,23 @@ namespace class_detail
         CujBase##PROXY(const CujBase##PROXY &other)                             \
             : CujBase##PROXY()                                                  \
         {                                                                       \
-            CUJ_MACRO_FOREACH_1(CUJ_ASSIGN_MEMBER_FROM_OTHER, __VA_ARGS__)      \
+            *this = other;                                                      \
         }                                                                       \
         CujBase##PROXY &operator=(const CujBase##PROXY &other)                  \
         {                                                                       \
-            CUJ_MACRO_FOREACH_1(CUJ_ASSIGN_MEMBER_FROM_OTHER, __VA_ARGS__)      \
+            if constexpr(!::cuj::dsl::class_detail                              \
+                ::are_all_members_trivially_copyable<Reflection>())             \
+            {                                                                   \
+                CUJ_MACRO_FOREACH_1(CUJ_ASSIGN_MEMBER_FROM_OTHER, __VA_ARGS__)  \
+            }                                                                   \
+            else                                                                \
+            {                                                                   \
+                ::cuj::dsl::FunctionContext::get_func_context()                 \
+                    ->append_statement(core::Copy{                              \
+                        .dst_addr = cuj_class_object_address_._load(),          \
+                        .src_addr = other.cuj_class_object_address_._load()     \
+                    });                                                         \
+            }                                                                   \
             return *this;                                                       \
         }                                                                       \
         CujBase##PROXY(CujBase##PROXY &&) noexcept = delete;                    \
@@ -177,6 +204,7 @@ namespace class_detail
     }
 
 #define CUJ_BASE_CONSTRUCTORS using CujBase::CujBase;
+#define CUJ_TRIVIALLY_COPYABLE struct TriviallyCopyableTag { };
 
 } // namespace class_detail
 

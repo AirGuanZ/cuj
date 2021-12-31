@@ -56,6 +56,8 @@ private:
 
     void print(TextBuilder &b, const core::Store &store);
 
+    void print(TextBuilder &b, const core::Copy &copy);
+
     void print(TextBuilder &b, const core::Block &block);
 
     void print(TextBuilder &b, const core::Return &ret);
