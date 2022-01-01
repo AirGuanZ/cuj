@@ -476,10 +476,12 @@ void LLVMIRGenerator::generate(const core::Copy &copy)
     {
         auto src_addr = generate(copy.src_addr);
         auto dst_addr = generate(copy.dst_addr);
-        const auto size = data_layout_->getTypeStoreSize(llvm::dyn_cast<
-            llvm::PointerType>(src_addr->getType())->getElementType());
+        auto src_elem_type = llvm::dyn_cast<llvm::PointerType>(
+            src_addr->getType())->getElementType();
+        const auto size = data_layout_->getTypeStoreSize(src_elem_type);
+        auto src_align = data_layout_->getABITypeAlign(src_elem_type);
         llvm_->ir_builder->CreateMemCpy(
-            dst_addr, {}, src_addr, {}, size.getFixedSize());
+            dst_addr, src_align, src_addr, src_align, size.getFixedSize());
     }
     else
     {

@@ -103,7 +103,7 @@ namespace class_detail
     CUJ_PROXY_CLASS(CujProxy##CLASS, CLASS, __VA_ARGS__)
     
 #define CUJ_CLASS_EX(CLASS, ...)                                                \
-    CUJ_PROXY_CLASS(CujProxy##CLASS, CLASS, __VA_ARGS__)
+    CUJ_PROXY_CLASS_EX(CujProxy##CLASS, CLASS, __VA_ARGS__)
 
 #define CUJ_PROXY_CLASS(PROXY, CLASS, ...)                                      \
     CUJ_PROXY_CLASS_EX(PROXY, CLASS, __VA_ARGS__)                               \
@@ -146,6 +146,8 @@ namespace class_detail
         using CXXClass = CLASS;                                                 \
         using CujBase = CujBase##PROXY;                                         \
         using Reflection = CujReflection##PROXY;                                \
+        static constexpr bool all_members_trivially_copyable = ::cuj::dsl       \
+            ::class_detail::are_all_members_trivially_copyable<Reflection>();   \
         struct CujClassTag { };                                                 \
         CujBase##PROXY() : CujBase##PROXY(                                      \
             ::cuj::dsl::class_detail::ClassInternalConstructorTag{},            \
@@ -161,8 +163,7 @@ namespace class_detail
         }                                                                       \
         CujBase##PROXY &operator=(const CujBase##PROXY &other)                  \
         {                                                                       \
-            if constexpr(!::cuj::dsl::class_detail                              \
-                ::are_all_members_trivially_copyable<Reflection>())             \
+            if constexpr(!all_members_trivially_copyable)                       \
             {                                                                   \
                 CUJ_MACRO_FOREACH_1(CUJ_ASSIGN_MEMBER_FROM_OTHER, __VA_ARGS__)  \
             }                                                                   \
@@ -204,7 +205,7 @@ namespace class_detail
     }
 
 #define CUJ_BASE_CONSTRUCTORS using CujBase::CujBase;
-#define CUJ_TRIVIALLY_COPYABLE struct TriviallyCopyableTag { };
+#define CUJ_NONE_TRIVIALLY_COPYABLE struct NoneTriviallyCopyableTag { };
 
 } // namespace class_detail
 

@@ -255,26 +255,23 @@ We can also add custom member functions to Cuj class.
 struct Vec3 { float x, y, z; };
 CUJ_CLASS_EX(Vec3, x, y, z)
 {
-    // do not forget to add this line
     CUJ_BASE_CONSTRUCTORS
-    
-    explicit Vec3(f32 v)
-        : Vec3(v, v, v)
-    {
-        
-    }
-        
-    Vec3(f32 _x, f32 _y, f32 _z)
-    {
-        x = _x;
-        y = _y;
-        z = _z;
-    }
-    
-    f32 length() const
-    {
-        return cstd::sqrt(x * x + y * y + z * z);
-    }
+    explicit Vec3(f32 v) : Vec3(v, v, v) { }
+    Vec3(f32 _x, f32 _y, f32 _z) { x = _x; y = _y; z = _z; }
+    f32 length() const { return cstd::sqrt(x * x + y * y + z * z); }
+};
+```
+
+**Note**. In default, all Cuj classes are trivially-copyable. Cuj use this assumption optimize class object copying. If custom copy constructor or assignment operator are provided, we need to use macro `CUJ_NONE_TRIVIALLY_COPYABLE` to indicate that this class is not trivially-copyable.
+
+```cpp
+struct A { ... };
+CUJ_PROXY_CLASS_EX(AProxy, A, ...)
+{
+    CUJ_BASE_CONSTRUCTORS
+    CUJ_NONE_TRIVIALLY_COPYABLE
+    AProxy(const AProxy &other) { ... }
+    AProxy &operator=(const AProxy &other) { ... }
 };
 ```
 

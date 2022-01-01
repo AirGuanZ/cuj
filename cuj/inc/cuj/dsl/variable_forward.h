@@ -141,7 +141,8 @@ struct IsTriviallyCopyable<arr<T, N>> : IsTriviallyCopyable<T> { };
 
 template<typename T>
     requires is_cuj_class_v<T> &&
-             requires { typename T::TriviallyCopyableTag; }
+             ((!requires { typename T::NoneTriviallyCopyableTag; }) &&
+             T::all_members_trivially_copyable)
 struct IsTriviallyCopyable<T> : std::true_type { };
 
 template<typename T>
