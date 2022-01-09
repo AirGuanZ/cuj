@@ -758,6 +758,28 @@ llvm::Value *LLVMIRGenerator::generate(const core::ArithmeticCast &expr)
     unreachable();
 }
 
+llvm::Value *LLVMIRGenerator::generate(const core::BitwiseCast &expr)
+{
+    auto src_type = get_llvm_type(expr.src_type);
+    auto dst_type = get_llvm_type(expr.dst_type);
+    auto src_val = generate(*expr.src_val);
+
+    if(src_type->isPointerTy())
+    {
+        if(dst_type->isPointerTy()) // ptr to ptr
+            return llvm_->ir_builder->CreatePointerCast(src_val, dst_type);
+
+        // ptr to integer
+        return llvm_->ir_builder->CreatePtrToInt(src_val, dst_type);
+    }
+
+    if(dst_type->isPointerTy()) // integer to ptr
+        return llvm_->ir_builder->CreateIntToPtr(src_val, dst_type);
+
+    // arithmetic to arithmetic
+    return llvm_->ir_builder->CreateBitCast(src_val, dst_type);
+}
+
 llvm::Value *LLVMIRGenerator::generate(const core::PointerOffset &expr)
 {
     auto ptr = generate(*expr.ptr_val);

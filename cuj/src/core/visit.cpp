@@ -134,6 +134,13 @@ void Visitor::visit(const ArithmeticCast &expr)
     visit(*expr.src_val);
 }
 
+void Visitor::visit(const BitwiseCast &expr)
+{
+    if(on_bitwise_cast)
+        on_bitwise_cast(expr);
+    visit(*expr.src_val);
+}
+
 void Visitor::visit(const PointerOffset &expr)
 {
     if(on_pointer_offset)

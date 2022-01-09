@@ -317,6 +317,15 @@ void Printer::print(TextBuilder &b, const core::ArithmeticCast &cast)
     b.append(")");
 }
 
+void Printer::print(TextBuilder &b, const core::BitwiseCast &cast)
+{
+    b.append("bitcast<");
+    print(b, *cast.dst_type);
+    b.append(">(");
+    print(b, *cast.src_val);
+    b.append(")");
+}
+
 void Printer::print(TextBuilder &b, const core::PointerOffset &ptr_offset)
 {
     print(b, *ptr_offset.ptr_val);

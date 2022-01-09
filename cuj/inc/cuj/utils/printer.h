@@ -90,6 +90,8 @@ private:
 
     void print(TextBuilder &b, const core::ArithmeticCast &cast);
 
+    void print(TextBuilder &b, const core::BitwiseCast &cast);
+
     void print(TextBuilder &b, const core::PointerOffset &ptr_offset);
 
     void print(TextBuilder &b, const core::ClassPointerToMemberPointer &mem);
