@@ -29,6 +29,7 @@
 #include "helper.h"
 #include "native_intrinsics.h"
 #include "ptx_intrinsics.h"
+#include "vector_intrinsic.h"
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 
@@ -472,7 +473,7 @@ void LLVMIRGenerator::generate(const core::Store &store)
 
 void LLVMIRGenerator::generate(const core::Copy &copy)
 {
-    if(data_layout_)
+    /*if(data_layout_)
     {
         auto src_addr = generate(copy.src_addr);
         auto dst_addr = generate(copy.dst_addr);
@@ -483,7 +484,7 @@ void LLVMIRGenerator::generate(const core::Copy &copy)
         llvm_->ir_builder->CreateMemCpy(
             dst_addr, src_align, src_addr, src_align, size.getFixedSize());
     }
-    else
+    else*/
     {
         auto src_addr = generate(copy.src_addr);
         auto dst_addr = generate(copy.dst_addr);
@@ -1012,6 +1013,29 @@ llvm::Value *LLVMIRGenerator::generate(const core::CallFunc &expr)
 llvm::Value *LLVMIRGenerator::process_intrinsic_call(
     const core::CallFunc &call, const std::vector<llvm::Value*> &args)
 {
+    if(call.intrinsic == core::Intrinsic::store_f32x4 ||
+       call.intrinsic == core::Intrinsic::store_f32x2 ||
+       call.intrinsic == core::Intrinsic::store_u32x4 ||
+       call.intrinsic == core::Intrinsic::store_u32x2 ||
+       call.intrinsic == core::Intrinsic::store_i32x4 ||
+       call.intrinsic == core::Intrinsic::store_i32x2)
+    {
+        return detail::create_vector_store(
+            *llvm_->ir_builder, args);
+    }
+    
+    if(call.intrinsic == core::Intrinsic::load_f32x4 ||
+       call.intrinsic == core::Intrinsic::load_f32x2 ||
+       call.intrinsic == core::Intrinsic::load_u32x4 ||
+       call.intrinsic == core::Intrinsic::load_u32x2 ||
+       call.intrinsic == core::Intrinsic::load_i32x4 ||
+       call.intrinsic == core::Intrinsic::load_i32x2)
+    {
+        detail::create_vector_load(
+            *llvm_->ir_builder, args);
+        return nullptr;
+    }
+
     if(target_ == Target::Native)
     {
         return process_native_intrinsics(
