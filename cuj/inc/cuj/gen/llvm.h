@@ -108,6 +108,8 @@ private:
 
     llvm::Value *generate(const core::ArithmeticCast &expr);
 
+    llvm::Value *generate(const core::BitwiseCast &expr);
+
     llvm::Value *generate(const core::PointerOffset &expr);
 
     llvm::Value *generate(const core::ClassPointerToMemberPointer &expr);

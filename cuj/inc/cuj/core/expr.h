@@ -13,6 +13,7 @@ struct Load;
 struct Immediate;
 struct NullPtr;
 struct ArithmeticCast;
+struct BitwiseCast; // arithmetic <-> arithmetic; size_t <-> pointer
 struct PointerOffset;
 struct ClassPointerToMemberPointer;
 struct DerefClassPointer;
@@ -31,6 +32,7 @@ using Expr = Variant<
     Immediate,
     NullPtr,
     ArithmeticCast,
+    BitwiseCast,
     PointerOffset,
     ClassPointerToMemberPointer,
     DerefClassPointer,
@@ -85,6 +87,13 @@ struct NullPtr
 };
 
 struct ArithmeticCast
+{
+    const Type *dst_type;
+    const Type *src_type;
+    RC<Expr>    src_val;
+};
+
+struct BitwiseCast
 {
     const Type *dst_type;
     const Type *src_type;

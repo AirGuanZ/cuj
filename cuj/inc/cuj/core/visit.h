@@ -29,6 +29,7 @@ public:
     void visit(const Immediate                   &expr);
     void visit(const NullPtr                     &expr);
     void visit(const ArithmeticCast              &expr);
+    void visit(const BitwiseCast                 &expr);
     void visit(const PointerOffset               &expr);
     void visit(const ClassPointerToMemberPointer &expr);
     void visit(const DerefClassPointer           &expr);
@@ -59,6 +60,7 @@ public:
     std::function<void(const Immediate                   &)> on_immediate;
     std::function<void(const NullPtr                     &)> on_nullptr;
     std::function<void(const ArithmeticCast              &)> on_arithmetic_cast;
+    std::function<void(const BitwiseCast                 &)> on_bitwise_cast;
     std::function<void(const PointerOffset               &)> on_pointer_offset;
     std::function<void(const ClassPointerToMemberPointer &)> on_class_ptr_to_member_ptr;
     std::function<void(const DerefClassPointer           &)> on_deref_class_ptr;

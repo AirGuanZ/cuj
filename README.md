@@ -327,6 +327,21 @@ ref f = *e;          // f: ref<i32>
 
 `var<T>` can simply be treated like `T`.
 
+## Builtin Operator
+
+### Bitwise Cast
+
+```cpp
+u64 x0 = ...;
+var y0 = bitcast<ptr<f32>>(x0); // num to ptr
+
+f32 x1 = ...;
+var y1 = bitcast<i32>(x1); // num to num
+
+ptr<f32> x2 = ...;
+var y2 = bitcast<i64>(x2); // ptr to num
+```
+
 ## Control Flow
 
 ### If

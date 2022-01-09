@@ -4,6 +4,7 @@
 #include <cuj/dsl/arithmetic_reference.h>
 #include <cuj/dsl/array.h>
 #include <cuj/dsl/array_reference.h>
+#include <cuj/dsl/bitcast.h>
 #include <cuj/dsl/class.h>
 #include <cuj/dsl/function.h>
 #include <cuj/dsl/if.h>
@@ -22,6 +23,7 @@
 #include <cuj/dsl/impl/arithmetic_reference.inl>
 #include <cuj/dsl/impl/array.inl>
 #include <cuj/dsl/impl/array_reference.inl>
+#include <cuj/dsl/impl/bitcast.inl>
 #include <cuj/dsl/impl/class.inl>
 #include <cuj/dsl/impl/function.inl>
 #include <cuj/dsl/impl/if.inl>
@@ -61,6 +63,8 @@ using dsl::ptr;
 using dsl::num;
 using dsl::arr;
 using dsl::cxx;
+
+using dsl::bitcast;
 
 using dsl::function;
 using dsl::kernel;
