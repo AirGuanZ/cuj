@@ -84,9 +84,9 @@ T select(
 
 template<typename T>
 T select(
-    const boolean          &cond,
-    const dsl::var<T> &a,
-    const dsl::var<T> &b)
+    const boolean &cond,
+    const var<T>  &a,
+    const var<T>  &b)
 {
     T ret;
     $if(cond)

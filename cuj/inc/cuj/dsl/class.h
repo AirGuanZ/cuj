@@ -170,7 +170,7 @@ namespace class_detail
             else                                                                \
             {                                                                   \
                 ::cuj::dsl::FunctionContext::get_func_context()                 \
-                    ->append_statement(core::Copy{                              \
+                    ->append_statement(::cuj::core::Copy{                       \
                         .dst_addr = cuj_class_object_address_._load(),          \
                         .src_addr = other.cuj_class_object_address_._load()     \
                     });                                                         \
