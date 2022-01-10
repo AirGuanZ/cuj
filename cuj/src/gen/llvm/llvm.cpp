@@ -27,6 +27,7 @@
 #include <cuj/utils/unreachable.h>
 
 #include "helper.h"
+#include "libdevice_man.h"
 #include "native_intrinsics.h"
 #include "ptx_intrinsics.h"
 #include "vector_intrinsic.h"
@@ -113,7 +114,7 @@ void LLVMIRGenerator::generate(const dsl::Module &mod)
     if(target_ == Target::PTX)
     {
         llvm_->top_module->setTargetTriple("nvptx64-nvidia-cuda");
-        link_with_libdevice(*llvm_->top_module);
+        libdev::link_with_libdevice(*llvm_->top_module);
 
         if(fast_math_)
         {
@@ -366,10 +367,12 @@ void LLVMIRGenerator::define_function(const core::Func *func)
 
     generate_default_ret(func);
 
+#if defined(DEBUG) || defined(_DEBUG)
     std::string err_msg;
     llvm::raw_string_ostream err_stream(err_msg);
     if(verifyFunction(*llvm_->current_function, &err_stream))
         throw CujException(err_msg);
+#endif
 }
 
 void LLVMIRGenerator::clear_temp_function_data()

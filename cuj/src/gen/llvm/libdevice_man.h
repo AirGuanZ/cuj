@@ -21,6 +21,8 @@ CUJ_NAMESPACE_BEGIN(cuj::gen::libdev)
 
 std::unique_ptr<llvm::Module> new_libdevice10_module(llvm::LLVMContext *context);
 
+void link_with_libdevice(llvm::Module &dest_module);
+
 const char *get_libdevice_function_name(core::Intrinsic);
 
 CUJ_NAMESPACE_END(cuj::gen::libdev)

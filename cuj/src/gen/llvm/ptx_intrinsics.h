@@ -6,8 +6,6 @@
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 
-void link_with_libdevice(llvm::Module &dest_module);
-
 llvm::Value *process_ptx_intrinsics(
     llvm::Module                    &top_module,
     llvm::IRBuilder<>               &ir_builder,

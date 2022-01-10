@@ -9,38 +9,11 @@
 
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/IntrinsicsNVPTX.h>
-#include <llvm/Linker/Linker.h>
 
 #include "libdevice_man.h"
 #include "ptx_intrinsics.h"
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
-
-void link_with_libdevice(llvm::Module &dest_module)
-{
-    auto &context = dest_module.getContext();
-    auto libdev_module = libdev::new_libdevice10_module(&context);
-
-    std::vector<std::string> libdev_func_names;
-    for(auto &f : *libdev_module)
-    {
-        if(!f.isDeclaration())
-            libdev_func_names.push_back(f.getName().str());
-    }
-
-    libdev_module->setTargetTriple("nvptx64-nvidia-cuda");
-    dest_module.setDataLayout(libdev_module->getDataLayout());
-
-    if(llvm::Linker::linkModules(dest_module, std::move(libdev_module)))
-        throw CujException("failed to link with libdevice");
-
-    for(auto &name : libdev_func_names)
-    {
-        auto func = dest_module.getFunction(name);
-        assert(func);
-        func->setLinkage(llvm::GlobalValue::InternalLinkage);
-    }
-}
 
 llvm::Value *process_ptx_intrinsics(
     llvm::Module                    &top_module,
