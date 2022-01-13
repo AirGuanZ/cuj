@@ -112,6 +112,8 @@ private:
 
     void print(TextBuilder &b, const core::CallFunc &call);
 
+    void print(TextBuilder &b, const core::GlobalVarAddr &global_var_addr);
+
     // type
 
     void print(TextBuilder &b, const core::Type &type);

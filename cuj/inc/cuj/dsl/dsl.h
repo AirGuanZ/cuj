@@ -7,6 +7,7 @@
 #include <cuj/dsl/bitcast.h>
 #include <cuj/dsl/class.h>
 #include <cuj/dsl/function.h>
+#include <cuj/dsl/global_var.h>
 #include <cuj/dsl/if.h>
 #include <cuj/dsl/loop.h>
 #include <cuj/dsl/module.h>
@@ -26,6 +27,7 @@
 #include <cuj/dsl/impl/bitcast.inl>
 #include <cuj/dsl/impl/class.inl>
 #include <cuj/dsl/impl/function.inl>
+#include <cuj/dsl/impl/global_var.inl>
 #include <cuj/dsl/impl/if.inl>
 #include <cuj/dsl/impl/loop.inl>
 #include <cuj/dsl/impl/pointer.inl>
@@ -69,5 +71,8 @@ using dsl::bitcast;
 using dsl::function;
 using dsl::kernel;
 using dsl::declare;
+
+using dsl::allocate_global_memory;
+using dsl::allocate_constant_memory;
 
 CUJ_NAMESPACE_END(cuj)

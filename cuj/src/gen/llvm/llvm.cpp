@@ -13,6 +13,7 @@
 #include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LegacyPassManager.h>
+#include <llvm/IR/IntrinsicsNVPTX.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Transforms/InstCombine/InstCombine.h>
 #include <llvm/Transforms/IPO/GlobalDCE.h>
@@ -53,6 +54,8 @@ struct LLVMIRGenerator::LLVMData
     };
 
     std::map<const core::Func *, FunctionRecord> llvm_functions_;
+
+    std::map<const core::GlobalVar *, llvm::GlobalVariable *> global_vars_;
 
     // per function
 
@@ -140,6 +143,10 @@ void LLVMIRGenerator::generate(const dsl::Module &mod)
         for(auto &[_, type] : index_to_type)
             build_llvm_struct_body(type);
     }
+
+    // generate global variables
+
+    generate_global_variables();
 
     // build functions
 
@@ -281,6 +288,50 @@ llvm::Type *LLVMIRGenerator::get_llvm_type(const core::Type *type) const
 {
     const auto index = llvm_->type_to_index.at(type);
     return llvm_->index_to_llvm_type.at(index);
+}
+
+void LLVMIRGenerator::generate_global_variables()
+{
+    for(auto &pv : llvm_->prog.global_vars)
+    {
+        auto &var = *pv;
+
+        // address space
+
+        unsigned int address_space;
+        if(var.memory_type == core::GlobalVar::MemoryType::Regular)
+        {
+            if(target_ == Target::Native)
+                address_space = 0;
+            else
+            {
+                assert(target_ == Target::PTX);
+                address_space = 1;
+            }
+        }
+        else
+        {
+            if(target_ == Target::Native)
+                address_space = 0;
+            else
+            {
+                assert(target_ == Target::PTX);
+                address_space = 4;
+            }
+        }
+
+        // allocate
+
+        auto llvm_type = get_llvm_type(var.type);
+        auto llvm_global_var = new llvm::GlobalVariable(
+            *llvm_->top_module, llvm_type, false,
+            llvm::GlobalValue::ExternalLinkage, nullptr,
+            var.symbol_name, nullptr,
+            llvm::GlobalValue::NotThreadLocal, address_space);
+        llvm_global_var->setInitializer(llvm::Constant::getNullValue(llvm_type));
+
+        llvm_->global_vars_.insert({ pv.get(), llvm_global_var });
+    }
 }
 
 llvm::FunctionType *LLVMIRGenerator::get_function_type(const core::Func &func)
@@ -1011,6 +1062,31 @@ llvm::Value *LLVMIRGenerator::generate(const core::CallFunc &expr)
     auto core_func = llvm_->prog.funcs[expr.contexted_func_index].get();
     auto func = llvm_->llvm_functions_.at(core_func).llvm_function;
     return llvm_->ir_builder->CreateCall(func, args);
+}
+
+llvm::Value *LLVMIRGenerator::generate(const core::GlobalVarAddr &expr)
+{
+    llvm::Value *ptr = llvm_->global_vars_.at(expr.var.get());
+    if(target_ == Target::PTX)
+    {
+        auto var_type = get_llvm_type(expr.var->type);
+        auto dst_type = llvm::PointerType::get(var_type, 0);
+        if(expr.var->memory_type == core::GlobalVar::MemoryType::Regular)
+        {
+            auto src_type = llvm::PointerType::get(var_type, 1);
+            ptr = llvm_->ir_builder->CreateIntrinsic(
+                llvm::Intrinsic::nvvm_ptr_global_to_gen,
+                { dst_type, src_type }, ptr);
+        }
+        else
+        {
+            auto src_type = llvm::PointerType::get(var_type, 4);
+            ptr = llvm_->ir_builder->CreateIntrinsic(
+                llvm::Intrinsic::nvvm_ptr_constant_to_gen,
+                { dst_type, src_type }, ptr);
+        }
+    }
+    return ptr;
 }
 
 llvm::Value *LLVMIRGenerator::process_intrinsic_call(

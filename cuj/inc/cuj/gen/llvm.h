@@ -60,6 +60,8 @@ private:
 
     llvm::Type *get_llvm_type(const core::Type *type) const;
 
+    void generate_global_variables();
+
     llvm::FunctionType *get_function_type(const core::Func &func);
 
     void declare_function(const core::Func *func);
@@ -129,6 +131,8 @@ private:
     llvm::Value *generate(const core::Unary &expr);
 
     llvm::Value *generate(const core::CallFunc &expr);
+
+    llvm::Value *generate(const core::GlobalVarAddr &expr);
 
     llvm::Value *process_intrinsic_call(
         const core::CallFunc &call, const std::vector<llvm::Value *> &args);

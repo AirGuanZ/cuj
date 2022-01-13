@@ -214,4 +214,10 @@ void Visitor::visit(const CallFunc &expr)
         visit(*arg);
 }
 
+void Visitor::visit(const GlobalVarAddr &expr)
+{
+    if(on_global_var_addr)
+        on_global_var_addr(expr);
+}
+
 CUJ_NAMESPACE_END(cuj::core)

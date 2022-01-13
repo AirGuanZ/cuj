@@ -23,7 +23,7 @@ CUJ_NAMESPACE_BEGIN(cuj::gen::libdev)
 namespace
 {
 
-    const std::set<std::string> used_libdevice_functions = {
+    const std::set<std::string> keeped_libdevice_functions = {
         "__nv_fabsf",
         "__nv_fmodf",
         "__nv_remainderf",
@@ -123,7 +123,7 @@ void link_with_libdevice(llvm::Module &dest_module)
         if(!f.hasName() || f.isDeclaration())
             continue;
         std::string name = f.getName().str();
-        if(f.getNumUses() == 0 && !used_libdevice_functions.contains(name))
+        if(f.getNumUses() == 0 && !keeped_libdevice_functions.contains(name))
             useless_libdev_func_names.push_back(std::move(name));
         else
             used_libdev_func_names.push_back(std::move(name));

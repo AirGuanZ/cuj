@@ -24,6 +24,7 @@ struct ArrayAddrToFirstElemAddr;
 struct Binary;
 struct Unary;
 struct CallFunc;
+struct GlobalVarAddr;
 
 using Expr = Variant<
     FuncArgAddr,
@@ -42,7 +43,8 @@ using Expr = Variant<
     ArrayAddrToFirstElemAddr,
     Binary,
     Unary,
-    CallFunc>;
+    CallFunc,
+    GlobalVarAddr>;
 
 struct FuncArgAddr
 {
@@ -200,6 +202,24 @@ struct CallFunc
     Intrinsic      intrinsic            = Intrinsic::None;
 
     std::vector<RC<Expr>> args;
+};
+
+struct GlobalVar
+{
+    enum class MemoryType
+    {
+        Regular,
+        Constant
+    };
+
+    const Type *type;
+    MemoryType  memory_type;
+    std::string symbol_name;
+};
+
+struct GlobalVarAddr
+{
+    RC<GlobalVar> var;
 };
 
 CUJ_NAMESPACE_END(cuj::core)

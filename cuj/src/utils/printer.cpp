@@ -1,5 +1,7 @@
 #include <cassert>
+#include <set>
 
+#include <cuj/core/visit.h>
 #include <cuj/utils/printer.h>
 #include <cuj/utils/scope_guard.h>
 #include <cuj/utils/unreachable.h>
@@ -109,8 +111,32 @@ std::string TextBuilder::get_str() const
 
 void Printer::print(TextBuilder &b, const dsl::FunctionContext &function)
 {
-    auto &args = function.get_core_func()->argument_types;
+    std::set<RC<core::GlobalVar>> global_vars;
+    core::Visitor visitor;
+    visitor.on_global_var_addr = [&](const core::GlobalVarAddr &addr)
+    {
+        global_vars.insert(addr.var);
+    };
+    visitor.visit(*function.get_core_func()->root_block);
 
+    for(auto &var : global_vars)
+    {
+        b.append(var->symbol_name, " : [");
+        switch(var->memory_type)
+        {
+        case core::GlobalVar::MemoryType::Regular:
+            b.append("global");
+            break;
+        case core::GlobalVar::MemoryType::Constant:
+            b.append("constant");
+            break;
+        }
+        b.append("] ");
+        print(b, var->type);
+        b.new_line();
+    }
+
+    auto &args = function.get_core_func()->argument_types;
     b.append("function(");
     for(size_t i = 0; i < function.get_core_func()->argument_types.size(); ++i)
     {
@@ -404,6 +430,11 @@ void Printer::print(TextBuilder &b, const core::CallFunc &call)
         print(b, *call.args[i]);
     }
     b.append(")");
+}
+
+void Printer::print(TextBuilder &b, const core::GlobalVarAddr &global_var_addr)
+{
+    b.append("&(global ", global_var_addr.var->symbol_name, ")");
 }
 
 void Printer::print(TextBuilder &b, const core::Type &type)

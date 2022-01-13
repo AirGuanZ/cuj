@@ -29,6 +29,7 @@ Module *Module::get_current_module()
 Module::Module()
 {
     type_context_ = newRC<TypeContext>(newRC<core::TypeSet>());
+    auto_global_memory_index_ = 0;
 }
 
 RC<FunctionContext> Module::_get_function(size_t index)
@@ -52,6 +53,7 @@ core::Prog Module::_generate_prog() const
 {
     core::Prog ret;
     ret.global_type_set = type_context_->get_type_set();
+    ret.global_vars = global_vars_;
 
     std::set<RC<const core::Func>> all_contextless_functions;
 

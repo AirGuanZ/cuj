@@ -1,12 +1,15 @@
 #pragma once
 
+#include <set>
+
 #include <cuj/core/func.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::core)
 
 struct Prog
 {
-    RC<const TypeSet> global_type_set;
+    std::set<RC<GlobalVar>>     global_vars;
+    RC<const TypeSet>           global_type_set;
     std::vector<RC<const Func>> funcs;
 };
 
