@@ -29,4 +29,10 @@ ref<T> GlobalVariable<T>::get_reference() const
     return get_address().deref();
 }
 
+template<typename T>
+const std::string &GlobalVariable<T>::get_symbol_name() const
+{
+    return var_->symbol_name;
+}
+
 CUJ_NAMESPACE_END(cuj::dsl)

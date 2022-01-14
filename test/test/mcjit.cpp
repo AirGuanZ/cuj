@@ -55,4 +55,30 @@ TEST_CASE("mcjit")
 
     CHECK_C_FUNC_TYPE(const A * (A *),    [](ptr<cxx<A>> a) { return 1 + a; });
     CHECK_C_FUNC_TYPE(void * (const A *), [](ref<cxx<A>> a) { return a.address(); });
+
+    SECTION("global variable")
+    {
+        ScopedModule mod;
+
+        auto global_i32 = allocate_global_memory<i32>();
+
+        Function func = [&]
+        {
+            return global_i32.get_reference();
+        };
+
+        MCJIT mcjit;
+        mcjit.generate(mod);
+
+        auto i32_addr = mcjit.get_global_variable(global_i32);
+        auto func_addr = mcjit.get_function(func);
+
+        REQUIRE(i32_addr);
+        REQUIRE(func_addr);
+        if(i32_addr && func_addr)
+        {
+            *i32_addr = 5;
+            REQUIRE(func_addr() == 5);
+        }
+    }
 }

@@ -280,11 +280,11 @@ std::string generate_ptx()
     
     const auto end_compile_time = std::chrono::steady_clock::now();
 
+    std::cout << ptx_gen.get_ptx() << std::endl;
     std::cout << "record time: "
               << std::chrono::duration_cast<std::chrono::milliseconds>(
                     end_record_time - start_time).count()
               << "ms" << std::endl;
-    
     std::cout << "compile time: "
               << std::chrono::duration_cast<std::chrono::milliseconds>(
                     end_compile_time - end_record_time).count()
@@ -375,7 +375,7 @@ void run()
         throw std::runtime_error(
             "failed to create output image: output.ppm");
     }
-    
+
     fout << "P3\n" << WIDTH << " " << HEIGHT << std::endl << 255 << std::endl;
     for(int i = 0, j = 0; i < WIDTH * HEIGHT; ++i, j += 3)
     {

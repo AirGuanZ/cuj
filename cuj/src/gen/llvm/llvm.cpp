@@ -1115,6 +1115,21 @@ llvm::Value *LLVMIRGenerator::process_intrinsic_call(
         return nullptr;
     }
 
+    if(call.intrinsic == core::Intrinsic::atomic_add_f32)
+    {
+        return llvm_->ir_builder->CreateAtomicRMW(
+            llvm::AtomicRMWInst::FAdd, args[0], args[1],
+            llvm::AtomicOrdering::SequentiallyConsistent);
+    }
+
+    if(call.intrinsic == core::Intrinsic::atomic_add_i32 ||
+       call.intrinsic == core::Intrinsic::atomic_add_u32)
+    {
+        return llvm_->ir_builder->CreateAtomicRMW(
+            llvm::AtomicRMWInst::Add, args[0], args[1],
+            llvm::AtomicOrdering::SequentiallyConsistent);
+    }
+
     if(target_ == Target::Native)
     {
         return process_native_intrinsics(

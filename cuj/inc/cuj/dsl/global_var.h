@@ -19,6 +19,8 @@ public:
     ptr<T> get_address() const;
 
     ref<T> get_reference() const;
+
+    const std::string &get_symbol_name() const;
 };
 
 CUJ_NAMESPACE_END(cuj::dsl)

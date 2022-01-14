@@ -40,11 +40,22 @@ public:
         requires (!std::is_function_v<Ret>)
     auto get_function(const dsl::Function<Ret(Args...)> &func) const;
 
+    template<typename T>
+    T *get_global_variable(const std::string &symbol_name) const;
+
+    template<typename T>
+    auto get_global_variable(const dsl::GlobalVariable<T> &var) const;
+
+    template<typename T, typename U>
+    auto get_global_variable(const dsl::GlobalVariable<U> &var) const;
+
 private:
 
     struct MCJITData;
 
     void *get_function_impl(const std::string &symbol_name) const;
+
+    void *get_global_variable_impl(const std::string &symbol_name) const;
 
     Options    opts_;
     MCJITData *llvm_data_ = nullptr;

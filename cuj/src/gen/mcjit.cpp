@@ -239,6 +239,12 @@ void *MCJIT::get_function_impl(const std::string &symbol_name) const
         llvm_data_->exec_engine->getFunctionAddress(symbol_name));
 }
 
+void *MCJIT::get_global_variable_impl(const std::string &symbol_name) const
+{
+    return reinterpret_cast<void *>(
+        llvm_data_->exec_engine->getGlobalValueAddress(symbol_name));
+}
+
 CUJ_NAMESPACE_END(cuj::gen)
 
 #ifdef _MSC_VER

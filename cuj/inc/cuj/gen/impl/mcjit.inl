@@ -147,7 +147,7 @@ template<typename T>
     requires std::is_function_v<T>
 T *MCJIT::get_function(const std::string &symbol_name) const
 {
-    return reinterpret_cast<T *>(get_function_impl(symbol_name));
+    return static_cast<T *>(get_function_impl(symbol_name));
 }
 
 template<typename T, typename Ret, typename...Args>
@@ -169,6 +169,28 @@ auto MCJIT::get_function(const dsl::Function<Ret(Args...)> &func) const
     using CFunctionType =
         typename mcjit_detail::FunctionTypeToCFunctionType<Ret(Args...)>::Type;
     return this->get_function<CFunctionType>(func);
+}
+
+template<typename T>
+T *MCJIT::get_global_variable(const std::string &symbol_name) const
+{
+    return static_cast<T *>(get_global_variable_impl(symbol_name));
+}
+
+template<typename T>
+auto MCJIT::get_global_variable(const dsl::GlobalVariable<T> &var) const
+{
+    using Type = typename mcjit_detail::ArgToCArg<T>::Type;
+    return static_cast<Type *>(
+        get_global_variable_impl(var.get_symbol_name()));
+}
+
+template<typename T, typename U>
+auto MCJIT::get_global_variable(const dsl::GlobalVariable<U> &var) const
+{
+    static_assert(mcjit_detail::is_arg_compatible<T*, dsl::ptr<U>>());
+    return static_cast<T *>(
+        get_global_variable_impl(var.get_symbol_name()));
 }
 
 CUJ_NAMESPACE_END(cuj::gen)
