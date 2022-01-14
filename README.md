@@ -327,6 +327,20 @@ ref f = *e;          // f: ref<i32>
 
 `var<T>` can simply be treated like `T`.
 
+## Global Variable
+
+```cpp
+ScopedModule mod;
+
+// global variable can only be allocated within a module
+auto global_i32_arr = allocate_global_memory<arr<i32, 16>>("my_symbol_name");
+
+// constant memory in PTX
+auto constant_f32 = allocate_constant_memory<f32>("constant_params");
+```
+
+Note that `allocate_constant_memory` allocates constant memory when using PTX backend and allocates normal global memory when using MC backend.
+
 ## Builtin Operator
 
 ### Bitwise Cast
@@ -596,6 +610,16 @@ T select(
     const boolean &cond,
     const T       &a,
     const T       &b);
+```
+
+### Atomic
+
+```cpp
+// in namespace cuj::cstd
+
+i32 atomic_add(ptr<i32> dst, i32 val);
+u32 atomic_add(ptr<u32> dst, u32 val);
+f32 atomic_add(ptr<f32> dst, f32 val);
 ```
 
 ### CUDA
