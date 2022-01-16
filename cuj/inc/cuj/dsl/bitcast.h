@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cuj/dsl/variable.h>
 #include <cuj/dsl/variable_forward.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::dsl)
@@ -33,5 +34,10 @@ To bitcast(From from);
 template<typename To, typename From>
     requires is_cuj_ref_v<From>
 To bitcast(From from);
+
+// var -> *
+
+template<typename To, typename From>
+To bitcast(var<From> from);
 
 CUJ_NAMESPACE_END(cuj::dsl)

@@ -65,4 +65,11 @@ To bitcast(From from)
     return dsl::bitcast<To>(from_val);
 }
 
+template<typename To, typename From>
+To bitcast(var<From> from)
+{
+    From from_val = from;
+    return dsl::bitcast<To>(from_val);
+}
+
 CUJ_NAMESPACE_END(cuj::dsl)
