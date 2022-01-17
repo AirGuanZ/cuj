@@ -48,8 +48,6 @@ TEST_CASE("control flow")
         MCJIT mcjit;
         mcjit.generate(mod);
 
-        printf("%s\n", mcjit.get_llvm_string().c_str());
-
         auto fib_c = mcjit.get_function(fib);
         REQUIRE(fib_c);
         if(fib_c)
