@@ -13,6 +13,12 @@ template<typename To, typename From>
              (sizeof(typename To::RawType) == sizeof(typename From::RawType))
 To bitcast(From from);
 
+// ptr to ptr
+
+template<typename To, typename From>
+    requires is_cuj_pointer_v<To> && is_cuj_pointer_v<From>
+To bitcast(From from);
+
 // num -> ptr
 
 template<typename To>

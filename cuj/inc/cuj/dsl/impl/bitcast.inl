@@ -33,6 +33,13 @@ To bitcast(From from)
 {
     return bitcast_detail::bitcast_impl<To>(from);
 }
+    
+template<typename To, typename From>
+    requires is_cuj_pointer_v<To> && is_cuj_pointer_v<From>
+To bitcast(From from)
+{
+    return bitcast_detail::bitcast_impl<To>(from);
+}
 
 template<typename To>
     requires is_cuj_pointer_v<To>
