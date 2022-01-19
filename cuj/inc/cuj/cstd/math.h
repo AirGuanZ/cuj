@@ -58,6 +58,12 @@ boolean isfinite(f64 x);
 boolean isinf(f64 x);
 boolean isnan(f64 x);
 
+i32 min(i32 a, i32 b);
+i32 max(i32 a, i32 b);
+
+i64 min(i64 a, i64 b);
+i64 max(i64 a, i64 b);
+
 f32 min(f32 a, f32 b);
 f32 max(f32 a, f32 b);
 

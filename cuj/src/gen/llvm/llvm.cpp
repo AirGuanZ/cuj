@@ -1156,6 +1156,34 @@ llvm::Value *LLVMIRGenerator::process_intrinsic_call(
             llvm::AtomicOrdering::SequentiallyConsistent);
     }
 
+    if(call.intrinsic == core::Intrinsic::f32_min ||
+       call.intrinsic == core::Intrinsic::f64_min)
+    {
+        auto comp = llvm_->ir_builder->CreateFCmpOLT(args[0], args[1]);
+        return llvm_->ir_builder->CreateSelect(comp, args[0], args[1]);
+    }
+
+    if(call.intrinsic == core::Intrinsic::f32_max ||
+       call.intrinsic == core::Intrinsic::f64_max)
+    {
+        auto comp = llvm_->ir_builder->CreateFCmpOGT(args[0], args[1]);
+        return llvm_->ir_builder->CreateSelect(comp, args[0], args[1]);
+    }
+    
+    if(call.intrinsic == core::Intrinsic::i32_min ||
+       call.intrinsic == core::Intrinsic::i64_min)
+    {
+        auto comp = llvm_->ir_builder->CreateICmpSLT(args[0], args[1]);
+        return llvm_->ir_builder->CreateSelect(comp, args[0], args[1]);
+    }
+
+    if(call.intrinsic == core::Intrinsic::i32_max ||
+       call.intrinsic == core::Intrinsic::i64_max)
+    {
+        auto comp = llvm_->ir_builder->CreateICmpSGT(args[0], args[1]);
+        return llvm_->ir_builder->CreateSelect(comp, args[0], args[1]);
+    }
+
     if(target_ == Target::Native)
     {
         return process_native_intrinsics(

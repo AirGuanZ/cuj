@@ -80,20 +80,6 @@ llvm::Value *process_ptx_intrinsics(
         MAP_INTRINSIC(f64_trunc, nvvm_trunc_d)
 
 #undef MAP_INTRINSIC
-
-        if(intrinsic_type == core::Intrinsic::f32_min ||
-           intrinsic_type == core::Intrinsic::f64_min)
-        {
-            auto comp = ir_builder.CreateFCmpOLT(args[0], args[1]);
-            return ir_builder.CreateSelect(comp, args[0], args[1]);
-        }
-
-        if(intrinsic_type == core::Intrinsic::f32_max ||
-           intrinsic_type == core::Intrinsic::f64_max)
-        {
-            auto comp = ir_builder.CreateFCmpOGT(args[0], args[1]);
-            return ir_builder.CreateSelect(comp, args[0], args[1]);
-        }
     }
 
     if(auto func_name = libdev::get_libdevice_function_name(intrinsic_type))

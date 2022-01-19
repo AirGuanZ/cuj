@@ -125,7 +125,7 @@ llvm::Value *process_native_intrinsics(
     CASE_LLVM_INTRINSICS(round, round,   f32);
     CASE_LLVM_INTRINSICS(min,   minimum, f32);
     CASE_LLVM_INTRINSICS(max,   maximum, f32);
-        
+
     CASE_LLVM_INTRINSICS(abs,   fabs,    f64);
     CASE_LLVM_INTRINSICS(exp,   exp,     f64);
     CASE_LLVM_INTRINSICS(exp2,  exp2,    f64);

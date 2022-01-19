@@ -418,6 +418,38 @@ boolean isnan(f64 x)
     }) != i32(0);
 }
 
+i32 min(i32 a, i32 b)
+{
+    return i32::_from_expr(core::CallFunc{
+        .intrinsic = core::Intrinsic::i32_min,
+        .args      = { newRC<core::Expr>(a._load()), newRC<core::Expr>(b._load()) }
+    });
+}
+
+i32 max(i32 a, i32 b)
+{
+    return i32::_from_expr(core::CallFunc{
+        .intrinsic = core::Intrinsic::i32_max,
+        .args      = { newRC<core::Expr>(a._load()), newRC<core::Expr>(b._load()) }
+    });
+}
+
+i64 min(i64 a, i64 b)
+{
+    return i64::_from_expr(core::CallFunc{
+        .intrinsic = core::Intrinsic::i64_min,
+        .args      = { newRC<core::Expr>(a._load()), newRC<core::Expr>(b._load()) }
+    });
+}
+
+i64 max(i64 a, i64 b)
+{
+    return i64::_from_expr(core::CallFunc{
+        .intrinsic = core::Intrinsic::i64_max,
+        .args      = { newRC<core::Expr>(a._load()), newRC<core::Expr>(b._load()) }
+    });
+}
+
 f32 min(f32 a, f32 b)
 {
     return f32::_from_expr(core::CallFunc{
