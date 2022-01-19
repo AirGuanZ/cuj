@@ -66,6 +66,7 @@ struct LLVMIRGenerator::LLVMData
 
     std::stack<llvm::BasicBlock *> break_dsts;
     std::stack<llvm::BasicBlock *> continue_dsts;
+    std::stack<llvm::BasicBlock *> scope_exits;
 };
 
 LLVMIRGenerator::~LLVMIRGenerator()
@@ -433,6 +434,7 @@ void LLVMIRGenerator::clear_temp_function_data()
     llvm_->arg_allocas.clear();
     llvm_->break_dsts = {};
     llvm_->continue_dsts = {};
+    llvm_->scope_exits = {};
 }
 
 void LLVMIRGenerator::generate_local_allocs(const core::Func *func)
@@ -717,6 +719,30 @@ void LLVMIRGenerator::generate(const core::Switch &switch_s)
 void LLVMIRGenerator::generate(const core::CallFuncStat &call)
 {
     generate(call.call_expr);
+}
+
+void LLVMIRGenerator::generate(const core::MakeScope &make_scope)
+{
+    auto exit_block = llvm::BasicBlock::Create(*llvm_->context, "exit_scope");
+
+    llvm_->scope_exits.push(exit_block);
+    generate(*make_scope.body);
+    llvm_->scope_exits.pop();
+
+    llvm_->ir_builder->CreateBr(exit_block);
+    llvm_->current_function->getBasicBlockList().push_back(exit_block);
+    llvm_->ir_builder->SetInsertPoint(exit_block);
+}
+
+void LLVMIRGenerator::generate(const core::ExitScope &exit_scope)
+{
+    assert(!llvm_->scope_exits.empty());
+    llvm_->ir_builder->CreateBr(llvm_->scope_exits.top());
+
+    auto after_exit = llvm::BasicBlock::Create(
+        *llvm_->context, "after_exit_scope");
+    llvm_->current_function->getBasicBlockList().push_back(after_exit);
+    llvm_->ir_builder->SetInsertPoint(after_exit);
 }
 
 llvm::Value *LLVMIRGenerator::generate(const core::Expr &expr)

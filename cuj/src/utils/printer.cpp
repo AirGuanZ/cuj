@@ -297,6 +297,22 @@ void Printer::print(TextBuilder &b, const core::CallFuncStat &call)
     b.new_line();
 }
 
+void Printer::print(TextBuilder &b, const core::MakeScope &make_scope)
+{
+    b.appendl("make_scope");
+    b.appendl("{");
+    b.with_indent([&]
+    {
+        print(b, *make_scope.body);
+    });
+    b.appendl("}");
+}
+
+void Printer::print(TextBuilder &b, const core::ExitScope &exit_scope)
+{
+    b.appendl("exit_scope");
+}
+
 void Printer::print(TextBuilder &b, const core::Expr &e)
 {
     e.match([&](auto &_e) { print(b, _e); });

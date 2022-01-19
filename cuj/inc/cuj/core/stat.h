@@ -14,6 +14,8 @@ struct Break;
 struct Continue;
 struct Switch;
 struct CallFuncStat;
+struct MakeScope;
+struct ExitScope;
 
 using Stat = Variant<
     Store,
@@ -25,7 +27,9 @@ using Stat = Variant<
     Break,
     Continue,
     Switch,
-    CallFuncStat>;
+    CallFuncStat,
+    MakeScope,
+    ExitScope>;
 
 struct Store
 {
@@ -90,6 +94,16 @@ struct Switch
 struct CallFuncStat
 {
     CallFunc call_expr;
+};
+
+struct MakeScope
+{
+    RC<Block> body;
+};
+
+struct ExitScope
+{
+    
 };
 
 CUJ_NAMESPACE_END(cuj::core)

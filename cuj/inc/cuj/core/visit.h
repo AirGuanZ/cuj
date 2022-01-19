@@ -21,6 +21,8 @@ public:
     void visit(const Continue     &continue_s);
     void visit(const Switch       &switch_s);
     void visit(const CallFuncStat &call);
+    void visit(const MakeScope    &make_scope);
+    void visit(const ExitScope    &exit_scope);
 
     void visit(const Expr                        &expr);
     void visit(const FuncArgAddr                 &expr);
@@ -53,6 +55,8 @@ public:
     std::function<void(const Continue &)>     on_continue;
     std::function<void(const Switch &)>       on_switch;
     std::function<void(const CallFuncStat &)> on_call_func_stat;
+    std::function<void(const MakeScope &)>    on_make_scope;
+    std::function<void(const ExitScope &)>    on_exit_scope;
     
     std::function<void(const Expr                        &)> on_expr;
     std::function<void(const FuncArgAddr                 &)> on_func_arg_addr;

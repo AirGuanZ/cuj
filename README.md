@@ -475,6 +475,37 @@ auto f = function([](i32 a, i32 b)
 });
 ```
 
+### ExitScope
+
+```cpp
+i32 inlined_native_func(i32 x)
+{
+    $declare_scope;
+    i32 ret;
+    $if(x <= 0)
+    {
+        ret = 4;
+        $exit_scope;
+    };
+    $if(x == 9)
+    {
+        ret = 99;
+        $exit_scope;
+    }
+    ret = 100;
+    return ret;
+}
+
+auto f = function<i32>([&](i32 x)
+{
+    $if(x == 1000)
+    {
+        $return(1999);
+    };
+    $return(inlined_native_func(x));
+});
+```
+
 ## Backend
 
 ### MC

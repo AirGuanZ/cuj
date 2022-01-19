@@ -74,6 +74,10 @@ private:
 
     void print(TextBuilder &b, const core::CallFuncStat &call);
 
+    void print(TextBuilder &b, const core::MakeScope &make_scope);
+
+    void print(TextBuilder &b, const core::ExitScope &exit_scope);
+
     // expression
 
     void print(TextBuilder &b, const core::Expr &e);

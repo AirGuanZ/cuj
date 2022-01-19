@@ -96,6 +96,10 @@ private:
 
     void generate(const core::CallFuncStat &call);
 
+    void generate(const core::MakeScope &make_scope);
+
+    void generate(const core::ExitScope &exit_scope);
+
     llvm::Value *generate(const core::Expr &expr);
 
     llvm::Value *generate(const core::FuncArgAddr &expr);

@@ -89,6 +89,19 @@ void Visitor::visit(const CallFuncStat &call)
     visit(call.call_expr);
 }
 
+void Visitor::visit(const MakeScope &make_scope)
+{
+    if(on_make_scope)
+        on_make_scope(make_scope);
+    visit(*make_scope.body);
+}
+
+void Visitor::visit(const ExitScope &exit_scope)
+{
+    if(on_exit_scope)
+        on_exit_scope(exit_scope);
+}
+
 void Visitor::visit(const Expr &expr)
 {
     if(on_expr)

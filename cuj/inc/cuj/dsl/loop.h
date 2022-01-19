@@ -30,8 +30,8 @@ public:
     void operator+(F &&body_func);
 };
 
-void _add_break_statement();
-void _add_continue_statement();
+inline void _add_break_statement();
+inline void _add_continue_statement();
 
 #define CUJ_LOOP ::cuj::dsl::LoopBuilder{}+[&]()->void
 #define CUJ_WHILE(COND)                                                         \
