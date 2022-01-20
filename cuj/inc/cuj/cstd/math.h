@@ -70,6 +70,14 @@ f32 max(f32 a, f32 b);
 f64 min(f64 a, f64 b);
 f64 max(f64 a, f64 b);
 
+f32 clamp(f32 x, f32 minv, f32 maxv);
+f64 clamp(f64 x, f64 minv, f64 maxv);
+i32 clamp(i32 x, i32 minv, i32 maxv);
+i64 clamp(i64 x, i64 minv, i64 maxv);
+
+f32 saturate(f32 v);
+f64 saturate(f64 v);
+
 template<typename T> requires dsl::is_cuj_var_v<T>
 T select(
     const boolean &cond,

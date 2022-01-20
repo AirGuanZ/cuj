@@ -6,6 +6,7 @@ TEST_CASE("math")
     {
         using D1 = f32(*)(f32);
         using D2 = f32(*)(f32, f32);
+        using D3 = f32(*)(f32, f32, f32);
 
         mcjit_require(D1(&cstd::abs), -0.2f, 0.2f);
         mcjit_require(D2(&cstd::mod), 4.6f, 1.7f, std::fmod(4.6f, 1.7f));
@@ -30,6 +31,10 @@ TEST_CASE("math")
         mcjit_require(D1(&cstd::floor), -0.7f, -1.0f);
         mcjit_require(D1(&cstd::trunc), -2.8f, -2.0f);
         mcjit_require(D1(&cstd::round), 0.6f, 1.0f);
+        mcjit_require(D3(&cstd::clamp), 0.5f, 0.1f, 0.6f, 0.5f);
+        mcjit_require(D3(&cstd::clamp), 0.0f, 0.1f, 0.6f, 0.1f);
+        mcjit_require(D3(&cstd::clamp), 0.7f, 0.1f, 0.6f, 0.6f);
+        mcjit_require(D1(&cstd::saturate), -0.4f, 0.0f);
 
         constexpr float f32_inf = std::numeric_limits<float>::infinity();
         constexpr float f32_nan = std::numeric_limits<float>::quiet_NaN();

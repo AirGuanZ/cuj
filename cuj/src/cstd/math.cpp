@@ -482,4 +482,40 @@ f64 max(f64 a, f64 b)
     });
 }
 
+f32 clamp(f32 x, f32 minv, f32 maxv)
+{
+    return max(minv, min(x, maxv));
+}
+
+f64 clamp(f64 x, f64 minv, f64 maxv)
+{
+    return max(minv, min(x, maxv));
+}
+
+i32 clamp(i32 x, i32 minv, i32 maxv)
+{
+    return max(minv, min(x, maxv));
+}
+
+i64 clamp(i64 x, i64 minv, i64 maxv)
+{
+    return max(minv, min(x, maxv));
+}
+
+f32 saturate(f32 v)
+{
+    return f32::_from_expr(core::CallFunc{
+        .intrinsic = core::Intrinsic::f32_saturate,
+        .args      = { newRC<core::Expr>(v._load()) }
+    });
+}
+
+f64 saturate(f64 v)
+{
+    return f64::_from_expr(core::CallFunc{
+        .intrinsic = core::Intrinsic::f64_saturate,
+        .args      = { newRC<core::Expr>(v._load()) }
+    });
+}
+
 CUJ_NAMESPACE_END(cuj::cstd)

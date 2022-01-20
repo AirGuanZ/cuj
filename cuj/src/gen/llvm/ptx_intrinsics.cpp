@@ -64,23 +64,34 @@ llvm::Value *process_ptx_intrinsics(
                 llvm::Intrinsic::TO, {}, args);                                 \
         }
 
-        MAP_INTRINSIC(f32_sin,   nvvm_sin_approx_ftz_f)
-        MAP_INTRINSIC(f32_cos,   nvvm_cos_approx_ftz_f)
-        MAP_INTRINSIC(f32_sqrt,  nvvm_sqrt_approx_ftz_f)
-        MAP_INTRINSIC(f32_rsqrt, nvvm_rsqrt_approx_ftz_f)
-        MAP_INTRINSIC(f32_floor, nvvm_floor_ftz_f)
-        MAP_INTRINSIC(f32_ceil,  nvvm_ceil_ftz_f)
-        MAP_INTRINSIC(f32_round, nvvm_round_ftz_f)
-        MAP_INTRINSIC(f32_trunc, nvvm_trunc_ftz_f)
-            
+        MAP_INTRINSIC(f32_sin,      nvvm_sin_approx_ftz_f)
+        MAP_INTRINSIC(f32_cos,      nvvm_cos_approx_ftz_f)
+        MAP_INTRINSIC(f32_sqrt,     nvvm_sqrt_approx_ftz_f)
+        MAP_INTRINSIC(f32_rsqrt,    nvvm_rsqrt_approx_ftz_f)
+        MAP_INTRINSIC(f32_floor,    nvvm_floor_ftz_f)
+        MAP_INTRINSIC(f32_ceil,     nvvm_ceil_ftz_f)
+        MAP_INTRINSIC(f32_round,    nvvm_round_ftz_f)
+        MAP_INTRINSIC(f32_trunc,    nvvm_trunc_ftz_f)
+        MAP_INTRINSIC(f32_saturate, nvvm_saturate_ftz_f)
+
         MAP_INTRINSIC(f64_rsqrt, nvvm_rsqrt_approx_d)
-        MAP_INTRINSIC(f64_floor, nvvm_floor_d)
-        MAP_INTRINSIC(f64_ceil,  nvvm_ceil_d)
-        MAP_INTRINSIC(f64_round, nvvm_round_d)
-        MAP_INTRINSIC(f64_trunc, nvvm_trunc_d)
+    }
+    else
+    {
+        MAP_INTRINSIC(f32_floor,    nvvm_floor_f)
+        MAP_INTRINSIC(f32_ceil,     nvvm_ceil_f)
+        MAP_INTRINSIC(f32_round,    nvvm_round_f)
+        MAP_INTRINSIC(f32_trunc,    nvvm_trunc_f)
+        MAP_INTRINSIC(f32_saturate, nvvm_saturate_f)
+    }
+
+    MAP_INTRINSIC(f64_floor,    nvvm_floor_d)
+    MAP_INTRINSIC(f64_ceil,     nvvm_ceil_d)
+    MAP_INTRINSIC(f64_round,    nvvm_round_d)
+    MAP_INTRINSIC(f64_trunc,    nvvm_trunc_d)
+    MAP_INTRINSIC(f64_saturate, nvvm_saturate_d)
 
 #undef MAP_INTRINSIC
-    }
 
     if(auto func_name = libdev::get_libdevice_function_name(intrinsic_type))
     {

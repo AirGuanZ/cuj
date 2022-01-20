@@ -149,6 +149,18 @@ llvm::Value *process_native_intrinsics(
         break;
     }
 
+    if(intrinsic_type == core::Intrinsic::f32_saturate ||
+       intrinsic_type == core::Intrinsic::f64_saturate)
+    {
+        auto x = args[0];
+        auto minv = llvm::ConstantFP::get(x->getType(), 0.0f);
+        auto maxv = llvm::ConstantFP::get(x->getType(), 1.0f);
+        auto cmp_left = ir_builder.CreateFCmpOLT(minv, x);
+        auto val_left = ir_builder.CreateSelect(cmp_left, x, minv);
+        auto cmp_right = ir_builder.CreateFCmpOGT(val_left, maxv);
+        return ir_builder.CreateSelect(cmp_right, maxv, val_left);
+    }
+
     auto func = get_intrinsics_function(top_module, intrinsic_type);
     return ir_builder.CreateCall(func, args);
 }
