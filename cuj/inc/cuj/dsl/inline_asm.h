@@ -32,4 +32,16 @@ void inline_asm(
     const std::vector<InputConstraint> &input_constraints,
     const std::vector<std::string> &clobber_constraints);
 
+void inline_asm(
+    std::string asm_code,
+    const std::vector<OutputConstraint> &output_constraints,
+    const std::vector<InputConstraint> &input_constraints,
+    const std::vector<std::string> &clobber_constraints);
+
+void inline_asm_volatile(
+    std::string asm_code,
+    const std::vector<OutputConstraint> &output_constraints,
+    const std::vector<InputConstraint> &input_constraints,
+    const std::vector<std::string> &clobber_constraints);
+
 CUJ_NAMESPACE_END(cuj::dsl)

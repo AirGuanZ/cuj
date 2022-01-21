@@ -48,4 +48,26 @@ void inline_asm(
         ->append_statement(core::Stat{ std::move(stat) });
 }
 
+void inline_asm(
+    std::string asm_code,
+    const std::vector<OutputConstraint> &output_constraints,
+    const std::vector<InputConstraint> &input_constraints,
+    const std::vector<std::string> &clobber_constraints)
+{
+    inline_asm(
+        std::move(asm_code), false,
+        output_constraints, input_constraints, clobber_constraints);
+}
+
+void inline_asm_volatile(
+    std::string asm_code,
+    const std::vector<OutputConstraint> &output_constraints,
+    const std::vector<InputConstraint> &input_constraints,
+    const std::vector<std::string> &clobber_constraints)
+{
+    inline_asm(
+        std::move(asm_code), true,
+        output_constraints, input_constraints, clobber_constraints);
+}
+
 CUJ_NAMESPACE_END(cuj::dsl)
