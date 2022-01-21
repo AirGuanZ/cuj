@@ -13,6 +13,7 @@
 #include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LegacyPassManager.h>
+#include <llvm/IR/InlineAsm.h>
 #include <llvm/IR/IntrinsicsNVPTX.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Transforms/InstCombine/InstCombine.h>
@@ -28,6 +29,7 @@
 #include <cuj/utils/unreachable.h>
 
 #include "helper.h"
+#include "libdevice_man.h"
 #include "libdevice_man.h"
 #include "native_intrinsics.h"
 #include "ptx_intrinsics.h"
@@ -375,9 +377,18 @@ void LLVMIRGenerator::declare_function(const core::Func *func)
     }
 
     auto func_type = get_function_type(*func);
-    auto llvm_func = llvm::Function::Create(
-        func_type, llvm::GlobalValue::ExternalLinkage,
-        symbol_name, llvm_->top_module.get());
+    llvm::Function *llvm_func;
+    if(func->is_declaration)
+    {
+        llvm_func = llvm::cast<llvm::Function>(llvm_->top_module->getOrInsertFunction(
+            symbol_name, func_type).getCallee());
+    }
+    else
+    {
+        llvm_func = llvm::Function::Create(
+            func_type, llvm::GlobalValue::ExternalLinkage,
+            symbol_name, llvm_->top_module.get());
+    }
 
     if(target_ == Target::PTX)
         llvm_func->addFnAttr("nvptx-f32ftz", "true");
@@ -405,6 +416,9 @@ void LLVMIRGenerator::declare_function(const core::Func *func)
 
 void LLVMIRGenerator::define_function(const core::Func *func)
 {
+    if(func->is_declaration)
+        return;
+
     clear_temp_function_data();
     llvm_->current_function = llvm_->llvm_functions_.at(func).llvm_function;
     CUJ_SCOPE_EXIT{ llvm_->current_function = nullptr; };
@@ -743,6 +757,52 @@ void LLVMIRGenerator::generate(const core::ExitScope &exit_scope)
         *llvm_->context, "after_exit_scope");
     llvm_->current_function->getBasicBlockList().push_back(after_exit);
     llvm_->ir_builder->SetInsertPoint(after_exit);
+}
+
+void LLVMIRGenerator::generate(const core::InlineAsm &inline_asm)
+{
+    std::vector<llvm::Value *> input_values;
+    for(auto &iv : inline_asm.input_values)
+        input_values.push_back(generate(iv));
+
+    std::vector<llvm::Value *> output_addresses;
+    for(auto &oa : inline_asm.output_addresses)
+        output_addresses.push_back(generate(oa));
+
+    std::vector<llvm::Type *> llvm_output_types;
+    for(auto oa : output_addresses)
+    {
+        auto oat = llvm::dyn_cast<llvm::PointerType>(oa->getType());
+        llvm_output_types.push_back(oat->getElementType());
+    }
+    auto llvm_output_struct_type =
+        llvm::StructType::get(*llvm_->context, llvm_output_types);
+
+    std::vector<llvm::Type *> llvm_input_types;
+    for(auto iv : input_values)
+        llvm_input_types.push_back(iv->getType());
+
+    auto asm_func_type = llvm::FunctionType::get(
+        llvm_output_struct_type, llvm_input_types, false);
+
+    std::string constraints = inline_asm.output_constraints;
+    if(!constraints.empty() && !inline_asm.input_constraints.empty())
+        constraints += ",";
+    constraints += inline_asm.input_constraints;
+    if(!constraints.empty() && !inline_asm.clobber_constraints.empty())
+        constraints += ",";
+    constraints += inline_asm.clobber_constraints;
+    auto asm_callee = llvm::InlineAsm::get(
+        asm_func_type, inline_asm.asm_string,
+        constraints, inline_asm.side_effects);
+
+    auto output_value = llvm_->ir_builder->CreateCall(asm_callee, input_values);
+    for(size_t i = 0; i < output_addresses.size(); ++i)
+    {
+        auto val = llvm_->ir_builder->CreateExtractValue(output_value, i);
+        auto ptr = output_addresses[i];
+        llvm_->ir_builder->CreateStore(val, ptr);
+    }
 }
 
 llvm::Value *LLVMIRGenerator::generate(const core::Expr &expr)
@@ -1169,6 +1229,8 @@ llvm::Value *LLVMIRGenerator::process_intrinsic_call(
         auto comp = llvm_->ir_builder->CreateFCmpOGT(args[0], args[1]);
         return llvm_->ir_builder->CreateSelect(comp, args[0], args[1]);
     }
+
+
     
     if(call.intrinsic == core::Intrinsic::i32_min ||
        call.intrinsic == core::Intrinsic::i64_min)

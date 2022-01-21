@@ -28,6 +28,8 @@ struct Func
 
     std::vector<const Type *> local_alloc_types;
     RC<Block>                 root_block;
+
+    bool is_declaration = true;
 };
 
 CUJ_NAMESPACE_END(cuj::core)

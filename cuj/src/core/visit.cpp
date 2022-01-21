@@ -102,6 +102,16 @@ void Visitor::visit(const ExitScope &exit_scope)
         on_exit_scope(exit_scope);
 }
 
+void Visitor::visit(const InlineAsm &inline_asm)
+{
+    if(on_inline_asm)
+        on_inline_asm(inline_asm);
+    for(auto &i : inline_asm.input_values)
+        visit(i);
+    for(auto &o : inline_asm.output_addresses)
+        visit(o);
+}
+
 void Visitor::visit(const Expr &expr)
 {
     if(on_expr)

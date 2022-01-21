@@ -151,4 +151,9 @@ RC<const core::Func> FunctionContext::get_core_func() const
     return func_;
 }
 
+void FunctionContext::mark_as_non_declaration()
+{
+    func_->is_declaration = false;
+}
+
 CUJ_NAMESPACE_END(cuj::dsl)

@@ -313,6 +313,30 @@ void Printer::print(TextBuilder &b, const core::ExitScope &exit_scope)
     b.appendl("exit_scope");
 }
 
+void Printer::print(TextBuilder &b, const core::InlineAsm &inline_asm)
+{
+    b.append("asm ");
+    if(inline_asm.side_effects)
+        b.append("side_effects ");
+    b.append(inline_asm.asm_string, " ");
+    b.append(inline_asm.output_constraints, " { ");
+    for(size_t i = 0; i < inline_asm.output_addresses.size(); ++i)
+    {
+        if(i > 0)
+            b.append(", ");
+        print(b, inline_asm.output_addresses[i]);
+    }
+    b.append(" } ", inline_asm.input_constraints, " { ");
+    for(size_t i = 0; i < inline_asm.input_values.size(); ++i)
+    {
+        if(i > 0)
+            b.append(", ");
+        print(b, inline_asm.input_values[i]);
+    }
+    b.append(" }", inline_asm.clobber_constraints);
+    b.new_line();
+}
+
 void Printer::print(TextBuilder &b, const core::Expr &e)
 {
     e.match([&](auto &_e) { print(b, _e); });

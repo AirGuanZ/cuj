@@ -100,6 +100,8 @@ private:
 
     void generate(const core::ExitScope &exit_scope);
 
+    void generate(const core::InlineAsm &inline_asm);
+
     llvm::Value *generate(const core::Expr &expr);
 
     llvm::Value *generate(const core::FuncArgAddr &expr);

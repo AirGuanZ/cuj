@@ -506,6 +506,19 @@ auto f = function<i32>([&](i32 x)
 });
 ```
 
+## Inline Asm
+
+```cpp
+i32 x, y, z, w;
+inline_asm(
+	"...", // asm code
+	true,  // volatile
+    { { "=r", x }, { "=r", y } }, // output constraints
+    { { "r", z }, { "r", w } },   // input constraints
+    { "cc" }                      // clobber constraints
+);
+```
+
 ## Backend
 
 ### MC

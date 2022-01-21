@@ -121,6 +121,8 @@ void Function<Ret(Args...)>::define_impl(F &&body_func)
     PointerTempVarContext::push_context(&ptr_temp_ctx);
     CUJ_SCOPE_EXIT{ PointerTempVarContext::pop_context(); };
 
+    CUJ_SCOPE_SUCCESS{ func_ctx.mark_as_non_declaration(); };
+
     auto type_ctx = func_ctx.get_type_context();
 
     std::tuple<ptr<arg_to_var_t<Args>>...> arg_pointers;
@@ -292,24 +294,24 @@ Ret Function<Ret(Args...)>::operator()(Args...args)
     }
     else if constexpr(is_cuj_ref_v<Ret>)
     {
-        auto ptr = ptr<remove_reference_t<Ret>>::_from_expr(std::move(call));
-        return Ret::_from_ptr(ptr);
+        auto p = ptr<remove_reference_t<Ret>>::_from_expr(std::move(call));
+        return Ret::_from_ptr(p);
     }
     else if constexpr(is_cuj_class_v<Ret>)
     {
         core::SaveClassIntoLocalAlloc alloc = {
             .class_ptr_type = type_ctx->get_type<ptr<Ret>>(),
-            .class_val      = std::move(call)
+            .class_val      = newRC<core::Expr>(std::move(call))
         };
-        return *ptr<Ret>::from_expr(std::move(alloc));
+        return *ptr<Ret>::_from_expr(std::move(alloc));
     }
     else if constexpr(is_cuj_array_v<Ret>)
     {
         core::SaveArrayIntoLocalAlloc alloc = {
             .array_ptr_type = type_ctx->get_type<ptr<Ret>>(),
-            .array_val      = std::move(call)
+            .array_val      = newRC<core::Expr>(std::move(call))
         };
-        return *ptr<Ret>::from_expr(std::move(alloc));
+        return *ptr<Ret>::_from_expr(std::move(alloc));
     }
     else
     {

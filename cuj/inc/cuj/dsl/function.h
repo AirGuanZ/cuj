@@ -131,6 +131,8 @@ public:
 
     RC<const core::Func> get_core_func() const;
 
+    void mark_as_non_declaration();
+
 private:
 
     RC<core::Func>  func_;

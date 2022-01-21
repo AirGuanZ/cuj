@@ -10,6 +10,7 @@
 #include <cuj/dsl/function.h>
 #include <cuj/dsl/global_var.h>
 #include <cuj/dsl/if.h>
+#include <cuj/dsl/inline_asm.h>
 #include <cuj/dsl/loop.h>
 #include <cuj/dsl/module.h>
 #include <cuj/dsl/pointer.h>
@@ -31,6 +32,7 @@
 #include <cuj/dsl/impl/function.inl>
 #include <cuj/dsl/impl/global_var.inl>
 #include <cuj/dsl/impl/if.inl>
+#include <cuj/dsl/impl/inline_asm.inl>
 #include <cuj/dsl/impl/loop.inl>
 #include <cuj/dsl/impl/pointer.inl>
 #include <cuj/dsl/impl/pointer_reference.inl>
@@ -69,6 +71,8 @@ using dsl::arr;
 using dsl::cxx;
 
 using dsl::bitcast;
+
+using dsl::inline_asm;
 
 using dsl::function;
 using dsl::kernel;

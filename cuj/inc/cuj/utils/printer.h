@@ -78,6 +78,8 @@ private:
 
     void print(TextBuilder &b, const core::ExitScope &exit_scope);
 
+    void print(TextBuilder &b, const core::InlineAsm &inline_asm);
+
     // expression
 
     void print(TextBuilder &b, const core::Expr &e);

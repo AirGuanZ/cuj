@@ -16,6 +16,7 @@ struct Switch;
 struct CallFuncStat;
 struct MakeScope;
 struct ExitScope;
+struct InlineAsm;
 
 using Stat = Variant<
     Store,
@@ -29,7 +30,8 @@ using Stat = Variant<
     Switch,
     CallFuncStat,
     MakeScope,
-    ExitScope>;
+    ExitScope,
+    InlineAsm>;
 
 struct Store
 {
@@ -104,6 +106,19 @@ struct MakeScope
 struct ExitScope
 {
     
+};
+
+struct InlineAsm
+{
+    std::string asm_string;
+    bool side_effects;
+    
+    std::vector<Expr> input_values;
+    std::vector<Expr> output_addresses;
+
+    std::string input_constraints;
+    std::string output_constraints;
+    std::string clobber_constraints;
 };
 
 CUJ_NAMESPACE_END(cuj::core)
