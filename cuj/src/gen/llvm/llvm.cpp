@@ -775,15 +775,23 @@ void LLVMIRGenerator::generate(const core::InlineAsm &inline_asm)
         auto oat = llvm::dyn_cast<llvm::PointerType>(oa->getType());
         llvm_output_types.push_back(oat->getElementType());
     }
-    auto llvm_output_struct_type =
-        llvm::StructType::get(*llvm_->context, llvm_output_types);
+    llvm::Type *llvm_output_type;
+    if(llvm_output_types.size() == 0)
+        llvm_output_type = llvm_->ir_builder->getVoidTy();
+    else if(llvm_output_types.size() == 1)
+        llvm_output_type = llvm_output_types[0];
+    else
+    {
+        llvm_output_type =
+            llvm::StructType::get(*llvm_->context, llvm_output_types);
+    }
 
     std::vector<llvm::Type *> llvm_input_types;
     for(auto iv : input_values)
         llvm_input_types.push_back(iv->getType());
 
-    auto asm_func_type = llvm::FunctionType::get(
-        llvm_output_struct_type, llvm_input_types, false);
+    auto asm_func_type =
+        llvm::FunctionType::get(llvm_output_type, llvm_input_types, false);
 
     std::string constraints = inline_asm.output_constraints;
     if(!constraints.empty() && !inline_asm.input_constraints.empty())
@@ -797,11 +805,20 @@ void LLVMIRGenerator::generate(const core::InlineAsm &inline_asm)
         constraints, inline_asm.side_effects);
 
     auto output_value = llvm_->ir_builder->CreateCall(asm_callee, input_values);
-    for(size_t i = 0; i < output_addresses.size(); ++i)
+    if(output_addresses.size() == 1)
     {
-        auto val = llvm_->ir_builder->CreateExtractValue(output_value, i);
-        auto ptr = output_addresses[i];
-        llvm_->ir_builder->CreateStore(val, ptr);
+        auto ptr = output_addresses[0];
+        llvm_->ir_builder->CreateStore(output_value, ptr);
+    }
+    else
+    {
+        for(size_t i = 0; i < output_addresses.size(); ++i)
+        {
+            unsigned idx = static_cast<unsigned int>(i);
+            auto val = llvm_->ir_builder->CreateExtractValue(output_value, idx);
+            auto ptr = output_addresses[i];
+            llvm_->ir_builder->CreateStore(val, ptr);
+        }
     }
 }
 
