@@ -129,7 +129,7 @@ public:
 
     RC<FunctionContext> clone_with_module(Module *mod);
 
-    RC<const core::Func> get_core_func() const;
+    RC<core::Func> get_core_func() const;
 
     void mark_as_non_declaration();
 

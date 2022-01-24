@@ -197,9 +197,9 @@ struct Unary
 
 struct CallFunc
 {
-    RC<const Func> contextless_func;
-    size_t         contexted_func_index = 0;
-    Intrinsic      intrinsic            = Intrinsic::None;
+    RC<Func>  contextless_func;
+    size_t    contexted_func_index = 0;
+    Intrinsic intrinsic            = Intrinsic::None;
 
     std::vector<RC<Expr>> args;
 };

@@ -38,9 +38,9 @@ public:
 
 private:
 
-    std::vector<RC<FunctionContext>>    functions_;
-    std::set<RC<const FunctionContext>> registered_contextless_functions_;
-    RC<TypeContext>                     type_context_;
+    std::vector<RC<FunctionContext>> functions_;
+    std::set<RC<FunctionContext>>    registered_contextless_functions_;
+    RC<TypeContext>                  type_context_;
 
     std::set<RC<core::GlobalVar>> global_vars_;
     int                           auto_global_memory_index_;

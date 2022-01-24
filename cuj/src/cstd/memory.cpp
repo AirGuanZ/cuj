@@ -21,7 +21,7 @@ namespace detail
                 }
             });
     }
-    
+
     template<typename T>
     void create_vectorized_load(
         core::Intrinsic intrinsic, ptr<T> addr, std::initializer_list<ref<T>> vals)

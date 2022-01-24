@@ -146,7 +146,7 @@ RC<FunctionContext> FunctionContext::clone_with_module(Module *mod)
     return ret;
 }
 
-RC<const core::Func> FunctionContext::get_core_func() const
+RC<core::Func> FunctionContext::get_core_func() const
 {
     return func_;
 }

@@ -55,9 +55,9 @@ core::Prog Module::_generate_prog() const
     ret.global_type_set = type_context_->get_type_set();
     ret.global_vars = global_vars_;
 
-    std::set<RC<const core::Func>> all_contextless_functions;
+    std::set<RC<core::Func>> all_contextless_functions;
 
-    std::stack<RC<const core::Func>> unprocessed_funcs;
+    std::stack<RC<core::Func>> unprocessed_funcs;
     for(auto &f : registered_contextless_functions_)
         unprocessed_funcs.push(f->get_core_func());
 
