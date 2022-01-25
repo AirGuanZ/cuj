@@ -140,6 +140,8 @@ private:
 
     llvm::Value *generate(const core::GlobalVarAddr &expr);
 
+    llvm::Value *generate(const core::GlobalConstAddr &expr);
+
     llvm::Value *process_intrinsic_call(
         const core::CallFunc &call, const std::vector<llvm::Value *> &args);
 

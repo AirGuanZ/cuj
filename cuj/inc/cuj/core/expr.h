@@ -25,6 +25,7 @@ struct Binary;
 struct Unary;
 struct CallFunc;
 struct GlobalVarAddr;
+struct GlobalConstAddr;
 
 using Expr = Variant<
     FuncArgAddr,
@@ -44,7 +45,8 @@ using Expr = Variant<
     Binary,
     Unary,
     CallFunc,
-    GlobalVarAddr>;
+    GlobalVarAddr,
+    GlobalConstAddr>;
 
 struct FuncArgAddr
 {
@@ -220,6 +222,13 @@ struct GlobalVar
 struct GlobalVarAddr
 {
     RC<GlobalVar> var;
+};
+
+struct GlobalConstAddr
+{
+    const Type                *pointed_type;
+    size_t                     alignment;
+    std::vector<unsigned char> data;
 };
 
 CUJ_NAMESPACE_END(cuj::core)

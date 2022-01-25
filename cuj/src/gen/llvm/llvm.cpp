@@ -59,6 +59,8 @@ struct LLVMIRGenerator::LLVMData
 
     std::map<const core::GlobalVar *, llvm::GlobalVariable *> global_vars_;
 
+    std::map<std::vector<unsigned char>, llvm::GlobalVariable *> global_const_vars_;
+
     // per function
 
     llvm::Function *current_function = nullptr;
@@ -1190,6 +1192,73 @@ llvm::Value *LLVMIRGenerator::generate(const core::GlobalVarAddr &expr)
         }
     }
     return ptr;
+}
+
+llvm::Value *LLVMIRGenerator::generate(const core::GlobalConstAddr &expr)
+{
+    const int GLOBAL_ADDR_SPACE = target_ == Target::PTX ? 1 : 0;
+
+    auto llvm_u8   = llvm_->ir_builder->getInt8Ty();
+    auto llvm_elem = get_llvm_type(expr.pointed_type);
+
+    llvm::GlobalVariable *global_var;
+    if(auto it = llvm_->global_const_vars_.find(expr.data);
+       it != llvm_->global_const_vars_.end())
+    {
+        global_var = it->second;
+        auto current_alignment = global_var->getAlign();
+        global_var->setAlignment(llvm::Align(
+            (std::max)(current_alignment.valueOrOne().value(), expr.alignment)));
+    }
+    else
+    {
+        auto arr_type = llvm::ArrayType::get(llvm_u8, expr.data.size());
+
+        std::vector<llvm::Constant *> byte_consts;
+        byte_consts.reserve(expr.data.size());
+        for(auto b : expr.data)
+            byte_consts.push_back(llvm::ConstantInt::get(llvm_u8, b, false));
+        auto const_init = llvm::ConstantArray::get(arr_type, byte_consts);
+
+        global_var = new llvm::GlobalVariable(
+            *llvm_->top_module, arr_type, true,
+            llvm::GlobalValue::InternalLinkage, const_init,
+            "", nullptr, llvm::GlobalValue::NotThreadLocal,
+            GLOBAL_ADDR_SPACE);
+
+        size_t alignment = expr.alignment;
+        if(data_layout_)
+        {
+            alignment = (std::max)(
+                alignment, data_layout_->getPrefTypeAlign(llvm_elem).value());
+        }
+        global_var->setAlignment(llvm::Align(alignment));
+
+        llvm_->global_const_vars_.insert({ expr.data, global_var });
+    }
+
+    std::array<llvm::Value *, 2> indices = {
+        llvm_helper::llvm_constant_num(*llvm_->context, 0u),
+        llvm_helper::llvm_constant_num(*llvm_->context, 0u)
+    };
+    auto val = llvm_->ir_builder->CreateGEP(global_var, indices);
+
+    if(target_ == Target::PTX)
+    {
+        auto src_type = llvm::PointerType::get(llvm_u8, GLOBAL_ADDR_SPACE);
+        auto dst_type = llvm::PointerType::get(llvm_u8, 0);
+        val = llvm_->ir_builder->CreateIntrinsic(
+            llvm::Intrinsic::nvvm_ptr_global_to_gen,
+            { dst_type, src_type }, { val });
+    }
+
+    if(llvm_elem != llvm_u8)
+    {
+        val = llvm_->ir_builder->CreatePointerCast(
+            val, llvm::PointerType::get(llvm_elem, 0));
+    }
+
+    return val;
 }
 
 llvm::Value *LLVMIRGenerator::process_intrinsic_call(

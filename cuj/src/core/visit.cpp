@@ -243,4 +243,10 @@ void Visitor::visit(const GlobalVarAddr &expr)
         on_global_var_addr(expr);
 }
 
+void Visitor::visit(const GlobalConstAddr &expr)
+{
+    if(on_global_const_addr)
+        on_global_const_addr(expr);
+}
+
 CUJ_NAMESPACE_END(cuj::core)

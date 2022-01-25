@@ -44,6 +44,7 @@ public:
     void visit(const Unary                       &expr);
     void visit(const CallFunc                    &expr);
     void visit(const GlobalVarAddr               &expr);
+    void visit(const GlobalConstAddr             &expr);
 
     std::function<void(const Stat &)>         on_stat;
     std::function<void(const Store &)>        on_store;
@@ -79,6 +80,7 @@ public:
     std::function<void(const Unary                       &)> on_unary;
     std::function<void(const CallFunc                    &)> on_call_func;
     std::function<void(const GlobalVarAddr               &)> on_global_var_addr;
+    std::function<void(const GlobalConstAddr             &)> on_global_const_addr;
 };
 
 CUJ_NAMESPACE_END(cuj::core)

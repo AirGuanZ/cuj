@@ -6,6 +6,7 @@
 #include <cuj/dsl/array_reference.h>
 #include <cuj/dsl/bitcast.h>
 #include <cuj/dsl/class.h>
+#include <cuj/dsl/const_data.h>
 #include <cuj/dsl/exit_scope.h>
 #include <cuj/dsl/function.h>
 #include <cuj/dsl/global_var.h>
@@ -28,6 +29,7 @@
 #include <cuj/dsl/impl/array_reference.inl>
 #include <cuj/dsl/impl/bitcast.inl>
 #include <cuj/dsl/impl/class.inl>
+#include <cuj/dsl/impl/const_data.inl>
 #include <cuj/dsl/impl/exit_scope.inl>
 #include <cuj/dsl/impl/function.inl>
 #include <cuj/dsl/impl/global_var.inl>
@@ -71,6 +73,8 @@ using dsl::arr;
 using dsl::cxx;
 
 using dsl::bitcast;
+using dsl::const_data;
+using dsl::string_literial;
 
 using dsl::inline_asm;
 using dsl::inline_asm_volatile;

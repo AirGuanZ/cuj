@@ -166,6 +166,8 @@ namespace
         ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_isinf,    f64_isinf);
         ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_isnan,    f64_isnan);
 
+        ADD_GLOBAL_FUNC(__cuj_intrinsic_print, printf);
+
 #undef ADD_GLOBAL_FUNC
     }
 

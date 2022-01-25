@@ -15,6 +15,32 @@
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 
+namespace
+{
+
+    llvm::Function *get_print_function(llvm::Module &top_module)
+    {
+        const char *name = "vprintf";
+        auto func = top_module.getFunction(name);
+        if(func)
+            return func;
+
+        auto &context = top_module.getContext();
+        std::array<llvm::Type *, 2> arg_types = {
+            llvm::PointerType::get(llvm::IntegerType::getInt8Ty(context), 0),
+            llvm::PointerType::get(llvm::IntegerType::getInt64Ty(context), 0)
+        };
+        auto ret_type = llvm::IntegerType::getInt32Ty(context);
+        auto func_type = llvm::FunctionType::get(ret_type, arg_types, false);
+
+        func = llvm::Function::Create(
+            func_type, llvm::GlobalValue::ExternalLinkage, name, &top_module);
+        func->deleteBody();
+        return func;
+    }
+
+} // namespace anonymous
+
 llvm::Value *process_ptx_intrinsics(
     llvm::Module                    &top_module,
     llvm::IRBuilder<>               &ir_builder,
@@ -100,6 +126,33 @@ llvm::Value *process_ptx_intrinsics(
         if(!func->hasFnAttribute(llvm::Attribute::ReadNone))
             func->addFnAttr(llvm::Attribute::ReadNone);
         return ir_builder.CreateCall(func, args);
+    }
+
+    if(intrinsic_type == core::Intrinsic::print)
+    {
+        auto func = get_print_function(top_module);
+
+        std::vector<llvm::Type *> mem_types;
+        for(size_t i = 1; i < args.size(); ++i)
+            mem_types.push_back(args[i]->getType());
+        auto valist_type =
+            llvm::StructType::get(top_module.getContext(), mem_types);
+
+        llvm::Value *valist = llvm::UndefValue::get(valist_type);
+        for(size_t i = 1; i < args.size(); ++i)
+        {
+            const auto iu = static_cast<unsigned>(i - 1);
+            valist = ir_builder.CreateInsertValue(valist, args[i], iu);
+        }
+
+        auto valist_alloc = ir_builder.CreateAlloca(valist_type, 0, nullptr);
+        ir_builder.CreateStore(valist, valist_alloc);
+
+        auto valist_ptr = ir_builder.CreatePointerCast(
+            valist_alloc, llvm::PointerType::get(
+                llvm::IntegerType::getInt64Ty(top_module.getContext()), 0));
+
+        return ir_builder.CreateCall(func, { args[0], valist_ptr });
     }
 
     throw CujException(

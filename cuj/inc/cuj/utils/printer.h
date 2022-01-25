@@ -120,6 +120,8 @@ private:
 
     void print(TextBuilder &b, const core::GlobalVarAddr &global_var_addr);
 
+    void print(TextBuilder &b, const core::GlobalConstAddr &global_const_addr);
+
     // type
 
     void print(TextBuilder &b, const core::Type &type);

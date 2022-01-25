@@ -1,3 +1,5 @@
+#include <array>
+
 #include "test/test.h"
 
 namespace
@@ -44,5 +46,22 @@ TEST_CASE("misc")
             s.a[4] = 4;
             return s;
         }, S{ { 0, 1, 2, 3, 4 } });
+    }
+
+    SECTION("const data")
+    {
+        with_mcjit(
+            [](i32 x)
+        {
+            var lut = const_data<int32_t>(std::array{ 3, 4, 5, 6 });
+            return lut[x];
+        },
+            [](auto f)
+        {
+            REQUIRE(f(0) == 3);
+            REQUIRE(f(1) == 4);
+            REQUIRE(f(2) == 5);
+            REQUIRE(f(3) == 6);
+        });
     }
 }

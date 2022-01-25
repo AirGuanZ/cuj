@@ -477,6 +477,23 @@ void Printer::print(TextBuilder &b, const core::GlobalVarAddr &global_var_addr)
     b.append("&(global ", global_var_addr.var->symbol_name, ")");
 }
 
+void Printer::print(TextBuilder &b, const core::GlobalConstAddr &global_const_addr)
+{
+    b.append(
+        "&(global const alignas(",
+        std::to_string(global_const_addr.alignment),
+        ") ");
+    print(b, *global_const_addr.pointed_type);
+    b.append(" [");
+    for(size_t i = 0; i < global_const_addr.data.size(); ++i)
+    {
+        if(i > 0)
+            b.append(", ");
+        b.append(static_cast<int>(global_const_addr.data[i]));
+    }
+    b.append("]");
+}
+
 void Printer::print(TextBuilder &b, const core::Type &type)
 {
     type.match([&](auto &t) { print(b, t); });
