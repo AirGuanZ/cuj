@@ -30,6 +30,20 @@ CUJ_NAMESPACE_BEGIN(cuj::gen)
 namespace
 {
 
+    void assert_fail(
+        const char *message,
+        const char *file,
+        int32_t     line,
+        const char *function)
+    {
+        std::cerr << "assertion failed. "
+                  << "file: " << file << ", "
+                  << "line: " << line << ", "
+                  << "func: " << function << ", "
+                  << "message: " << message;
+        std::abort();
+    }
+
     struct LLVMModuleData
     {
         Box<llvm::LLVMContext>  llvm_context;
@@ -106,6 +120,8 @@ namespace
             llvm_ir_gen.use_fast_math();
         if(opts.approx_math_func)
             llvm_ir_gen.use_approx_math_func();
+        if(!opts.enable_assert)
+            llvm_ir_gen.disable_assert();
         llvm_ir_gen.set_data_layout(&data_layout);
         llvm_ir_gen.generate(mod);
 
@@ -166,7 +182,8 @@ namespace
         ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_isinf,    f64_isinf);
         ADD_GLOBAL_FUNC(__cuj_intrinsic_f64_isnan,    f64_isnan);
 
-        ADD_GLOBAL_FUNC(__cuj_intrinsic_print, printf);
+        ADD_GLOBAL_FUNC(__cuj_intrinsic_print,       printf);
+        ADD_GLOBAL_FUNC(__cuj_intrinsic_assert_fail, assert_fail);
 
 #undef ADD_GLOBAL_FUNC
     }

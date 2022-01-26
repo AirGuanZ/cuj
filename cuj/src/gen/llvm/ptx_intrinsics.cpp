@@ -10,6 +10,7 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/IntrinsicsNVPTX.h>
 
+#include "helper.h"
 #include "libdevice_man.h"
 #include "ptx_intrinsics.h"
 
@@ -35,6 +36,30 @@ namespace
 
         func = llvm::Function::Create(
             func_type, llvm::GlobalValue::ExternalLinkage, name, &top_module);
+        func->deleteBody();
+        return func;
+    }
+
+    llvm::Function *get_assertfail_function(llvm::Module &top_module)
+    {
+        const char *name = "__assertfail";
+        auto func = top_module.getFunction(name);
+        if(func)
+            return func;
+
+        auto &context = top_module.getContext();
+        std::array<llvm::Type *, 5> arg_types = {
+            llvm::PointerType::get(llvm::IntegerType::getInt8Ty(context), 0),
+            llvm::PointerType::get(llvm::IntegerType::getInt8Ty(context), 0),
+            llvm::IntegerType::getInt32Ty(context),
+            llvm::PointerType::get(llvm::IntegerType::getInt8Ty(context), 0),
+            llvm::IntegerType::getInt64Ty(context)
+        };
+        auto ret_type = llvm::Type::getVoidTy(context);
+        auto func_type = llvm::FunctionType::get(ret_type, arg_types, false);
+
+        func = llvm::Function::Create(
+            func_type, llvm::GlobalValue::ExternalLinkage, name, top_module);
         func->deleteBody();
         return func;
     }
@@ -153,6 +178,15 @@ llvm::Value *process_ptx_intrinsics(
                 llvm::IntegerType::getInt64Ty(top_module.getContext()), 0));
 
         return ir_builder.CreateCall(func, { args[0], valist_ptr });
+    }
+
+    if(intrinsic_type == core::Intrinsic::assert_fail)
+    {
+        auto func = get_assertfail_function(top_module);
+        auto one = llvm_helper::llvm_constant_num(
+            top_module.getContext(), size_t(1));
+        return ir_builder.CreateCall(
+            func, { args[0], args[1], args[2], args[3], one });
     }
 
     throw CujException(

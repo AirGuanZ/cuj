@@ -39,6 +39,8 @@ public:
 
     void disable_basic_optimizations();
 
+    void disable_assert();
+
     void set_data_layout(llvm::DataLayout *data_layout);
 
     void generate(const dsl::Module &mod);
@@ -149,6 +151,7 @@ private:
     bool              fast_math_           = false;
     bool              approx_math_func_    = false;
     bool              basic_optimizations_ = true;
+    bool              enable_assert_       = true;
     llvm::DataLayout *data_layout_         = nullptr;
 
     LLVMData *llvm_ = nullptr;

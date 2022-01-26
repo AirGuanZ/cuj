@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cuj/cstd/assert.h>
 #include <cuj/cstd/atomic.h>
 #include <cuj/cstd/math.h>
 #include <cuj/cstd/memory.h>

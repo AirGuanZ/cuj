@@ -5,6 +5,7 @@
 #include <llvm/Support/CodeGen.h>
 #include <llvm/Support/raw_ostream.h>
 
+#include <cuj/core/expr.h>
 #include <cuj/gen/option.h>
 #include <cuj/utils/unreachable.h>
 

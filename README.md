@@ -341,9 +341,24 @@ auto constant_f32 = allocate_constant_memory<f32>("constant_params");
 
 Note that `allocate_constant_memory` allocates constant memory when using PTX backend and allocates normal global memory when using MC backend.
 
-## Builtin Operator
+## Const Data
 
-### Bitwise Cast
+```cpp
+// global const data
+Function f = [](i32 x)
+{
+    ptr<i32> lut = const_data<i32>(std::array{ 1, 4, 6, 3 });
+    return lut[x];
+};
+
+// string literial
+Function f2 = []
+{
+    cstd::print("%s\n", string_literial("hello, cuj!"));
+};
+```
+
+## Bitwise Cast
 
 ```cpp
 u64 x0 = ...;
@@ -684,6 +699,20 @@ i32 block_dim_y();
 i32 block_dim_z();
 ```
 
+### System
+
+```cpp
+// in namespace cuj::cstd
+// e.g. print("%d\n%s", i32(42), string_literial("hello, cuj!"));
+i32 print(const std::string &fmt_str, Args...args);
+```
+
+```cpp
+// in any cuj function
+// assertion generation is controled by cuj::gen::Options::enable_assert
+CUJ_ASSERT(cuj_bool_expr);
+```
+
 ## Example
 
 ### example/pow
@@ -692,6 +721,6 @@ Full source code of `A Quick Example`.
 
 ### example/sdf
 
-A simple CUDA path tracer based on SDF marching. The scene comes from [taichi sdf renderer](https://github.com/taichi-dev/taichi/blob/master/examples/rendering/sdf_renderer.py) 
+A simple CUDA path tracer based on SDF marching. The scene comes from [taichi sdf renderer](https://github.com/taichi-dev/taichi/blob/master/examples/rendering/sdf_renderer.py).
 
 ![](./example/sdf/result.png)

@@ -51,6 +51,29 @@ namespace
         return func;
     }
 
+    llvm::Function *get_assert_fail_function(llvm::Module &top_module)
+    {
+        const char *name = intrinsic_name(core::Intrinsic::assert_fail);
+        auto func = top_module.getFunction(name);
+        if(func)
+            return func;
+
+        auto &context = top_module.getContext();
+        std::array<llvm::Type *, 4> arg_types = {
+            llvm::PointerType::get(llvm::IntegerType::getInt8Ty(context), 0),
+            llvm::PointerType::get(llvm::IntegerType::getInt8Ty(context), 0),
+            llvm::IntegerType::getInt32Ty(context),
+            llvm::PointerType::get(llvm::IntegerType::getInt8Ty(context), 0)
+        };
+        auto ret_type = llvm::Type::getVoidTy(context);
+        auto func_type = llvm::FunctionType::get(ret_type, arg_types, false);
+
+        func = llvm::Function::Create(
+            func_type, llvm::GlobalValue::ExternalLinkage, name, top_module);
+        func->deleteBody();
+        return func;
+    }
+
     llvm::Function *get_intrinsics_function(
         llvm::Module      &top_module,
         core::Intrinsic    intrinsic_type)
@@ -184,6 +207,12 @@ llvm::Value *process_native_intrinsics(
     if(intrinsic_type == core::Intrinsic::print)
     {
         auto func = get_print_function(top_module);
+        return ir_builder.CreateCall(func, args);
+    }
+
+    if(intrinsic_type == core::Intrinsic::assert_fail)
+    {
+        auto func = get_assert_fail_function(top_module);
         return ir_builder.CreateCall(func, args);
     }
 

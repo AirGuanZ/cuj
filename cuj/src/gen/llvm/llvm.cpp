@@ -98,6 +98,11 @@ void LLVMIRGenerator::disable_basic_optimizations()
     basic_optimizations_ = false;
 }
 
+void LLVMIRGenerator::disable_assert()
+{
+    enable_assert_ = false;
+}
+
 void LLVMIRGenerator::set_data_layout(llvm::DataLayout *data_layout)
 {
     data_layout_ = data_layout;
@@ -1316,8 +1321,6 @@ llvm::Value *LLVMIRGenerator::process_intrinsic_call(
         return llvm_->ir_builder->CreateSelect(comp, args[0], args[1]);
     }
 
-
-    
     if(call.intrinsic == core::Intrinsic::i32_min ||
        call.intrinsic == core::Intrinsic::i64_min)
     {
@@ -1332,11 +1335,15 @@ llvm::Value *LLVMIRGenerator::process_intrinsic_call(
         return llvm_->ir_builder->CreateSelect(comp, args[0], args[1]);
     }
 
+    if(call.intrinsic == core::Intrinsic::assert_fail && !enable_assert_)
+        return nullptr;
+
     if(target_ == Target::Native)
     {
         return process_native_intrinsics(
             *llvm_->top_module, *llvm_->ir_builder, call.intrinsic, args);
     }
+
     assert(target_ == Target::PTX);
     return process_ptx_intrinsics(
         *llvm_->top_module, *llvm_->ir_builder,

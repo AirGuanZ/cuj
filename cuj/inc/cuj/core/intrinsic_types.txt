@@ -96,3 +96,4 @@ CUJ_INTRINSIC_TYPE(atomic_add_u32)
 CUJ_INTRINSIC_TYPE(atomic_add_f32)
 
 CUJ_INTRINSIC_TYPE(print)
+CUJ_INTRINSIC_TYPE(assert_fail)
