@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cuj/dsl/arithmetic.h>
+#include <cuj/dsl/bitcast.h>
 #include <cuj/dsl/function.h>
 #include <cuj/dsl/pointer.h>
 #include <cuj/dsl/pointer_temp_var.h>
@@ -184,24 +185,6 @@ add_reference_t<T> ptr<T>::operator[](const ref<num<U>> &rhs) const
     return *(*this + rhs);
 }
 
-template<typename U, typename T> requires std::is_integral_v<U>
-ptr<T> operator+(const num<U> &lhs, const ptr<T> &rhs)
-{
-    return rhs + lhs;
-}
-
-template<typename U, typename T> requires std::is_integral_v<U>
-ptr<T> operator+(U lhs, const ptr<T> &rhs)
-{
-    return rhs + lhs;
-}
-
-template<typename U, typename T> requires std::is_integral_v<U>
-ptr<T> operator+(const ref<num<U>> &lhs, const ptr<T> &rhs)
-{
-    return rhs + lhs;
-}
-
 template<typename T>
 ptr<ptr<T>> ptr<T>::address() const
 {
@@ -266,6 +249,38 @@ core::Load ptr<T>::_load() const
         .val_type = type(),
         .src_addr = newRC<core::Expr>(_addr())
     };
+}
+
+template<typename U, typename T> requires std::is_integral_v<U>
+ptr<T> operator+(const num<U> &lhs, const ptr<T> &rhs)
+{
+    return rhs + lhs;
+}
+
+template<typename U, typename T> requires std::is_integral_v<U>
+ptr<T> operator+(U lhs, const ptr<T> &rhs)
+{
+    return rhs + lhs;
+}
+
+template<typename U, typename T> requires std::is_integral_v<U>
+ptr<T> operator+(const ref<num<U>> &lhs, const ptr<T> &rhs)
+{
+    return rhs + lhs;
+}
+
+template<typename T>
+ptr<cxx<T>> import_pointer(T *pointer)
+{
+    num v = reinterpret_cast<size_t>(pointer);
+    return bitcast<ptr<cxx<T>>>(v);
+}
+
+template<typename T>
+ptr<cxx<T>> import_pointer(const T *pointer)
+{
+    num v = reinterpret_cast<size_t>(pointer);
+    return bitcast<ptr<cxx<T>>>(v);
 }
 
 CUJ_NAMESPACE_END(cuj::dsl)

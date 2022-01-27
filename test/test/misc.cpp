@@ -64,4 +64,23 @@ TEST_CASE("misc")
             REQUIRE(f(3) == 6);
         });
     }
+
+    SECTION("import pointer")
+    {
+        int32_t host_var;
+        with_mcjit(
+            [&](i32 x)
+        {
+            *import_pointer(&host_var) = x;
+        },
+            [&host_var](auto set_host_var)
+        {
+            set_host_var(1);
+            REQUIRE(host_var == 1);
+            set_host_var(2);
+            REQUIRE(host_var == 2);
+            set_host_var(99);
+            REQUIRE(host_var == 99);
+        });
+    }
 }

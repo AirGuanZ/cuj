@@ -84,4 +84,10 @@ ptr<T> operator+(U lhs, const ptr<T> &rhs);
 template<typename U, typename T> requires std::is_integral_v<U>
 ptr<T> operator+(const ref<num<U>> &lhs, const ptr<T> &rhs);
 
+template<typename T>
+ptr<cxx<T>> import_pointer(T *pointer);
+
+template<typename T>
+ptr<cxx<T>> import_pointer(const T *pointer);
+
 CUJ_NAMESPACE_END(cuj::dsl)

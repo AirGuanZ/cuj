@@ -75,6 +75,7 @@ using dsl::cxx;
 using dsl::bitcast;
 using dsl::const_data;
 using dsl::string_literial;
+using dsl::import_pointer;
 
 using dsl::inline_asm;
 using dsl::inline_asm_volatile;
