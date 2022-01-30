@@ -45,7 +45,7 @@ const TypeContext::Type *TypeContext::get_type()
         std::vector<const core::Type *> members;
         T::foreach_member([&]<typename M>
         {
-            members.push_back(get_type<typename M::Variable>());
+            members.push_back(get_type<M>());
         });
         *it->second = core::Struct{ std::move(members) };
     }

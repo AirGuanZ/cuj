@@ -1338,6 +1338,16 @@ llvm::Value *LLVMIRGenerator::process_intrinsic_call(
     if(call.intrinsic == core::Intrinsic::assert_fail && !enable_assert_)
         return nullptr;
 
+    if(call.intrinsic == core::Intrinsic::unreachable)
+    {
+        auto ret = llvm_->ir_builder->CreateUnreachable();
+        auto after_block =
+            llvm::BasicBlock::Create(*llvm_->context, "after_unreachable");
+        llvm_->current_function->getBasicBlockList().push_back(after_block);
+        llvm_->ir_builder->SetInsertPoint(after_block);
+        return ret;
+    }
+
     if(target_ == Target::Native)
     {
         return process_native_intrinsics(

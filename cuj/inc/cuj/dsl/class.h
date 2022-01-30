@@ -47,6 +47,16 @@ public:
 
 namespace class_detail
 {
+    template<int N>
+    struct Int : Int<N - 1> { };
+
+    template<>
+    struct Int<0> { };
+
+    template<int N>
+    struct Sizer { char _data[N]; };
+
+    static_assert(sizeof(Sizer<17>) == 17);
 
     template<typename T>
     struct MemberVariableTypeAux { };
@@ -85,7 +95,7 @@ namespace class_detail
         template<typename F>                                                    \
         static void process(const F &f)                                         \
         {                                                                       \
-            f.template operator()<MemberInfo<INDEX - 1>>();                     \
+            f.template operator()<MemberInfo<INDEX - 1>::Variable>();           \
         }                                                                       \
     };
 
@@ -206,6 +216,109 @@ namespace class_detail
 
 #define CUJ_BASE_CONSTRUCTORS using CujBase::CujBase;
 #define CUJ_NONE_TRIVIALLY_COPYABLE struct NoneTriviallyCopyableTag { };
+
+} // namespace class_detail
+
+#define CUJ_CLASS_MAX_MEMBER_COUNT 128
+
+#define CUJ_CLASS_BEGIN(CLASS_NAME)                                             \
+    class CLASS_NAME;                                                           \
+    class CujBase##CLASS_NAME                                                   \
+    {                                                                           \
+    public:                                                                     \
+        ::cuj::dsl::ptr<CLASS_NAME> cuj_class_object_address_;                  \
+        CujBase##CLASS_NAME(                                                    \
+            ::cuj::dsl::class_detail::ClassInternalConstructorTag,              \
+            const ::cuj::dsl::ptr<CLASS_NAME> &addr)                            \
+            : cuj_class_object_address_(addr) { }                               \
+        CujBase##CLASS_NAME()                                                   \
+            : CujBase##CLASS_NAME(                                              \
+                ::cuj::dsl::class_detail::ClassInternalConstructorTag{},        \
+                ::cuj::dsl::class_detail::alloc_local_var<CLASS_NAME>()) { }    \
+        CujBase##CLASS_NAME(const CujBase##CLASS_NAME &) = delete;              \
+        CujBase##CLASS_NAME &operator=(const CujBase##CLASS_NAME &) = delete;   \
+        auto address() const { return cuj_class_object_address_; }              \
+    };                                                                          \
+    class CLASS_NAME : public CujBase##CLASS_NAME                               \
+    {                                                                           \
+    public:                                                                     \
+        struct CujClassTag { };                                                 \
+        using CujBase##CLASS_NAME::CujBase##CLASS_NAME;                         \
+        using CujReflectionSelf = CLASS_NAME;                                   \
+        static ::cuj::dsl::class_detail::Sizer<1>                               \
+            _cuj_refl_mem_var_counter(...);                                     \
+        template<int N>                                                         \
+        struct MemberInfo                                                       \
+        {                                                                       \
+            static constexpr int exists = 0;                                    \
+            template<typename F>                                                \
+            static void process(const F &f) { }                                 \
+        };                                                                      \
+        CLASS_NAME(const CLASS_NAME &other)                                     \
+        {                                                                       \
+            *this = other;                                                      \
+        }                                                                       \
+        CLASS_NAME &operator=(const CLASS_NAME &other)                          \
+        {                                                                       \
+            ::cuj::dsl::FunctionContext::get_func_context()                     \
+                    ->append_statement(::cuj::core::Copy{                       \
+                        .dst_addr = cuj_class_object_address_._load(),          \
+                        .src_addr = other.cuj_class_object_address_._load()     \
+                    });                                                         \
+            return *this;                                                       \
+        }                                                                       \
+        template<typename F>                                                    \
+        static void foreach_member(const F &f)                                  \
+        {                                                                       \
+            ::cuj::dsl::class_detail::foreach_member_2<CujReflectionSelf>(f);   \
+        }                                                                       \
+
+#define CUJ_MEMBER_VARIABLE(TYPE, NAME)                                         \
+    static constexpr int cuj_member_counter##NAME =                             \
+        sizeof(_cuj_refl_mem_var_counter(                                       \
+            (::cuj::dsl::class_detail::Int<                                     \
+                CUJ_CLASS_MAX_MEMBER_COUNT>*)nullptr)) - 1;                     \
+    static ::cuj::dsl::class_detail::Sizer<cuj_member_counter##NAME + 2>        \
+        _cuj_refl_mem_var_counter(                                              \
+            ::cuj::dsl::class_detail::Int<                                      \
+                cuj_member_counter##NAME + 2>*);                                \
+    template<>                                                                  \
+    struct MemberInfo<cuj_member_counter##NAME>                                 \
+    {                                                                           \
+        static constexpr bool exists = true;                                    \
+        using Variable = TYPE;                                                  \
+        using Reference = ::cuj::dsl::add_reference_t<Variable>;                \
+        template<typename F>                                                    \
+        static void process(const F &f)                                         \
+        {                                                                       \
+            f.template operator()<Variable>();                                  \
+        }                                                                       \
+    };                                                                          \
+    ::cuj::dsl::add_reference_t<MemberInfo<                                     \
+        cuj_member_counter##NAME>::Variable> NAME =                             \
+            MemberInfo<cuj_member_counter##NAME>::Reference::_from_ptr(         \
+                ::cuj::dsl::class_detail::class_pointer_to_member_ptr<          \
+                    CujReflectionSelf,                                          \
+                    MemberInfo<cuj_member_counter##NAME>::Variable>(            \
+                        cuj_class_object_address_, cuj_member_counter##NAME));
+
+#define CUJ_CLASS_END };
+
+namespace class_detail
+{
+
+    template<typename T, typename F, int...Is>
+    void foreach_member_2_aux(const F &f, std::integer_sequence<int, Is...>)
+    {
+        (T::template MemberInfo<Is>::template process<F>(f), ...);
+    }
+
+    template<typename T, typename F>
+    void foreach_member_2(const F &f)
+    {
+        foreach_member_2_aux<T>(
+            f, std::make_integer_sequence<int, CUJ_CLASS_MAX_MEMBER_COUNT>());
+    }
 
 } // namespace class_detail
 

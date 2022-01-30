@@ -21,4 +21,14 @@ i32 print(const std::string &format_string, Args...args)
     return i32::_from_expr(core::Expr(std::move(call)));
 }
 
+inline void unreachable()
+{
+    auto func = dsl::FunctionContext::get_func_context();
+    func->append_statement(core::CallFuncStat{
+        .call_expr = core::CallFunc{
+            .intrinsic = core::Intrinsic::unreachable
+        }
+    });
+}
+
 CUJ_NAMESPACE_END(cuj::cstd)

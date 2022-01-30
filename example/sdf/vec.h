@@ -4,27 +4,20 @@
 
 using namespace cuj;
 
-struct CVec2f
-{
-    float x, y;
-};
+CUJ_CLASS_BEGIN(Vec2f)
+    CUJ_MEMBER_VARIABLE(f32, x)
+    CUJ_MEMBER_VARIABLE(f32, y)
+CUJ_CLASS_END
 
-struct CVec3f
-{
-    float x, y, z;
-};
-
-CUJ_PROXY_CLASS(Vec2f, CVec2f, x, y);
-
-CUJ_PROXY_CLASS_EX(Vec3f, CVec3f, x, y, z)
-{
-    CUJ_BASE_CONSTRUCTORS
-
+CUJ_CLASS_BEGIN(Vec3f)
+    CUJ_MEMBER_VARIABLE(f32, x)
+    CUJ_MEMBER_VARIABLE(f32, y)
+    CUJ_MEMBER_VARIABLE(f32, z)
     ref<f32> operator[](i32 i)
     {
         return *(x.address() + i);
     }
-};
+CUJ_CLASS_END
 
 inline Vec2f make_vec2f(f32 x, f32 y)
 {
