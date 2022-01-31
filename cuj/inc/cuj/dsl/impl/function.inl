@@ -320,6 +320,12 @@ Ret Function<Ret(Args...)>::operator()(Args...args)
 }
 
 template<typename Ret, typename ... Args>
+Module *Function<Ret(Args ...)>::get_module() const
+{
+    return context_->get_module();
+}
+
+template<typename Ret, typename ... Args>
 RC<const FunctionContext> Function<Ret(Args ...)>::_get_context() const
 {
     return context_;

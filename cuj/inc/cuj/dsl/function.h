@@ -175,6 +175,8 @@ public:
 
     Ret operator()(Args...args);
 
+    Module *get_module() const;
+
     RC<const FunctionContext> _get_context() const;
 };
 
