@@ -82,6 +82,7 @@ using Type = Variant<
 struct Struct
 {
     std::vector<const Type *> members;
+    size_t alignment = 0;
 
     std::strong_ordering operator<=>(const Struct &rhs) const;
 
@@ -113,30 +114,39 @@ struct TypeSet
     std::map<const Type *, std::type_index> type_to_index;
 };
 
-inline bool is_floating_point(core::Builtin builtin)
+inline bool is_floating_point(Builtin builtin)
 {
-    return builtin == core::Builtin::F32 || builtin == core::Builtin::F64;
+    return builtin == Builtin::F32 || builtin == Builtin::F64;
 }
 
-inline bool is_signed(core::Builtin builtin)
+inline bool is_signed(Builtin builtin)
 {
     if constexpr(std::is_signed_v<char>)
     {
-        if(builtin == core::Builtin::Char)
+        if(builtin == Builtin::Char)
             return true;
     }
     switch(builtin)
     {
-        case core::Builtin::S8:
-        case core::Builtin::S16:
-        case core::Builtin::S32:
-        case core::Builtin::S64:
-        case core::Builtin::F32:
-        case core::Builtin::F64:
+        case Builtin::S8:
+        case Builtin::S16:
+        case Builtin::S32:
+        case Builtin::S64:
+        case Builtin::F32:
+        case Builtin::F64:
             return true;
         default:
             return false;
     }
+}
+
+inline size_t get_custom_alignment(const Type *type)
+{
+    return type->match(
+        [](Builtin) {  return size_t(0); },
+        [](const Struct &s) { return s.alignment; },
+        [](const Array &a) { return get_custom_alignment(a.element); },
+        [](const Pointer &) { return size_t(0); });
 }
 
 CUJ_NAMESPACE_END(cuj::core)

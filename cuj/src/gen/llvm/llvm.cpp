@@ -337,6 +337,10 @@ void LLVMIRGenerator::generate_global_variables()
             llvm::GlobalValue::ExternalLinkage, nullptr,
             var.symbol_name, nullptr,
             llvm::GlobalValue::NotThreadLocal, address_space);
+        if(const size_t align = get_custom_alignment(var.type))
+        {
+            llvm_global_var->setAlignment(llvm::Align(align));
+        }
         llvm_global_var->setInitializer(llvm::Constant::getNullValue(llvm_type));
 
         llvm_->global_vars_.insert({ pv.get(), llvm_global_var });
@@ -469,19 +473,27 @@ void LLVMIRGenerator::generate_local_allocs(const core::Func *func)
 
     for(size_t i = 0; i < func->local_alloc_types.size(); ++i)
     {
-        auto llvm_type = get_llvm_type(func->local_alloc_types[i]);
+        auto type = func->local_alloc_types[i];
+        auto llvm_type = get_llvm_type(type);
         auto alloca_inst = llvm_->ir_builder->CreateAlloca(
             llvm_type, LOCAL_ALLOCA_ADDRESS_SPACE,
             nullptr, "var" + std::to_string(i));
+        if(const size_t align = get_custom_alignment(type))
+            alloca_inst->setAlignment(llvm::Align(align));
         llvm_->local_allocas.push_back(alloca_inst);
     }
 
-    for(auto &arg : llvm_->current_function->args())
+    for(size_t i = 0; i < func->argument_types.size(); ++i)
     {
+        auto arg = llvm_->current_function->getArg(static_cast<unsigned>(i));
+
         auto alloca_inst = llvm_->ir_builder->CreateAlloca(
-            arg.getType(), LOCAL_ALLOCA_ADDRESS_SPACE, nullptr);
+            arg->getType(), LOCAL_ALLOCA_ADDRESS_SPACE, nullptr);
+        if(const size_t align = get_custom_alignment(func->local_alloc_types[i]))
+            alloca_inst->setAlignment(llvm::Align(align));
+
         llvm_->arg_allocas.push_back(alloca_inst);
-        llvm_->ir_builder->CreateStore(&arg, alloca_inst);
+        llvm_->ir_builder->CreateStore(arg, alloca_inst);
     }
 }
 
@@ -1216,8 +1228,10 @@ llvm::Value *LLVMIRGenerator::generate(const core::GlobalConstAddr &expr)
     {
         global_var = it->second;
         auto current_alignment = global_var->getAlign();
-        global_var->setAlignment(llvm::Align(
-            (std::max)(current_alignment.valueOrOne().value(), expr.alignment)));
+        size_t alignment = global_var->getAlign().valueOrOne().value();
+        alignment = (std::max)(alignment, expr.alignment);
+        alignment = (std::max)(alignment, get_custom_alignment(expr.pointed_type));
+        global_var->setAlignment(llvm::Align(alignment));
     }
     else
     {
@@ -1236,6 +1250,7 @@ llvm::Value *LLVMIRGenerator::generate(const core::GlobalConstAddr &expr)
             GLOBAL_ADDR_SPACE);
 
         size_t alignment = expr.alignment;
+        alignment = (std::max)(alignment, get_custom_alignment(expr.pointed_type));
         if(data_layout_)
         {
             alignment = (std::max)(

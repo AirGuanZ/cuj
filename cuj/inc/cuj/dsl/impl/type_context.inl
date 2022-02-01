@@ -47,7 +47,8 @@ const TypeContext::Type *TypeContext::get_type()
         {
             members.push_back(get_type<M>());
         });
-        *it->second = core::Struct{ std::move(members) };
+        const size_t alignment = T::CujClassAlignment;
+        *it->second = core::Struct{ std::move(members), alignment };
     }
 
     assert(it != type_set_->index_to_type.end());

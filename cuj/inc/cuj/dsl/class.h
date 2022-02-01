@@ -156,6 +156,7 @@ namespace class_detail
         using CXXClass = CLASS;                                                 \
         using CujBase = CujBase##PROXY;                                         \
         using Reflection = CujReflection##PROXY;                                \
+        static constexpr size_t CujClassAlignment = 0;                          \
         static constexpr bool all_members_trivially_copyable = ::cuj::dsl       \
             ::class_detail::are_all_members_trivially_copyable<Reflection>();   \
         struct CujClassTag { };                                                 \
@@ -226,6 +227,7 @@ namespace class_detail
     class CujBase##CLASS_NAME                                                   \
     {                                                                           \
     public:                                                                     \
+        static constexpr size_t CujClassAlignment = 0;                          \
         ::cuj::dsl::ptr<CLASS_NAME> cuj_class_object_address_;                  \
         CujBase##CLASS_NAME(                                                    \
             ::cuj::dsl::class_detail::ClassInternalConstructorTag,              \
