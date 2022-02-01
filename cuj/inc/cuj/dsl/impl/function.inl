@@ -200,11 +200,6 @@ template<typename Ret, typename...Args>
 Function<Ret(Args...)>::Function()
 {
     initialize();
-    if(!context_->get_module())
-    {
-        throw CujException(
-            "context-less function cannot be declared without definition");
-    }
 }
 
 template<typename Ret, typename...Args>
@@ -233,6 +228,11 @@ template<typename Ret, typename...Args>
 template<typename F>
 void Function<Ret(Args...)>::define(F &&body_func)
 {
+    if(!context_->get_module())
+    {
+        throw CujException(
+            "context-less function cannot be declared and defined separately");
+    }
     define_impl(std::forward<F>(body_func));
 }
 

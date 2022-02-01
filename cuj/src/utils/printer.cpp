@@ -109,7 +109,7 @@ std::string TextBuilder::get_str() const
     return ss_.str();
 }
 
-void Printer::print(TextBuilder &b, const dsl::FunctionContext &function)
+void Printer::print(TextBuilder &b, const core::Func &func)
 {
     std::set<RC<core::GlobalVar>> global_vars;
     core::Visitor visitor;
@@ -117,7 +117,7 @@ void Printer::print(TextBuilder &b, const dsl::FunctionContext &function)
     {
         global_vars.insert(addr.var);
     };
-    visitor.visit(*function.get_core_func()->root_block);
+    visitor.visit(*func.root_block);
 
     for(auto &var : global_vars)
     {
@@ -132,13 +132,13 @@ void Printer::print(TextBuilder &b, const dsl::FunctionContext &function)
             break;
         }
         b.append("] ");
-        print(b, var->type);
+        print(b, *var->type);
         b.new_line();
     }
 
-    auto &args = function.get_core_func()->argument_types;
-    b.append("function(");
-    for(size_t i = 0; i < function.get_core_func()->argument_types.size(); ++i)
+    auto &args = func.argument_types;
+    b.append("function ", func.name, "(");
+    for(size_t i = 0; i < func.argument_types.size(); ++i)
     {
         if(i > 0)
             b.append(", ");
@@ -147,15 +147,15 @@ void Printer::print(TextBuilder &b, const dsl::FunctionContext &function)
         print(b, *args[i].type);
     }
     b.append(") -> ");
-    if(function.get_core_func()->return_type.is_reference)
+    if(func.return_type.is_reference)
         b.append("ref ");
-    print(b, *function.get_core_func()->return_type.type);
+    print(b, *func.return_type.type);
     b.new_line();
 
     b.appendl("{");
     b.with_indent([&]
     {
-        auto &local_alloc_types = function.get_core_func()->local_alloc_types;
+        auto &local_alloc_types = func.local_alloc_types;
         for(size_t i = 0; i < local_alloc_types.size(); ++i)
         {
             b.append("var", i, " : ");
@@ -163,7 +163,7 @@ void Printer::print(TextBuilder &b, const dsl::FunctionContext &function)
             b.new_line();
         }
 
-        for(auto &s : function.get_core_func()->root_block->stats)
+        for(auto &s : func.root_block->stats)
             print(b, *s);
     });
     b.appendl("}");
@@ -195,7 +195,7 @@ void Printer::print(TextBuilder &b, const core::Copy &copy)
     print(b, copy.src_addr);
     b.append(") to (");
     print(b, copy.dst_addr);
-    b.append(")");
+    b.appendl(")");
 }
 
 void Printer::print(TextBuilder &b, const core::Block &block)

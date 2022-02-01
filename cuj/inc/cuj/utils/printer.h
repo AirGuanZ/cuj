@@ -45,10 +45,12 @@ public:
     
     template<typename F>
     std::string print(const dsl::Function<F> &function);
+    
+    std::string print(const core::Func &func);
 
 private:
 
-    void print(TextBuilder &b, const dsl::FunctionContext &function);
+    void print(TextBuilder &b, const core::Func &func);
 
     // statements
 
@@ -157,7 +159,14 @@ template<typename F>
 std::string Printer::print(const dsl::Function<F> &function)
 {
     TextBuilder builder;
-    print(builder, *function._get_context());
+    print(builder, *function._get_context()->get_core_func());
+    return builder.get_str();
+}
+
+inline std::string Printer::print(const core::Func &func)
+{
+    TextBuilder builder;
+    print(builder, func);
     return builder.get_str();
 }
 

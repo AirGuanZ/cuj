@@ -30,7 +30,6 @@
 
 #include "helper.h"
 #include "libdevice_man.h"
-#include "libdevice_man.h"
 #include "native_intrinsics.h"
 #include "ptx_intrinsics.h"
 #include "vector_intrinsic.h"
@@ -372,13 +371,19 @@ llvm::FunctionType *LLVMIRGenerator::get_function_type(const core::Func &func)
 void LLVMIRGenerator::declare_function(const core::Func *func)
 {
     std::string symbol_name = func->name;
-    if(symbol_name.empty())
+    assert(!symbol_name.empty());
+
+    if(auto existing_llvm_func = llvm_->top_module->getFunction(symbol_name))
     {
-        symbol_name = "_cuj_function_"
-            + std::to_string(llvm_->llvm_functions_.size());
-    }
-    if(llvm_->top_module->getFunction(symbol_name))
-    {
+        if(func->is_declaration)
+        {
+            if(existing_llvm_func->getFunctionType() != get_function_type(*func))
+            {
+                throw CujException(
+                    "multiple function declaration with different signatures: " + symbol_name);
+            }
+            return;
+        }
         throw CujException(
             "multiple definitions of function " + symbol_name);
     }
@@ -427,7 +432,7 @@ void LLVMIRGenerator::define_function(const core::Func *func)
         return;
 
     clear_temp_function_data();
-    llvm_->current_function = llvm_->llvm_functions_.at(func).llvm_function;
+    llvm_->current_function = llvm_->top_module->getFunction(func->name);
     CUJ_SCOPE_EXIT{ llvm_->current_function = nullptr; };
 
     auto entry_block = llvm::BasicBlock::Create(
@@ -1161,8 +1166,7 @@ llvm::Value *LLVMIRGenerator::generate(const core::CallFunc &expr)
 
     if(expr.contextless_func)
     {
-        auto func =
-            llvm_->llvm_functions_.at(expr.contextless_func.get()).llvm_function;
+        auto func = llvm_->top_module->getFunction(expr.contextless_func->name);
         return llvm_->ir_builder->CreateCall(func, args);
     }
     
