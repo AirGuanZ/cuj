@@ -275,6 +275,26 @@ CUJ_PROXY_CLASS_EX(AProxy, A, ...)
 };
 ```
 
+Custom class alignment can be specified with `CUJ_CLASS_ALIGNMENT`:
+
+```cpp
+CUJ_CLASS_EX(...)
+{
+    CUJ_CLASS_ALIGNMENT(128) // alignas(128)
+    ...
+};
+```
+
+We can also define a new Cuj class without relying on existing C++ class:
+
+```cpp
+CUJ_CLASS_BEGIN(MyCujClass)
+    CUJ_CLASS_ALIGNMENT(64) // optional
+    CUJ_MEMBER_VARIABLE(i32, x)
+    CUJ_MEMBER_VARIABLE(f32, y)
+CUJ_CLASS_END
+```
+
 ### Pointer
 
 ```cpp
@@ -356,6 +376,14 @@ Function f2 = []
 {
     cstd::print("%s\n", string_literial("hello, cuj!"));
 };
+```
+
+## Import Pointer
+
+```cpp
+int32_t i;
+// equvialent to bitcast<ptr<i32>>(u64(&i))
+var p = import_pointer(&i);
 ```
 
 ## Bitwise Cast
@@ -703,14 +731,15 @@ i32 block_dim_z();
 
 ```cpp
 // in namespace cuj::cstd
+
 // e.g. print("%d\n%s", i32(42), string_literial("hello, cuj!"));
 i32 print(const std::string &fmt_str, Args...args);
-```
 
-```cpp
 // in any cuj function
 // assertion generation is controled by cuj::gen::Options::enable_assert
 CUJ_ASSERT(cuj_bool_expr);
+
+void unreachable();
 ```
 
 ## Example
