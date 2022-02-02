@@ -217,6 +217,7 @@ namespace class_detail
 
 #define CUJ_BASE_CONSTRUCTORS using CujBase::CujBase;
 #define CUJ_NONE_TRIVIALLY_COPYABLE struct NoneTriviallyCopyableTag { };
+#define CUJ_CLASS_ALIGNMENT(Align) static constexpr size_t CujClassAlignment = Align;
 
 } // namespace class_detail
 

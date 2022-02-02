@@ -53,15 +53,6 @@ public:
 
 private:
 
-    std::map<std::type_index, const core::Type *>
-        build_type_to_index(const core::Prog &prog);
-
-    llvm::Type *build_llvm_type(const core::Type *type);
-
-    void build_llvm_struct_body(const core::Type *type);
-
-    llvm::Type *get_llvm_type(const core::Type *type) const;
-
     void generate_global_variables();
 
     llvm::FunctionType *get_function_type(const core::Func &func);

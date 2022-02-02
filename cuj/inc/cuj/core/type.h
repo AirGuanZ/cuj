@@ -82,7 +82,7 @@ using Type = Variant<
 struct Struct
 {
     std::vector<const Type *> members;
-    size_t alignment = 0;
+    size_t custom_alignment = 0;
 
     std::strong_ordering operator<=>(const Struct &rhs) const;
 
@@ -138,15 +138,6 @@ inline bool is_signed(Builtin builtin)
         default:
             return false;
     }
-}
-
-inline size_t get_custom_alignment(const Type *type)
-{
-    return type->match(
-        [](Builtin) {  return size_t(0); },
-        [](const Struct &s) { return s.alignment; },
-        [](const Array &a) { return get_custom_alignment(a.element); },
-        [](const Pointer &) { return size_t(0); });
 }
 
 CUJ_NAMESPACE_END(cuj::core)

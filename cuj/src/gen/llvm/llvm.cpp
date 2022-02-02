@@ -32,6 +32,7 @@
 #include "libdevice_man.h"
 #include "native_intrinsics.h"
 #include "ptx_intrinsics.h"
+#include "type_manager.h"
 #include "vector_intrinsic.h"
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
@@ -42,9 +43,6 @@ struct LLVMIRGenerator::LLVMData
 
     core::Prog             prog;
     Box<llvm::LLVMContext> context;
-
-    std::map<std::type_index, llvm::Type *>       index_to_llvm_type;
-    std::map<const core::Type *, std::type_index> type_to_index;
 
     Box<llvm::IRBuilder<>> ir_builder;
     Box<llvm::Module>      top_module;
@@ -59,6 +57,8 @@ struct LLVMIRGenerator::LLVMData
     std::map<const core::GlobalVar *, llvm::GlobalVariable *> global_vars_;
 
     std::map<std::vector<unsigned char>, llvm::GlobalVariable *> global_const_vars_;
+
+    llvm_helper::TypeManager type_manager;
 
     // per function
 
@@ -144,13 +144,22 @@ void LLVMIRGenerator::generate(const dsl::Module &mod)
     // build llvm types
 
     {
-        auto index_to_type = build_type_to_index(prog);
+        std::map<const core::Type *, std::type_index> types;
+        auto handle_type_set = [&](const core::TypeSet &set)
+        {
+            for(auto &[type, index] : set.type_to_index)
+                types.try_emplace(type, index);
+        };
 
-        for(auto &[_, type] : index_to_type)
-            build_llvm_type(type);
+        handle_type_set(*prog.global_type_set);
+        for(auto &func : prog.funcs)
+        {
+            if(func->type_set)
+                handle_type_set(*func->type_set);
+        }
 
-        for(auto &[_, type] : index_to_type)
-            build_llvm_struct_body(type);
+        llvm_->type_manager.initialize(
+            llvm_->context.get(), data_layout_, std::move(types));
     }
 
     // generate global variables
@@ -216,89 +225,6 @@ std::string LLVMIRGenerator::get_llvm_string() const
     return result;
 }
 
-std::map<std::type_index, const core::Type *>
-    LLVMIRGenerator::build_type_to_index(const core::Prog &prog)
-{
-    std::map<std::type_index, const core::Type *> ret;
-    auto handle_type_set = [&](const core::TypeSet &set)
-    {
-        for(auto &[type, index] : set.type_to_index)
-        {
-            llvm_->type_to_index.try_emplace(type, index);
-            ret.try_emplace(index, type);
-        }
-    };
-
-    handle_type_set(*prog.global_type_set);
-    for(auto &func : prog.funcs)
-    {
-        if(auto set = func->type_set)
-            handle_type_set(*set);
-    }
-
-    return ret;
-}
-
-llvm::Type *LLVMIRGenerator::build_llvm_type(const core::Type *type)
-{
-    const auto index = llvm_->type_to_index.at(type);
-    if(auto it = llvm_->index_to_llvm_type.find(index);
-       it != llvm_->index_to_llvm_type.end())
-        return it->second;
-
-    auto llvm_type = type->match(
-        [&](core::Builtin t) -> llvm::Type*
-    {
-        return llvm_helper::builtin_to_llvm_type(llvm_->context.get(), t);
-    },
-        [&](const core::Struct &t) -> llvm::Type *
-    {
-        return llvm::StructType::create(*llvm_->context);
-    },
-        [&](const core::Array &t) -> llvm::Type *
-    {
-        auto element = build_llvm_type(t.element);
-        return llvm::ArrayType::get(element, t.size);
-    },
-        [&](const core::Pointer &t) -> llvm::Type *
-    {
-        if(auto pt = t.pointed->as_if<core::Builtin>();
-           pt && *pt == core::Builtin::Void)
-        {
-            return llvm::PointerType::get(
-                llvm::Type::getInt8Ty(*llvm_->context), 0);
-        }
-        auto pointed = build_llvm_type(t.pointed);
-        return llvm::PointerType::get(pointed, 0);
-    });
-
-    llvm_->index_to_llvm_type.insert({ index, llvm_type });
-    return llvm_type;
-}
-
-void LLVMIRGenerator::build_llvm_struct_body(const core::Type *type)
-{
-    auto struct_type = type->as_if<core::Struct>();
-    if(!struct_type)
-        return;
-
-    auto llvm_type = get_llvm_type(type);
-    auto llvm_struct_type = llvm::dyn_cast<llvm::StructType>(llvm_type);
-    assert(llvm_struct_type->isOpaque());
-
-    std::vector<llvm::Type *> member_types;
-    for(auto member : struct_type->members)
-        member_types.push_back(get_llvm_type(member));
-
-    llvm_struct_type->setBody(member_types);
-}
-
-llvm::Type *LLVMIRGenerator::get_llvm_type(const core::Type *type) const
-{
-    const auto index = llvm_->type_to_index.at(type);
-    return llvm_->index_to_llvm_type.at(index);
-}
-
 void LLVMIRGenerator::generate_global_variables()
 {
     for(auto &pv : llvm_->prog.global_vars)
@@ -331,13 +257,13 @@ void LLVMIRGenerator::generate_global_variables()
 
         // allocate
 
-        auto llvm_type = get_llvm_type(var.type);
+        auto llvm_type = llvm_->type_manager.get_llvm_type(var.type);
         auto llvm_global_var = new llvm::GlobalVariable(
             *llvm_->top_module, llvm_type, false,
             llvm::GlobalValue::ExternalLinkage, nullptr,
             var.symbol_name, nullptr,
             llvm::GlobalValue::NotThreadLocal, address_space);
-        if(const size_t align = get_custom_alignment(var.type))
+        if(const size_t align = llvm_->type_manager.get_custom_alignment(var.type))
         {
             llvm_global_var->setAlignment(llvm::Align(align));
         }
@@ -356,14 +282,14 @@ llvm::FunctionType *LLVMIRGenerator::get_function_type(const core::Func &func)
             throw CujException("kernel function must return void");
     }
 
-    llvm::Type *ret_type = get_llvm_type(func.return_type.type);
+    llvm::Type *ret_type = llvm_->type_manager.get_llvm_type(func.return_type.type);
     if(func.return_type.is_reference)
         ret_type = llvm::PointerType::get(ret_type, 0);
 
     std::vector<llvm::Type *> arg_types;
     for(auto &arg : func.argument_types)
     {
-        llvm::Type *arg_type = get_llvm_type(arg.type);
+        llvm::Type *arg_type = llvm_->type_manager.get_llvm_type(arg.type);
         if(arg.is_reference)
             arg_type = llvm::PointerType::get(arg_type, 0);
         arg_types.push_back(arg_type);
@@ -474,11 +400,11 @@ void LLVMIRGenerator::generate_local_allocs(const core::Func *func)
     for(size_t i = 0; i < func->local_alloc_types.size(); ++i)
     {
         auto type = func->local_alloc_types[i];
-        auto llvm_type = get_llvm_type(type);
+        auto llvm_type = llvm_->type_manager.get_llvm_type(type);
         auto alloca_inst = llvm_->ir_builder->CreateAlloca(
             llvm_type, LOCAL_ALLOCA_ADDRESS_SPACE,
             nullptr, "var" + std::to_string(i));
-        if(const size_t align = get_custom_alignment(type))
+        if(const size_t align = llvm_->type_manager.get_custom_alignment(type))
             alloca_inst->setAlignment(llvm::Align(align));
         llvm_->local_allocas.push_back(alloca_inst);
     }
@@ -489,7 +415,8 @@ void LLVMIRGenerator::generate_local_allocs(const core::Func *func)
 
         auto alloca_inst = llvm_->ir_builder->CreateAlloca(
             arg->getType(), LOCAL_ALLOCA_ADDRESS_SPACE, nullptr);
-        if(const size_t align = get_custom_alignment(func->local_alloc_types[i]))
+        if(const size_t align = llvm_->type_manager.get_custom_alignment(
+                func->local_alloc_types[i]))
             alloca_inst->setAlignment(llvm::Align(align));
 
         llvm_->arg_allocas.push_back(alloca_inst);
@@ -501,14 +428,14 @@ void LLVMIRGenerator::generate_default_ret(const core::Func *func)
 {
     if(func->return_type.is_reference)
     {
-        auto ret_type = get_llvm_type(func->return_type.type);
+        auto ret_type = llvm_->type_manager.get_llvm_type(func->return_type.type);
         llvm_->ir_builder->CreateRet(
             llvm::ConstantPointerNull::get(
                 llvm::PointerType::get(ret_type, 0)));
     }
     else
     {
-        auto llvm_type = get_llvm_type(func->return_type.type);
+        auto llvm_type = llvm_->type_manager.get_llvm_type(func->return_type.type);
         func->return_type.type->match(
             [&](core::Builtin t)
         {
@@ -880,7 +807,8 @@ llvm::Value *LLVMIRGenerator::generate(const core::NullPtr &expr)
 {
     assert(expr.ptr_type->is<core::Pointer>());
     return llvm::ConstantPointerNull::get(
-        llvm::dyn_cast<llvm::PointerType>(get_llvm_type(expr.ptr_type)));
+        llvm::dyn_cast<llvm::PointerType>(
+            llvm_->type_manager.get_llvm_type(expr.ptr_type)));
 }
 
 llvm::Value *LLVMIRGenerator::generate(const core::ArithmeticCast &expr)
@@ -896,7 +824,7 @@ llvm::Value *LLVMIRGenerator::generate(const core::ArithmeticCast &expr)
     auto src_val = generate(*expr.src_val);
     if(src_builtin_type == dst_builtin_type)
         return src_val;
-    auto dst_type = get_llvm_type(expr.dst_type);
+    auto dst_type = llvm_->type_manager.get_llvm_type(expr.dst_type);
 
     if(src_builtin_type == core::Builtin::Bool)
     {
@@ -942,8 +870,8 @@ llvm::Value *LLVMIRGenerator::generate(const core::ArithmeticCast &expr)
 
 llvm::Value *LLVMIRGenerator::generate(const core::BitwiseCast &expr)
 {
-    auto src_type = get_llvm_type(expr.src_type);
-    auto dst_type = get_llvm_type(expr.dst_type);
+    auto src_type = llvm_->type_manager.get_llvm_type(expr.src_type);
+    auto dst_type = llvm_->type_manager.get_llvm_type(expr.dst_type);
     auto src_val = generate(*expr.src_val);
 
     if(src_type->isPointerTy())
@@ -1195,7 +1123,7 @@ llvm::Value *LLVMIRGenerator::generate(const core::GlobalVarAddr &expr)
     llvm::Value *ptr = llvm_->global_vars_.at(expr.var.get());
     if(target_ == Target::PTX)
     {
-        auto var_type = get_llvm_type(expr.var->type);
+        auto var_type = llvm_->type_manager.get_llvm_type(expr.var->type);
         auto dst_type = llvm::PointerType::get(var_type, 0);
         if(expr.var->memory_type == core::GlobalVar::MemoryType::Regular)
         {
@@ -1220,17 +1148,17 @@ llvm::Value *LLVMIRGenerator::generate(const core::GlobalConstAddr &expr)
     const int GLOBAL_ADDR_SPACE = target_ == Target::PTX ? 1 : 0;
 
     auto llvm_u8   = llvm_->ir_builder->getInt8Ty();
-    auto llvm_elem = get_llvm_type(expr.pointed_type);
+    auto llvm_elem = llvm_->type_manager.get_llvm_type(expr.pointed_type);
 
     llvm::GlobalVariable *global_var;
     if(auto it = llvm_->global_const_vars_.find(expr.data);
        it != llvm_->global_const_vars_.end())
     {
         global_var = it->second;
-        auto current_alignment = global_var->getAlign();
         size_t alignment = global_var->getAlign().valueOrOne().value();
         alignment = (std::max)(alignment, expr.alignment);
-        alignment = (std::max)(alignment, get_custom_alignment(expr.pointed_type));
+        alignment = (std::max)(
+            alignment, llvm_->type_manager.get_custom_alignment(expr.pointed_type));
         global_var->setAlignment(llvm::Align(alignment));
     }
     else
@@ -1250,13 +1178,10 @@ llvm::Value *LLVMIRGenerator::generate(const core::GlobalConstAddr &expr)
             GLOBAL_ADDR_SPACE);
 
         size_t alignment = expr.alignment;
-        alignment = (std::max)(alignment, get_custom_alignment(expr.pointed_type));
-        if(data_layout_)
-        {
-            alignment = (std::max)(
-                alignment, data_layout_->getPrefTypeAlign(llvm_elem).value());
-        }
-        global_var->setAlignment(llvm::Align(alignment));
+        alignment = (std::max)(
+            alignment, llvm_->type_manager.get_custom_alignment(expr.pointed_type));
+        if(alignment)
+            global_var->setAlignment(llvm::Align(alignment));
 
         llvm_->global_const_vars_.insert({ expr.data, global_var });
     }

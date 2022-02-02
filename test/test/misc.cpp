@@ -14,6 +14,16 @@ namespace
 
     CUJ_CLASS(S, a);
 
+    CUJ_CLASS_BEGIN(AlignedClass64)
+        CUJ_CLASS_ALIGNMENT(64)
+        CUJ_MEMBER_VARIABLE(i32, x)
+    CUJ_CLASS_END
+    
+    CUJ_CLASS_BEGIN(AlignedClass64_2)
+        CUJ_MEMBER_VARIABLE(AlignedClass64, c)
+        CUJ_MEMBER_VARIABLE(i32, x)
+    CUJ_CLASS_END
+
 } // namespace anonymous
 
 TEST_CASE("misc")
@@ -82,5 +92,22 @@ TEST_CASE("misc")
             set_host_var(99);
             REQUIRE(host_var == 99);
         });
+    }
+
+    SECTION("alignment")
+    {
+        mcjit_require(
+            []
+        {
+            AlignedClass64 c;
+            return bitcast<u64>(c.address()) % 64;
+        }, 0);
+
+        mcjit_require(
+            []
+        {
+            arr<AlignedClass64_2, 2> c;
+            return bitcast<u64>(c[1].address()) - bitcast<u64>(c[0].address());
+        }, 128);
     }
 }
