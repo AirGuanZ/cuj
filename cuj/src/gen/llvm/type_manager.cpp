@@ -98,7 +98,7 @@ void TypeManager::fill_layout(const core::Type *type)
     {
         if(data_layout_ && t != core::Builtin::Void)
         {
-            record.alignment = data_layout_->getPrefTypeAlign(record.type).value();
+            record.alignment = data_layout_->getABITypeAlign(record.type).value();
             record.size = data_layout_->getTypeAllocSize(record.type).getFixedSize();
         }
         else
@@ -187,7 +187,7 @@ void TypeManager::fill_layout(const core::Type *type)
         if(data_layout_)
         {
             size = (std::max)(size, data_layout_->getTypeAllocSize(record.type).getFixedSize());
-            alignment = (std::max)(alignment, data_layout_->getPrefTypeAlign(record.type).value());
+            alignment = (std::max)(alignment, data_layout_->getABITypeAlign(record.type).value());
         }
 
         record.alignment = alignment;
@@ -203,7 +203,7 @@ void TypeManager::fill_layout(const core::Type *type)
         if(data_layout_)
         {
             record.alignment = (std::max)(
-                *record.alignment, data_layout_->getPrefTypeAlign(record.type).value());
+                *record.alignment, data_layout_->getABITypeAlign(record.type).value());
             record.size = (std::max)(
                 *record.size, data_layout_->getTypeAllocSize(record.type).getFixedSize());
         }
@@ -212,7 +212,7 @@ void TypeManager::fill_layout(const core::Type *type)
     {
         if(data_layout_)
         {
-            record.alignment = data_layout_->getPrefTypeAlign(record.type).value();
+            record.alignment = data_layout_->getABITypeAlign(record.type).value();
             record.size = data_layout_->getTypeAllocSize(record.type).getFixedSize();
         }
         else

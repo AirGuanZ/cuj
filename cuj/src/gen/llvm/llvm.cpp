@@ -903,9 +903,11 @@ llvm::Value *LLVMIRGenerator::generate(const core::PointerOffset &expr)
 llvm::Value *LLVMIRGenerator::generate(const core::ClassPointerToMemberPointer &expr)
 {
     auto class_ptr = generate(*expr.class_ptr);
+    const int member_index = llvm_->type_manager.get_struct_member_index(
+        expr.class_ptr_type->as<core::Pointer>().pointed, expr.member_index);
     std::array<llvm::Value *, 2> indices;
     indices[0] = llvm_helper::llvm_constant_num(*llvm_->context, uint32_t(0));
-    indices[1] = llvm_helper::llvm_constant_num(*llvm_->context, uint32_t(expr.member_index));
+    indices[1] = llvm_helper::llvm_constant_num(*llvm_->context, uint32_t(member_index));
     return llvm_->ir_builder->CreateGEP(class_ptr, indices);
 }
 
