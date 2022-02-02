@@ -1216,10 +1216,13 @@ llvm::Value *LLVMIRGenerator::process_intrinsic_call(
     const core::CallFunc &call, const std::vector<llvm::Value*> &args)
 {
     if(call.intrinsic == core::Intrinsic::store_f32x4 ||
+       call.intrinsic == core::Intrinsic::store_f32x3 ||
        call.intrinsic == core::Intrinsic::store_f32x2 ||
        call.intrinsic == core::Intrinsic::store_u32x4 ||
+       call.intrinsic == core::Intrinsic::store_u32x3 ||
        call.intrinsic == core::Intrinsic::store_u32x2 ||
        call.intrinsic == core::Intrinsic::store_i32x4 ||
+       call.intrinsic == core::Intrinsic::store_i32x3 ||
        call.intrinsic == core::Intrinsic::store_i32x2)
     {
         return detail::create_vector_store(
@@ -1227,10 +1230,13 @@ llvm::Value *LLVMIRGenerator::process_intrinsic_call(
     }
     
     if(call.intrinsic == core::Intrinsic::load_f32x4 ||
+       call.intrinsic == core::Intrinsic::load_f32x3 ||
        call.intrinsic == core::Intrinsic::load_f32x2 ||
        call.intrinsic == core::Intrinsic::load_u32x4 ||
+       call.intrinsic == core::Intrinsic::load_u32x3 ||
        call.intrinsic == core::Intrinsic::load_u32x2 ||
        call.intrinsic == core::Intrinsic::load_i32x4 ||
+       call.intrinsic == core::Intrinsic::load_i32x3 ||
        call.intrinsic == core::Intrinsic::load_i32x2)
     {
         detail::create_vector_load(

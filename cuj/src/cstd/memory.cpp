@@ -59,6 +59,24 @@ void store_i32x4(ptr<i32> addr, i32 a, i32 b, i32 c, i32 d)
         core::Intrinsic::store_i32x4, addr, { a, b, c, d });
 }
 
+void store_f32x3(ptr<f32> addr, f32 a, f32 b, f32 c)
+{
+    detail::create_vectorized_store(
+        core::Intrinsic::store_f32x3, addr, { a, b, c });
+}
+
+void store_u32x3(ptr<u32> addr, u32 a, u32 b, u32 c)
+{
+    detail::create_vectorized_store(
+        core::Intrinsic::store_u32x3, addr, { a, b, c });
+}
+
+void store_i32x3(ptr<i32> addr, i32 a, i32 b, i32 c)
+{
+    detail::create_vectorized_store(
+        core::Intrinsic::store_i32x3, addr, { a, b, c });
+}
+
 void store_f32x2(ptr<f32> addr, f32 a, f32 b)
 {
     detail::create_vectorized_store(
@@ -93,6 +111,24 @@ void load_i32x4(ptr<i32> addr, ref<i32> a, ref<i32> b, ref<i32> c, ref<i32> d)
 {
     detail::create_vectorized_load(
         core::Intrinsic::load_i32x4, addr, { a, b, c, d });
+}
+
+void load_f32x3(ptr<f32> addr, ref<f32> a, ref<f32> b, ref<f32> c)
+{
+    detail::create_vectorized_load(
+        core::Intrinsic::load_f32x3, addr, { a, b, c });
+}
+
+void load_u32x3(ptr<u32> addr, ref<u32> a, ref<u32> b, ref<u32> c)
+{
+    detail::create_vectorized_load(
+        core::Intrinsic::load_u32x3, addr, { a, b, c });
+}
+
+void load_i32x3(ptr<i32> addr, ref<i32> a, ref<i32> b, ref<i32> c)
+{
+    detail::create_vectorized_load(
+        core::Intrinsic::load_i32x3, addr, { a, b, c });
 }
 
 void load_f32x2(ptr<f32> addr, ref<f32> a, ref<f32> b)
