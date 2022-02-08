@@ -1286,6 +1286,20 @@ llvm::Value *LLVMIRGenerator::process_intrinsic_call(
         auto comp = llvm_->ir_builder->CreateICmpSGT(args[0], args[1]);
         return llvm_->ir_builder->CreateSelect(comp, args[0], args[1]);
     }
+    
+    if(call.intrinsic == core::Intrinsic::u32_min ||
+       call.intrinsic == core::Intrinsic::u64_min)
+    {
+        auto comp = llvm_->ir_builder->CreateICmpULT(args[0], args[1]);
+        return llvm_->ir_builder->CreateSelect(comp, args[0], args[1]);
+    }
+
+    if(call.intrinsic == core::Intrinsic::u32_max ||
+       call.intrinsic == core::Intrinsic::u64_max)
+    {
+        auto comp = llvm_->ir_builder->CreateICmpUGT(args[0], args[1]);
+        return llvm_->ir_builder->CreateSelect(comp, args[0], args[1]);
+    }
 
     if(call.intrinsic == core::Intrinsic::assert_fail && !enable_assert_)
         return nullptr;

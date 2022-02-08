@@ -64,6 +64,12 @@ i32 max(i32 a, i32 b);
 i64 min(i64 a, i64 b);
 i64 max(i64 a, i64 b);
 
+u32 min(u32 a, u32 b);
+u32 max(u32 a, u32 b);
+
+u64 min(u64 a, u64 b);
+u64 max(u64 a, u64 b);
+
 f32 min(f32 a, f32 b);
 f32 max(f32 a, f32 b);
 

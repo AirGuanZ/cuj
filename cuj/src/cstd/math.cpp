@@ -450,6 +450,38 @@ i64 max(i64 a, i64 b)
     });
 }
 
+u32 min(u32 a, u32 b)
+{
+    return u32::_from_expr(core::CallFunc{
+        .intrinsic = core::Intrinsic::u32_min,
+        .args      = { newRC<core::Expr>(a._load()), newRC<core::Expr>(b._load()) }
+    });
+}
+
+u32 max(u32 a, u32 b)
+{
+    return u32::_from_expr(core::CallFunc{
+        .intrinsic = core::Intrinsic::u32_max,
+        .args      = { newRC<core::Expr>(a._load()), newRC<core::Expr>(b._load()) }
+    });
+}
+
+u64 min(u64 a, u64 b)
+{
+    return u64::_from_expr(core::CallFunc{
+        .intrinsic = core::Intrinsic::u64_min,
+        .args      = { newRC<core::Expr>(a._load()), newRC<core::Expr>(b._load()) }
+    });
+}
+
+u64 max(u64 a, u64 b)
+{
+    return u64::_from_expr(core::CallFunc{
+        .intrinsic = core::Intrinsic::u64_max,
+        .args      = { newRC<core::Expr>(a._load()), newRC<core::Expr>(b._load()) }
+    });
+}
+
 f32 min(f32 a, f32 b)
 {
     return f32::_from_expr(core::CallFunc{
