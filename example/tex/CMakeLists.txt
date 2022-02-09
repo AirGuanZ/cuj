@@ -1,0 +1,11 @@
+﻿PROJECT(CUJ-EXAMPLE-TEX)
+
+ADD_EXECUTABLE(
+	example_tex
+	"main.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../../test/test/cuda/cuda.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../../test/test/cuda/cuda.h")
+SET_PROPERTY(TARGET example_tex PROPERTY CXX_STANDARD 20)
+SET_PROPERTY(TARGET example_tex PROPERTY CXX_STANDARD_REQUIRED ON)
+TARGET_LINK_LIBRARIES(example_tex PUBLIC CUDA::nvrtc CUDA::cudart)
+TARGET_LINK_LIBRARIES(example_tex PUBLIC cuj)

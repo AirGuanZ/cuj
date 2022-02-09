@@ -64,6 +64,54 @@ namespace
         return func;
     }
 
+    void create_sample_texture_intrinsic(
+        llvm::IRBuilder<>                &ir,
+        const std::vector<llvm::Value *> &args,
+        llvm::Intrinsic::ID               intrinsic_id)
+    {
+        auto &ctx = ir.getContext();
+
+        assert(args.size() == 1 + 2 + 4);
+        auto tex = args[0];
+        auto u   = args[1];
+        auto v   = args[2];
+        auto r   = args[3];
+        auto g   = args[4];
+        auto b   = args[5];
+        auto a   = args[6];
+
+        auto call = ir.CreateIntrinsic(intrinsic_id, {}, { tex, u, v });
+        auto raw_type = call->getType();
+        assert(raw_type->isStructTy());
+        auto type = llvm::dyn_cast<llvm::StructType>(raw_type);
+
+        auto alloc = ir.CreateAlloca(type);
+        ir.CreateStore(call, alloc);
+
+        std::array<llvm::Value *, 2> indices = {};
+        indices[0] = llvm::ConstantInt::get(ctx, llvm::APInt(32, 0));
+
+        indices[1] = llvm::ConstantInt::get(ctx, llvm::APInt(32, 0));
+        auto member_addr = ir.CreateGEP(type, alloc, indices);
+        auto member = ir.CreateLoad(member_addr);
+        ir.CreateStore(member, r);
+
+        indices[1] = llvm::ConstantInt::get(ctx, llvm::APInt(32, 1));
+        member_addr = ir.CreateGEP(type, alloc, indices);
+        member = ir.CreateLoad(member_addr);
+        ir.CreateStore(member, g);
+
+        indices[1] = llvm::ConstantInt::get(ctx, llvm::APInt(32, 2));
+        member_addr = ir.CreateGEP(type, alloc, indices);
+        member = ir.CreateLoad(member_addr);
+        ir.CreateStore(member, b);
+
+        indices[1] = llvm::ConstantInt::get(ctx, llvm::APInt(32, 3));
+        member_addr = ir.CreateGEP(type, alloc, indices);
+        member = ir.CreateLoad(member_addr);
+        ir.CreateStore(member, a);
+    }
+
 } // namespace anonymous
 
 llvm::Value *process_ptx_intrinsics(
@@ -187,6 +235,18 @@ llvm::Value *process_ptx_intrinsics(
             top_module.getContext(), size_t(1));
         return ir_builder.CreateCall(
             func, { args[0], args[1], args[2], args[3], one });
+    }
+
+    if(intrinsic_type == core::Intrinsic::sample_tex_2d_f32)
+    {
+        create_sample_texture_intrinsic(ir_builder, args, llvm::Intrinsic::nvvm_tex_unified_2d_v4f32_f32);
+        return nullptr;
+    }
+
+    if(intrinsic_type == core::Intrinsic::sample_tex_2d_i32)
+    {
+        create_sample_texture_intrinsic(ir_builder, args, llvm::Intrinsic::nvvm_tex_unified_2d_v4s32_f32);
+        return nullptr;
     }
 
     throw CujException(

@@ -725,6 +725,14 @@ i32 block_idx_z();
 i32 block_dim_x();
 i32 block_dim_y();
 i32 block_dim_z();
+
+void sample_texture2d_1f(u64 texture_object, f32 u, f32 v, ref<f32> r);
+void sample_texture2d_3f(u64 texture_object, f32 u, f32 v, ref<f32> r, ref<f32> g, ref<f32> b);
+void sample_texture2d_4f(u64 texture_object, f32 u, f32 v, ref<f32> r, ref<f32> g, ref<f32> b, ref<f32> a);
+
+void sample_texture2d_1i(u64 texture_object, f32 u, f32 v, ref<i32> r);
+void sample_texture2d_3i(u64 texture_object, f32 u, f32 v, ref<i32> r, ref<i32> g, ref<i32> b);
+void sample_texture2d_4i(u64 texture_object, f32 u, f32 v, ref<i32> r, ref<i32> g, ref<i32> b, ref<i32> a);
 ```
 
 ### System
@@ -753,3 +761,26 @@ Full source code of `A Quick Example`.
 A simple CUDA path tracer based on SDF marching. The scene comes from [taichi sdf renderer](https://github.com/taichi-dev/taichi/blob/master/examples/rendering/sdf_renderer.py).
 
 ![](./example/sdf/result.png)
+
+### example/tex
+
+Example of sampling cuda texture object.
+
+```cpp
+std::vector<float> tex_data =
+{
+    1, 0, 0, 1,
+    0, 1, 0, 1,
+    0, 0, 1, 1,
+    
+    0, 1, 0, 1,
+    0, 0, 1, 1,
+    1, 0, 0, 1,
+    
+    0, 0, 1, 1,
+    1, 0, 0, 1,
+    0, 1, 0, 1,
+};
+```
+
+![](./example/tex/result.png)
