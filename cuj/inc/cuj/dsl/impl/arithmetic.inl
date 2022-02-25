@@ -91,7 +91,6 @@ template<typename T> requires std::is_arithmetic_v<T>
 template<typename U> requires is_cuj_arithmetic_v<U>
 U num<T>::as() const
 {
-    using URaw = typename U::RawType;
     auto src_type = FunctionContext::get_func_context()
         ->get_type_context()->get_type<num>();
     auto dst_type = FunctionContext::get_func_context()
