@@ -81,6 +81,7 @@ using dsl::inline_asm;
 using dsl::inline_asm_volatile;
 
 using dsl::function;
+using dsl::function_contextless;
 using dsl::kernel;
 using dsl::declare;
 

@@ -156,4 +156,19 @@ void FunctionContext::mark_as_non_declaration()
     func_->is_declaration = false;
 }
 
+namespace function_detail
+{
+
+    Module *get_current_module()
+    {
+        return Module::get_current_module();
+    }
+
+    void set_current_module(Module *mod)
+    {
+        Module::set_current_module(mod);
+    }
+
+} // namespace function_detail
+
 CUJ_NAMESPACE_END(cuj::dsl)

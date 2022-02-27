@@ -6,6 +6,7 @@
 #include <cuj/core/func.h>
 #include <cuj/dsl/type_context.h>
 #include <cuj/dsl/variable.h>
+#include <cuj/utils/scope_guard.h>
 #include <cuj/utils/uncopyable.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
@@ -225,6 +226,61 @@ auto declare(std::string name = {})
     Func ret;
     if(!name.empty())
         ret.set_name(std::move(name));
+    return ret;
+}
+
+// create contextless function
+
+namespace function_detail
+{
+
+    Module *get_current_module();
+
+    void set_current_module(Module *mod);
+
+} // namespace function_detail
+
+template<typename F> requires (!(is_cuj_ref_v<F> || is_cuj_var_v<F>))
+auto function_contextless(F &&body_func)
+{
+    auto old_mod = function_detail::get_current_module();
+    function_detail::set_current_module(nullptr);
+    CUJ_SCOPE_EXIT{ function_detail::set_current_module(old_mod); };
+    using Func = typename function_detail::AutoFunctionTrait<F>::F;
+    Func ret(std::forward<F>(body_func));
+    return ret;
+}
+
+template<typename R, typename F> requires is_cuj_ref_v<R> || is_cuj_var_v<R>
+auto function_contextless(F && body_func)
+{
+    auto old_mod = function_detail::get_current_module();
+    function_detail::set_current_module(nullptr);
+    CUJ_SCOPE_EXIT{ function_detail::set_current_module(old_mod); };
+    using Func = typename function_detail::AutoFunctionTraitWithCustomRet<R, F>::F;
+    Func ret(std::forward<F>(body_func));
+    return ret;
+}
+
+template<typename F>
+auto function_contextless(std::string name, F &&body_func)
+{
+    auto old_mod = function_detail::get_current_module();
+    function_detail::set_current_module(nullptr);
+    CUJ_SCOPE_EXIT{ function_detail::set_current_module(old_mod); };
+    auto ret = function(std::forward<F>(body_func));
+    ret.set_name(std::move(name));
+    return ret;
+}
+
+template<typename R, typename F> requires is_cuj_ref_v<R> || is_cuj_var_v<R>
+auto function_contextless(std::string name, F && body_func)
+{
+    auto old_mod = function_detail::get_current_module();
+    function_detail::set_current_module(nullptr);
+    CUJ_SCOPE_EXIT{ function_detail::set_current_module(old_mod); };
+    auto ret = function<R>(std::forward<F>(body_func));
+    ret.set_name(std::move(name));
     return ret;
 }
 
