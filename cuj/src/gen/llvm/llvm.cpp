@@ -175,32 +175,6 @@ void LLVMIRGenerator::generate(const dsl::Module &mod)
 
     for(auto &f : prog.funcs)
         define_function(f.get());
-
-    llvm::legacy::FunctionPassManager fpm(llvm_->top_module.get());
-    fpm.add(llvm::createPromoteMemoryToRegisterPass());
-    fpm.add(llvm::createSROAPass());
-
-    if(basic_optimizations_)
-    {
-        fpm.add(llvm::createEarlyCSEPass());
-        fpm.add(llvm::createBasicAAWrapperPass());
-        fpm.add(llvm::createInstructionCombiningPass());
-        fpm.add(llvm::createReassociatePass());
-        fpm.add(llvm::createGVNPass());
-        fpm.add(llvm::createDeadCodeEliminationPass());
-        fpm.add(llvm::createCFGSimplificationPass());
-    }
-
-    fpm.doInitialization();
-    for(auto &[_, f] : llvm_->llvm_functions_)
-        fpm.run(*f.llvm_function);
-    fpm.doFinalization();
-
-    if(basic_optimizations_)
-    {
-        llvm::ModuleAnalysisManager mam;
-        llvm::GlobalDCEPass().run(*llvm_->top_module, mam);
-    }
 }
 
 llvm::Module *LLVMIRGenerator::get_llvm_module() const
@@ -1128,19 +1102,9 @@ llvm::Value *LLVMIRGenerator::generate(const core::GlobalVarAddr &expr)
         auto var_type = llvm_->type_manager.get_llvm_type(expr.var->type);
         auto dst_type = llvm::PointerType::get(var_type, 0);
         if(expr.var->memory_type == core::GlobalVar::MemoryType::Regular)
-        {
-            auto src_type = llvm::PointerType::get(var_type, 1);
-            ptr = llvm_->ir_builder->CreateIntrinsic(
-                llvm::Intrinsic::nvvm_ptr_global_to_gen,
-                { dst_type, src_type }, ptr);
-        }
+            ptr = llvm_->ir_builder->CreateAddrSpaceCast(ptr, dst_type);
         else
-        {
-            auto src_type = llvm::PointerType::get(var_type, 4);
-            ptr = llvm_->ir_builder->CreateIntrinsic(
-                llvm::Intrinsic::nvvm_ptr_constant_to_gen,
-                { dst_type, src_type }, ptr);
-        }
+            ptr = llvm_->ir_builder->CreateAddrSpaceCast(ptr, dst_type);
     }
     return ptr;
 }
@@ -1196,11 +1160,8 @@ llvm::Value *LLVMIRGenerator::generate(const core::GlobalConstAddr &expr)
 
     if(target_ == Target::PTX)
     {
-        auto src_type = llvm::PointerType::get(llvm_u8, GLOBAL_ADDR_SPACE);
         auto dst_type = llvm::PointerType::get(llvm_u8, 0);
-        val = llvm_->ir_builder->CreateIntrinsic(
-            llvm::Intrinsic::nvvm_ptr_global_to_gen,
-            { dst_type, src_type }, { val });
+        val = llvm_->ir_builder->CreateAddrSpaceCast(val, dst_type);
     }
 
     if(llvm_elem != llvm_u8)
