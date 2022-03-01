@@ -92,11 +92,6 @@ void LLVMIRGenerator::use_approx_math_func()
     approx_math_func_ = true;
 }
 
-void LLVMIRGenerator::disable_basic_optimizations()
-{
-    basic_optimizations_ = false;
-}
-
 void LLVMIRGenerator::disable_assert()
 {
     enable_assert_ = false;

@@ -81,7 +81,6 @@ namespace
             ir_gen.use_approx_math_func();
         if(!opts.enable_assert)
             ir_gen.disable_assert();
-        ir_gen.disable_basic_optimizations();
         ir_gen.set_target(LLVMIRGenerator::Target::PTX);
         ir_gen.set_data_layout(&data_layout);
         ir_gen.generate(mod);

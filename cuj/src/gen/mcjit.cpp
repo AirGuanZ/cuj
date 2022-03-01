@@ -114,7 +114,6 @@ namespace
         auto data_layout = target_machine->createDataLayout();
 
         LLVMIRGenerator llvm_ir_gen;
-        llvm_ir_gen.disable_basic_optimizations();
         llvm_ir_gen.set_target(LLVMIRGenerator::Target::Native);
         if(opts.fast_math)
             llvm_ir_gen.use_fast_math();

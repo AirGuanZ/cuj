@@ -37,8 +37,6 @@ public:
 
     void use_approx_math_func();
 
-    void disable_basic_optimizations();
-
     void disable_assert();
 
     void set_data_layout(llvm::DataLayout *data_layout);
@@ -141,7 +139,6 @@ private:
     Target            target_              = Target::Native;
     bool              fast_math_           = false;
     bool              approx_math_func_    = false;
-    bool              basic_optimizations_ = true;
     bool              enable_assert_       = true;
     llvm::DataLayout *data_layout_         = nullptr;
 
