@@ -37,6 +37,13 @@ SwitchBuilder::SwitchBuilder(const num<T> &value)
     switch_s_.value = value._load();
 }
 
+template<typename T> requires std::is_integral_v<T>
+SwitchBuilder::SwitchBuilder(const ref<num<T>> &value)
+    : SwitchBuilder(num(value))
+{
+    
+}
+
 template<typename F>
 void SwitchBuilder::operator*(F &&stat_func)
 {

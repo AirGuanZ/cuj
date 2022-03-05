@@ -2,6 +2,7 @@
 
 #include <cuj/core/stat.h>
 #include <cuj/dsl/arithmetic.h>
+#include <cuj/dsl/arithmetic_reference.h>
 #include <cuj/utils/uncopyable.h>
 
 CUJ_NAMESPACE_BEGIN(cuj::dsl)
@@ -19,6 +20,9 @@ public:
 
     template<typename T> requires std::is_integral_v<T>
     explicit SwitchBuilder(const num<T> &value);
+
+    template<typename T> requires std::is_integral_v<T>
+    explicit SwitchBuilder(const ref<num<T>> &value);
 
     template<typename F>
     void operator*(F &&stat_func);
