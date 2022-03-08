@@ -1,6 +1,8 @@
 #include <cuj/cstd/math.h>
 #include <cuj/cstd/random.h>
 
+#include <random>
+
 CUJ_NAMESPACE_BEGIN(cuj::cstd)
 
 namespace
@@ -64,8 +66,8 @@ f64 LCG::uniform_double()
 
 u32 LCG::next_state()
 {
-    const u32 m = state * AX + CX;
-    state = m % MX;
+    const u64 m = u64(state) * AX + CX;
+    state = u32(m % MX);
     return state;
 }
 

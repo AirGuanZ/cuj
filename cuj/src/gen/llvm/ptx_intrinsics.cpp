@@ -64,7 +64,7 @@ namespace
         return func;
     }
 
-    void create_sample_texture_intrinsic(
+    void create_sample_texture2d_intrinsic(
         llvm::IRBuilder<>                &ir,
         const std::vector<llvm::Value *> &args,
         llvm::Intrinsic::ID               intrinsic_id)
@@ -81,6 +81,55 @@ namespace
         auto a   = args[6];
 
         auto call = ir.CreateIntrinsic(intrinsic_id, {}, { tex, u, v });
+        auto raw_type = call->getType();
+        assert(raw_type->isStructTy());
+        auto type = llvm::dyn_cast<llvm::StructType>(raw_type);
+
+        auto alloc = ir.CreateAlloca(type);
+        ir.CreateStore(call, alloc);
+
+        std::array<llvm::Value *, 2> indices = {};
+        indices[0] = llvm::ConstantInt::get(ctx, llvm::APInt(32, 0));
+
+        indices[1] = llvm::ConstantInt::get(ctx, llvm::APInt(32, 0));
+        auto member_addr = ir.CreateGEP(type, alloc, indices);
+        auto member = ir.CreateLoad(member_addr);
+        ir.CreateStore(member, r);
+
+        indices[1] = llvm::ConstantInt::get(ctx, llvm::APInt(32, 1));
+        member_addr = ir.CreateGEP(type, alloc, indices);
+        member = ir.CreateLoad(member_addr);
+        ir.CreateStore(member, g);
+
+        indices[1] = llvm::ConstantInt::get(ctx, llvm::APInt(32, 2));
+        member_addr = ir.CreateGEP(type, alloc, indices);
+        member = ir.CreateLoad(member_addr);
+        ir.CreateStore(member, b);
+
+        indices[1] = llvm::ConstantInt::get(ctx, llvm::APInt(32, 3));
+        member_addr = ir.CreateGEP(type, alloc, indices);
+        member = ir.CreateLoad(member_addr);
+        ir.CreateStore(member, a);
+    }
+    
+    void create_sample_texture3d_intrinsic(
+        llvm::IRBuilder<>                &ir,
+        const std::vector<llvm::Value *> &args,
+        llvm::Intrinsic::ID               intrinsic_id)
+    {
+        auto &ctx = ir.getContext();
+
+        assert(args.size() == 1 + 3 + 4);
+        auto tex = args[0];
+        auto u   = args[1];
+        auto v   = args[2];
+        auto w   = args[3];
+        auto r   = args[4];
+        auto g   = args[5];
+        auto b   = args[6];
+        auto a   = args[7];
+
+        auto call = ir.CreateIntrinsic(intrinsic_id, {}, { tex, u, v, w });
         auto raw_type = call->getType();
         assert(raw_type->isStructTy());
         auto type = llvm::dyn_cast<llvm::StructType>(raw_type);
@@ -239,13 +288,25 @@ llvm::Value *process_ptx_intrinsics(
 
     if(intrinsic_type == core::Intrinsic::sample_tex_2d_f32)
     {
-        create_sample_texture_intrinsic(ir_builder, args, llvm::Intrinsic::nvvm_tex_unified_2d_v4f32_f32);
+        create_sample_texture2d_intrinsic(ir_builder, args, llvm::Intrinsic::nvvm_tex_unified_2d_v4f32_f32);
         return nullptr;
     }
 
     if(intrinsic_type == core::Intrinsic::sample_tex_2d_i32)
     {
-        create_sample_texture_intrinsic(ir_builder, args, llvm::Intrinsic::nvvm_tex_unified_2d_v4s32_f32);
+        create_sample_texture2d_intrinsic(ir_builder, args, llvm::Intrinsic::nvvm_tex_unified_2d_v4s32_f32);
+        return nullptr;
+    }
+
+    if(intrinsic_type == core::Intrinsic::sample_tex_3d_f32)
+    {
+        create_sample_texture3d_intrinsic(ir_builder, args, llvm::Intrinsic::nvvm_tex_unified_3d_v4f32_f32);
+        return nullptr;
+    }
+
+    if(intrinsic_type == core::Intrinsic::sample_tex_3d_i32)
+    {
+        create_sample_texture3d_intrinsic(ir_builder, args, llvm::Intrinsic::nvvm_tex_unified_3d_v4s32_f32);
         return nullptr;
     }
 
