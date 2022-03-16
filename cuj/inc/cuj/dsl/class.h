@@ -297,12 +297,12 @@ namespace class_detail
             f.template operator()<Variable>();                                  \
         }                                                                       \
     };                                                                          \
-    ::cuj::dsl::add_reference_t<typename MemberInfo<                                     \
+    ::cuj::dsl::add_reference_t<typename MemberInfo<                            \
         cuj_member_counter##NAME>::Variable> NAME =                             \
             MemberInfo<cuj_member_counter##NAME>::Reference::_from_ptr(         \
                 ::cuj::dsl::class_detail::class_pointer_to_member_ptr<          \
                     CujReflectionSelf,                                          \
-                    typename MemberInfo<cuj_member_counter##NAME>::Variable>(            \
+                    typename MemberInfo<cuj_member_counter##NAME>::Variable>(   \
                         cuj_class_object_address_, cuj_member_counter##NAME));
 
 #define CUJ_CLASS_END };
@@ -311,7 +311,7 @@ namespace class_detail
 #define CUJ_DECLARE_TEMPLATE(...)                                               \
     template<CUJ_MACRO_FOREACH_1(CUJ_ADD_TYPENAME, __VA_ARGS__)                 \
              typename DummyTypename = void>
-#define CUJ_DEFINE_TEMPLATE(...)                                               \
+#define CUJ_DEFINE_TEMPLATE(...)                                                \
     template<CUJ_MACRO_FOREACH_1(CUJ_ADD_TYPENAME, __VA_ARGS__)                 \
              typename DummyTypename>
 
@@ -337,7 +337,7 @@ namespace class_detail
         CujBase##CLASS_NAME &operator=(const CujBase##CLASS_NAME &) = delete;   \
         auto address() const { return cuj_class_object_address_; }              \
     };                                                                          \
-    CUJ_DEFINE_TEMPLATE(__VA_ARGS__)                                           \
+    CUJ_DEFINE_TEMPLATE(__VA_ARGS__)                                            \
     class CLASS_NAME : public CujBase##CLASS_NAME<__VA_ARGS__>                  \
     {                                                                           \
     public:                                                                     \
