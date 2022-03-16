@@ -23,7 +23,7 @@ ptr<T> const_data(const void *data, size_t bytes, size_t alignment)
 }
 
 template<typename T>
-ptr<cxx<std::remove_cvref_t<T>>> const_data(std::span<T> data)
+ptr<cxx<std::remove_cvref_t<T>>> const_data(std::span<const T> data)
 {
     return const_data<cxx<std::remove_cvref_t<T>>>(data.data(), data.size() * sizeof(T), alignof(T));
 }

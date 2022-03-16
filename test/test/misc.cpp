@@ -63,7 +63,7 @@ TEST_CASE("misc")
         with_mcjit(
             [](i32 x)
         {
-            var lut = const_data<int32_t>(std::array{ 3, 4, 5, 6 });
+            var lut = const_data<int32_t>(std::span<const int>(std::array{ 3, 4, 5, 6 }));
             return lut[x];
         },
             [](auto f)

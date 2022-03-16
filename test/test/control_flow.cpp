@@ -78,6 +78,18 @@ TEST_CASE("control flow")
             return ret;
         },
             5, 1 + 2 + 3 + 4);
+
+        mcjit_require(
+            [](i32 n)
+        {
+            i32 ret = 0;
+            $forrange(i, 0, n)
+            {
+                ret = ret + i;
+            };
+            return ret;
+        },
+            5, 0 + 1 + 2 + 3 + 4);
     }
 
     SECTION("while")

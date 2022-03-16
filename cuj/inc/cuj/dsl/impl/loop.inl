@@ -81,7 +81,7 @@ void ForRangeBuilder<IT>::operator+(F &&body_func)
             $break;
         };
         next_idx = next_idx + IT(1);
-        (void)std::forward<F>(body_func);
+        std::forward<F>(body_func)();
     };
 }
 
