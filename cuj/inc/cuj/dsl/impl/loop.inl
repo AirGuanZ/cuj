@@ -60,6 +60,31 @@ void WhileBuilder::operator+(F &&body_func)
     });
 }
 
+template<typename IT>
+ForRangeBuilder<IT>::ForRangeBuilder(IT &idx, IT beg, IT end)
+    : idx_(idx)
+{
+    beg_ = beg;
+    end_ = end;
+}
+
+template<typename IT>
+template<typename F>
+void ForRangeBuilder<IT>::operator+(F &&body_func)
+{
+    IT next_idx = beg_;
+    $loop
+    {
+        idx_ = next_idx;
+        $if(idx_ >= end_)
+        {
+            $break;
+        };
+        next_idx = next_idx + IT(1);
+        (void)std::forward<F>(body_func);
+    };
+}
+
 inline void _add_break_statement()
 {
     FunctionContext::get_func_context()
