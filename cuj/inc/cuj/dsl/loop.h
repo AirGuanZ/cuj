@@ -47,10 +47,11 @@ public:
 
 struct ForRangeCondVar
 {
-    operator bool() const
+    bool value;
+    operator bool()
     {
-        static thread_local bool ret = false;
-        ret = !ret;
+        const bool ret = value;
+        value = !value;
         return ret;
     }
 };
@@ -63,8 +64,9 @@ inline void _add_continue_statement();
     ::cuj::dsl::WhileBuilder(                                                   \
         [&]()->::cuj::dsl::num<bool>{return(COND);})+[&]()->void
 #define CUJ_FORRANGE(I, BEG, END)                                               \
-    for(::cuj::dsl::remove_var_wrapper_t<decltype(::cuj::dsl::var(BEG))>        \
-        I = BEG; ::cuj::dsl::ForRangeCondVar();)                                \
+    for(auto [I, _cuj_for_cond] = std::tuple{                                   \
+        ::cuj::dsl::remove_var_wrapper_t<decltype(::cuj::dsl::var(BEG))>(BEG),  \
+        ::cuj::dsl::ForRangeCondVar{ true } }; _cuj_for_cond;)                  \
         ::cuj::dsl::ForRangeBuilder<decltype(I)>(I, BEG, END)+[&]
 
 #define $loop CUJ_LOOP
