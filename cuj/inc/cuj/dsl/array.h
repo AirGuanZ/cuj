@@ -34,6 +34,9 @@ public:
     add_reference_t<T> operator[](const num<U> &idx) const;
 
     template<typename U> requires std::is_integral_v<U>
+    add_reference_t<T> operator[](const ref<num<U>> &idx) const;
+
+    template<typename U> requires std::is_integral_v<U>
     add_reference_t<T> operator[](U idx) const;
 
     ptr<arr> address() const;

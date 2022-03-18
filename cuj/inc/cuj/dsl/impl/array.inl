@@ -111,6 +111,13 @@ add_reference_t<T> arr<T, N>::operator[](const num<U> &idx) const
 
 template<typename T, size_t N>
 template<typename U> requires std::is_integral_v<U>
+add_reference_t<T> arr<T, N>::operator[](const ref<num<U>> &idx) const
+{
+    return this->operator[](num<U>(idx));
+}
+
+template<typename T, size_t N>
+template<typename U> requires std::is_integral_v<U>
 add_reference_t<T> arr<T, N>::operator[](U idx) const
 {
     return this->operator[](num(idx));
