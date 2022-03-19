@@ -64,10 +64,11 @@ inline void _add_continue_statement();
     ::cuj::dsl::WhileBuilder(                                                   \
         [&]()->::cuj::dsl::num<bool>{return(COND);})+[&]()->void
 #define CUJ_FORRANGE(I, BEG, END)                                               \
-    for(auto [I, _cuj_for_cond] = std::tuple{                                   \
+    for(auto [_cuj_for_var, _cuj_for_cond] = std::tuple{                        \
         ::cuj::dsl::remove_var_wrapper_t<decltype(::cuj::dsl::var(BEG))>(BEG),  \
         ::cuj::dsl::ForRangeCondVar{ true } }; _cuj_for_cond;)                  \
-        ::cuj::dsl::ForRangeBuilder<decltype(I)>(I, BEG, END)+[&]
+        ::cuj::dsl::ForRangeBuilder<decltype(_cuj_for_var)>                     \
+            (_cuj_for_var, BEG, END)+[&, &I = _cuj_for_var]
 
 #define $loop CUJ_LOOP
 #define $while CUJ_WHILE
