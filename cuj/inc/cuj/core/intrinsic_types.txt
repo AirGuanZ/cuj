@@ -118,3 +118,5 @@ CUJ_INTRINSIC_TYPE(sample_tex_2d_i32)
 
 CUJ_INTRINSIC_TYPE(sample_tex_3d_f32)
 CUJ_INTRINSIC_TYPE(sample_tex_3d_i32)
+
+CUJ_INTRINSIC_TYPE(memcpy)

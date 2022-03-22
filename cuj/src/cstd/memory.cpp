@@ -149,4 +149,19 @@ void load_i32x2(ptr<i32> addr, ref<i32> a, ref<i32> b)
         core::Intrinsic::load_i32x2, addr, { a, b });
 }
 
+void _memcpy_impl(ptr<u8> dst, ptr<u8> src, u64 bytes)
+{
+    auto call = core::CallFuncStat{
+        .call_expr = core::CallFunc{
+            .intrinsic = core::Intrinsic::memcpy,
+            .args = {
+                newRC<core::Expr>(dst._load()),
+                newRC<core::Expr>(src._load()),
+                newRC<core::Expr>(bytes._load())
+            }
+        }
+    };
+    dsl::FunctionContext::get_func_context()->append_statement(std::move(call));
+}
+
 CUJ_NAMESPACE_END(cuj::cstd)

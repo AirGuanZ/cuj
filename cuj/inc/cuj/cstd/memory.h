@@ -28,4 +28,12 @@ void load_f32x2(ptr<f32> addr, ref<f32> a, ref<f32> b);
 void load_u32x2(ptr<u32> addr, ref<u32> a, ref<u32> b);
 void load_i32x2(ptr<i32> addr, ref<i32> a, ref<i32> b);
 
+void _memcpy_impl(ptr<u8> dst, ptr<u8> src, u64 bytes);
+
+template<typename A, typename B>
+void memcpy(ptr<A> dst, ptr<B> src, u64 bytes)
+{
+    cstd::_memcpy_impl(bitcast<ptr<u8>>(dst), bitcast<ptr<u8>>(src), bytes);
+}
+
 CUJ_NAMESPACE_END(cuj::cstd)

@@ -179,4 +179,16 @@ ptr<T> operator+(const ref<num<U>> &lhs, const ref<ptr<T>> &rhs)
     return rhs + lhs;
 }
 
+template<typename T>
+num<bool> operator==(const ref<ptr<T>> &lhs, const ref<ptr<T>> &rhs)
+{
+    return bitcast<num<size_t>>(lhs) == bitcast<num<size_t>>(rhs);
+}
+
+template<typename T>
+num<bool> operator!=(const ref<ptr<T>> &lhs, const ref<ptr<T>> &rhs)
+{
+    return bitcast<num<size_t>>(lhs) != bitcast<num<size_t>>(rhs);
+}
+
 CUJ_NAMESPACE_END(cuj::dsl)

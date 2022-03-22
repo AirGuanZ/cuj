@@ -53,6 +53,8 @@ CUJ_PROXY_CLASS_EX(PCG, PCGData, state, inc)
 
     explicit PCG(u64 seed);
 
+    void advance(i64 idelta);
+
     f32 uniform_float();
 
     f64 uniform_double();

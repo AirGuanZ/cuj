@@ -119,6 +119,27 @@ PCG::PCG(u64 seed)
     next_state();
 }
 
+void PCG::advance(i64 idelta)
+{
+    u64 cur_mult = PCG_MULT;
+    u64 cur_plus = inc;
+    u64 acc_mult = 1u;
+    u64 acc_plus = 0u;
+    u64 delta = u64(idelta);
+    $while(delta > 0)
+    {
+        $if((delta & 1) != 0)
+        {
+            acc_mult = acc_mult * cur_mult;
+            acc_plus = acc_plus * cur_mult + cur_plus;
+        };
+        cur_plus = (cur_mult + 1) * cur_plus;
+        cur_mult = cur_mult * cur_mult;
+        delta = delta / 2;
+    };
+    state = acc_mult * state + acc_plus;
+}
+
 f32 PCG::uniform_float()
 {
     return cstd::min(f32(next_state()) * 0x1p-32f, f32(0x1.fffffep-1));

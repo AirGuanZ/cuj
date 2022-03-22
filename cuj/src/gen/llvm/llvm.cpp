@@ -1270,6 +1270,9 @@ llvm::Value *LLVMIRGenerator::process_intrinsic_call(
         return ret;
     }
 
+    if(call.intrinsic == core::Intrinsic::memcpy)
+        return llvm_->ir_builder->CreateMemCpy(args[0], {}, args[1], {}, args[2]);
+
     if(target_ == Target::Native)
     {
         return process_native_intrinsics(

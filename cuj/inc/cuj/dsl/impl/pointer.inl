@@ -270,6 +270,18 @@ ptr<T> operator+(const ref<num<U>> &lhs, const ptr<T> &rhs)
 }
 
 template<typename T>
+num<bool> operator==(const ptr<T> &lhs, const ptr<T> &rhs)
+{
+    return bitcast<num<size_t>>(lhs) == bitcast<num<size_t>>(rhs);
+}
+
+template<typename T>
+num<bool> operator!=(const ptr<T> &lhs, const ptr<T> &rhs)
+{
+    return bitcast<num<size_t>>(lhs) != bitcast<num<size_t>>(rhs);
+}
+
+template<typename T>
 ptr<cxx<T>> import_pointer(T *pointer)
 {
     num v = reinterpret_cast<size_t>(pointer);

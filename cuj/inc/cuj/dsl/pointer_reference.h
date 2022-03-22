@@ -72,4 +72,10 @@ ptr<T> operator+(const num<U> &lhs, const ref<ptr<T>> &rhs);
 template<typename U, typename T> requires std::is_integral_v<U>
 ptr<T> operator+(const ref<num<U>> &lhs, const ref<ptr<T>> &rhs);
 
+template<typename T>
+num<bool> operator==(const ref<ptr<T>> &lhs, const ref<ptr<T>> &rhs);
+
+template<typename T>
+num<bool> operator!=(const ref<ptr<T>> &lhs, const ref<ptr<T>> &rhs);
+
 CUJ_NAMESPACE_END(cuj::dsl)
