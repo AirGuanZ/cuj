@@ -28,12 +28,12 @@
 #include <cuj/utils/scope_guard.h>
 #include <cuj/utils/unreachable.h>
 
-#include "helper.h"
-#include "libdevice_man.h"
-#include "native_intrinsics.h"
-#include "ptx_intrinsics.h"
-#include "type_manager.h"
-#include "vector_intrinsic.h"
+#include "./llvm/helper.h"
+#include "./llvm/libdevice_man.h"
+#include "./llvm/native_intrinsics.h"
+#include "./llvm/ptx_intrinsics.h"
+#include "./llvm/type_manager.h"
+#include "./llvm/vector_intrinsic.h"
 
 CUJ_NAMESPACE_BEGIN(cuj::gen)
 
@@ -873,7 +873,8 @@ llvm::Value *LLVMIRGenerator::generate(const core::ClassPointerToMemberPointer &
 {
     auto class_ptr = generate(*expr.class_ptr);
     const int member_index = llvm_->type_manager.get_struct_member_index(
-        expr.class_ptr_type->as<core::Pointer>().pointed, expr.member_index);
+        expr.class_ptr_type->as<core::Pointer>().pointed,
+        static_cast<int>(expr.member_index));
     std::array<llvm::Value *, 2> indices;
     indices[0] = llvm_helper::llvm_constant_num(*llvm_->context, uint32_t(0));
     indices[1] = llvm_helper::llvm_constant_num(*llvm_->context, uint32_t(member_index));
@@ -1096,10 +1097,7 @@ llvm::Value *LLVMIRGenerator::generate(const core::GlobalVarAddr &expr)
     {
         auto var_type = llvm_->type_manager.get_llvm_type(expr.var->type);
         auto dst_type = llvm::PointerType::get(var_type, 0);
-        if(expr.var->memory_type == core::GlobalVar::MemoryType::Regular)
-            ptr = llvm_->ir_builder->CreateAddrSpaceCast(ptr, dst_type);
-        else
-            ptr = llvm_->ir_builder->CreateAddrSpaceCast(ptr, dst_type);
+        ptr = llvm_->ir_builder->CreateAddrSpaceCast(ptr, dst_type);
     }
     return ptr;
 }

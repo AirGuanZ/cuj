@@ -136,11 +136,11 @@ private:
     llvm::Value *process_intrinsic_call(
         const core::CallFunc &call, const std::vector<llvm::Value *> &args);
 
-    Target            target_              = Target::Native;
-    bool              fast_math_           = false;
-    bool              approx_math_func_    = false;
-    bool              enable_assert_       = true;
-    llvm::DataLayout *data_layout_         = nullptr;
+    Target            target_           = Target::Native;
+    bool              fast_math_        = false;
+    bool              approx_math_func_ = false;
+    bool              enable_assert_    = true;
+    llvm::DataLayout *data_layout_      = nullptr;
 
     LLVMData *llvm_ = nullptr;
 };

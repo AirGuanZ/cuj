@@ -53,6 +53,11 @@ llvm_map_components_to_libnames(
     mcjit nativecodegen nvptxcodegen)
 TARGET_LINK_LIBRARIES(cuj PUBLIC ${LLVM_LIBS})
 
+IF(CUJ_ENABLE_CUDA)
+    TARGET_COMPILE_DEFINITIONS(cuj PUBLIC CUJ_ENABLE_CUDA)
+    TARGET_LINK_LIBRARIES(cuj PUBLIC CUDA::nvrtc)
+ENDIF()
+
 ################ tests ################
 
 IF(CUJ_BUILD_TEST)
