@@ -4,6 +4,15 @@ CUJ_FUNCTION_PREFIX inline constexpr size_t _cuj_constexpr_max(size_t a, size_t 
     return a > b ? a : b;
 }
 
+template<typename DstType, typename SrcType>
+CUJ_FUNCTION_PREFIX DstType _cuj_bitcast(const SrcType &src)
+{
+    static_assert(sizeof(DstType) == sizeof(SrcType));
+    DstType ret;
+    CUJ_STD memcpy(&ret, &src, sizeof(src));
+    return ret;
+}
+
 CUJ_FUNCTION_PREFIX inline float _cuj_f32_abs(float f)
 {
     return CUJ_STD fabsf(f);
@@ -624,7 +633,7 @@ CUJ_FUNCTION_PREFIX inline void _cuj_load_i32x2(int *p, int *a, int *b)
 #endif
 }
 
-CUJ_FUNCTION_PREFIX inline int _cuj_u32_atomic_add(int *p, int v)
+CUJ_FUNCTION_PREFIX inline int _cuj_i32_atomic_add(int *p, int v)
 {
 #ifdef CUJ_IS_CUDA
     return atomicAdd(p, v);
@@ -722,4 +731,10 @@ CUJ_FUNCTION_PREFIX inline void _cuj_sample_tex3d_i32(unsigned long long tex, fl
 }
 
 #endif
+
+CUJ_FUNCTION_PREFIX inline void _cuj_memcpy(void *dst, void *src, unsigned long long size)
+{
+    CUJ_STD memcpy(dst, src, size);
+}
+
 )___"

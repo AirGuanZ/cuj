@@ -44,6 +44,7 @@ void Visitor::visit(const If &if_s)
 {
     if(on_if)
         on_if(if_s);
+    visit(*if_s.calc_cond);
     visit(if_s.cond);
     visit(*if_s.then_body);
     if(if_s.else_body)

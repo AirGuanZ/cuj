@@ -306,7 +306,7 @@ void CPPCodeGenerator::generate_global_consts(const core::Prog &prog)
         builder_.append(prefix);
         if(target_ == Target::Native)
             builder_.append("alignas(", cat_max_align(align_specifiers, align_specifiers.size()), ") ");
-        builder_.append("_cuj_global_", std::to_string(index++), "[] = { ");
+        builder_.append("_cuj_global_", std::to_string(index), "[] = { ");
         for(size_t i = 0; i < data.size(); ++i)
         {
             if(i > 0)
@@ -321,6 +321,8 @@ void CPPCodeGenerator::generate_global_consts(const core::Prog &prog)
             builder_.append(cat_max_align(align_specifiers, align_specifiers.size()));
             builder_.appendl("));");
         }
+
+        global_const_indices_[data] = index++;
     }
 }
 
@@ -429,7 +431,7 @@ void CPPCodeGenerator::generate(const core::Block &s)
 
 void CPPCodeGenerator::generate(const core::Return &s)
 {
-    if(auto b = s.return_type->as<core::Builtin>(); b == core::Builtin::Void)
+    if(auto b = s.return_type->as_if<core::Builtin>(); b && *b == core::Builtin::Void)
         builder_.appendl("return;");
     else
         builder_.appendl("return ", generate(s.val), ";");
@@ -836,6 +838,7 @@ std::string CPPCodeGenerator::generate_intrinsic_call(const core::CallFunc &e) c
     case core::Intrinsic::sample_tex_2d_i32: callee = "_cuj_sample_tex2d_i32"; break;
     case core::Intrinsic::sample_tex_3d_f32: callee = "_cuj_sample_tex3d_f32"; break;
     case core::Intrinsic::sample_tex_3d_i32: callee = "_cuj_sample_tex3d_i32"; break;
+    case core::Intrinsic::memcpy:            callee = "_cuj_memcpy";           break;
     default:
         throw CujException(std::string("unknown intrinsic: ") + intrinsic_name(e.intrinsic));
     }

@@ -26,19 +26,4 @@ inline void _exit_current_scope()
     FunctionContext::get_func_context()->append_statement(core::ExitScope{});
 }
 
-inline ScopedExitScopeBuilder::ScopedExitScopeBuilder()
-{
-    block_ = newRC<core::Block>();
-    FunctionContext::get_func_context()->push_block(block_);
-}
-
-inline ScopedExitScopeBuilder::~ScopedExitScopeBuilder()
-{
-    auto func = FunctionContext::get_func_context();
-    FunctionContext::get_func_context()->pop_block();
-    func->append_statement(core::MakeScope{
-        .body = std::move(std::move(block_))
-    });
-}
-
 CUJ_NAMESPACE_END(cuj::dsl)

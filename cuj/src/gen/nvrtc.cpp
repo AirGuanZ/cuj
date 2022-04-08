@@ -52,7 +52,6 @@ void NVRTC::generate(const dsl::Module &mod)
         program, option_count, options.data());
 
     {
-
         size_t log_size;
         check_nvrtc_error(nvrtcGetProgramLogSize(program, &log_size));
 
