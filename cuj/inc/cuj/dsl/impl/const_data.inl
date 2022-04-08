@@ -28,6 +28,12 @@ ptr<cxx<std::remove_cvref_t<T>>> const_data(std::span<const T> data)
     return const_data<cxx<std::remove_cvref_t<T>>>(data.data(), data.size() * sizeof(T), alignof(T));
 }
 
+template<typename T>
+ptr<cxx<std::remove_cvref_t<T>>> const_data(const std::vector<T> &data)
+{
+    return const_data<cxx<std::remove_cvref_t<T>>>(data.data(), data.size() * sizeof(T), alignof(T));
+}
+
 inline ptr<num<char>> string_literial(const std::string &str)
 {
     return const_data(std::span{ str.data(), str.data() + str.size() + 1 });
