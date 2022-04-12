@@ -1213,6 +1213,16 @@ llvm::Value *LLVMIRGenerator::process_intrinsic_call(
             llvm::AtomicOrdering::SequentiallyConsistent);
     }
 
+    if(call.intrinsic == core::Intrinsic::cmpxchg_i32 ||
+       call.intrinsic == core::Intrinsic::cmpxchg_u32 ||
+       call.intrinsic == core::Intrinsic::cmpxchg_u64)
+    {
+        llvm_->ir_builder->CreateAtomicCmpXchg(
+            args[0], args[1], args[2],
+            llvm::AtomicOrdering::SequentiallyConsistent,
+            llvm::AtomicOrdering::SequentiallyConsistent);
+    }
+
     if(call.intrinsic == core::Intrinsic::f32_min ||
        call.intrinsic == core::Intrinsic::f64_min)
     {

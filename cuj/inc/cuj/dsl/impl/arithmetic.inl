@@ -283,6 +283,18 @@ num<bool> num<T>::operator>=(const num &rhs) const
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
+num<bool> num<T>::operator==(const ref<num<T>> &rhs) const
+{
+    return *this == num<T>(rhs);
+}
+
+template<typename T> requires std::is_arithmetic_v<T>
+num<bool> num<T>::operator!=(const ref<num<T>> &rhs) const
+{
+    return *this != num<T>(rhs);
+}
+
+template<typename T> requires std::is_arithmetic_v<T>
 num<bool> num<T>::operator==(T rhs) const
 {
     return *this == num(rhs);

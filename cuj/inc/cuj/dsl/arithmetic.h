@@ -50,6 +50,9 @@ public:
     num<bool> operator> (const num &rhs) const;
     num<bool> operator>=(const num &rhs) const;
 
+    num<bool> operator==(const ref<num<T>> &rhs) const;
+    num<bool> operator!=(const ref<num<T>> &rhs) const;
+
     num<bool> operator==(T rhs) const;
     num<bool> operator!=(T rhs) const;
     num<bool> operator< (T rhs) const;

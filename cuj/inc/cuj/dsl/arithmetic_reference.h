@@ -44,6 +44,9 @@ public:
     num<bool> operator> (const num<T> &rhs) const;
     num<bool> operator>=(const num<T> &rhs) const;
 
+    num<bool> operator==(const ref<num<T>> &rhs) const;
+    num<bool> operator!=(const ref<num<T>> &rhs) const;
+
     num<T> operator>>(const num<T> &rhs) const;
     num<T> operator<<(const num<T> &rhs) const;
 

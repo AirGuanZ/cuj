@@ -247,6 +247,18 @@ num<bool> ref<num<T>>::operator>=(const num<T> &rhs) const
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
+num<bool> ref<num<T>>::operator==(const ref<num<T>> &rhs) const
+{
+    return num<T>(*this) == num<T>(rhs);
+}
+
+template<typename T> requires std::is_arithmetic_v<T>
+num<bool> ref<num<T>>::operator!=(const ref<num<T>> &rhs) const
+{
+    return num<T>(*this) != num<T>(rhs);
+}
+
+template<typename T> requires std::is_arithmetic_v<T>
 num<T> ref<num<T>>::operator>>(const num<T> &rhs) const
 {
     static_assert(std::is_integral_v<T> && !std::is_signed_v<T>);

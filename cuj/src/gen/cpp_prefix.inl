@@ -1,4 +1,10 @@
 R"___(
+#ifndef CUJ_IS_CUDA
+#include <cmath>
+#include <cstring>
+#include <atomic>
+#endif
+
 CUJ_FUNCTION_PREFIX inline constexpr size_t _cuj_constexpr_max(size_t a, size_t b)
 {
     return a > b ? a : b;
@@ -657,6 +663,36 @@ CUJ_FUNCTION_PREFIX inline unsigned _cuj_u32_atomic_add(unsigned *p, unsigned v)
     return atomicAdd(p, v);
 #else
     return CUJ_STD atomic_ref(*p).fetch_add(v);
+#endif
+}
+
+CUJ_FUNCTION_PREFIX inline unsigned _cuj_i32_atomic_cmpxchg(unsigned *p, unsigned cmp, unsigned new_val)
+{
+#ifdef CUJ_IS_CUDA
+    return atomicCAS(p, cmp, new_val);
+#else
+    std::atomic_ref(*p).compare_exchange_strong(cmp, new_val);
+    return cmp;
+#endif
+}
+
+CUJ_FUNCTION_PREFIX inline int _cuj_u32_atomic_cmpxchg(int *p, int cmp, int new_val)
+{
+#ifdef CUJ_IS_CUDA
+    return atomicCAS(p, cmp, new_val);
+#else
+    std::atomic_ref(*p).compare_exchange_strong(cmp, new_val);
+    return cmp;
+#endif
+}
+
+CUJ_FUNCTION_PREFIX inline unsigned long long _cuj_u64_atomic_cmpxchg(unsigned long long *p, unsigned long long cmp, unsigned long long new_val)
+{
+#ifdef CUJ_IS_CUDA
+    return atomicCAS(p, cmp, new_val);
+#else
+    std::atomic_ref(*p).compare_exchange_strong(cmp, new_val);
+    return cmp;
 #endif
 }
 
