@@ -14,7 +14,7 @@ class GlobalVariable
 
 public:
 
-    explicit GlobalVariable(RC<core::GlobalVar> var);
+    explicit GlobalVariable(RC<core::GlobalVar> var = {});
 
     ptr<T> get_address() const;
 
