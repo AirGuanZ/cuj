@@ -215,7 +215,7 @@ template<typename T>
 add_reference_t<T> *ptr<T>::operator->() const
 {
     auto temp_var_ctx = PointerTempVarContext::get_context();
-    auto ret = newRC<add_reference_t<T>>(this->deref());
+    auto ret = cuj::newRC<add_reference_t<T>>(this->deref());
     temp_var_ctx->add_var(ret);
     return ret.get();
 }
